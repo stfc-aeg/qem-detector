@@ -7,7 +7,7 @@ from i2c_device import I2CDevice, I2CException
 from i2c_container import I2CContainer
 
 from tca9548 import TCA9548
-from ad5272 import AD5272
+#from ad5272 import AD5272
 from mcp23008 import MCP23008
 from tpl0102 import TPL0102
 from si570 import SI570
@@ -43,13 +43,16 @@ class Backplane(I2CContainer):
             for i in range(4): #was 5 but removed last one
                 self.tpl0102[i].set_non_volatile(False)
 
-            # this is the new calibration board resistors 07/06/18 : added by AOD, attached to PL27, mux bus 4
-            self.ad5272 = []
-            for i in range(2):
-                self.ad5272.append(self.tca.attach_device(4, AD5272, 0x2E + i, busnum=1))
+            # ************  REMOVED AS NOT ON NEW MODULE *****************
+	    #this is the new calibration board resistors 07/06/18 : added by AOD, attached to PL27, mux bus 4
+            #self.ad5272 = []
+            #for i in range(2):
+            #    self.ad5272.append(self.tca.attach_device(4, AD5272, 0x2E + i, busnum=1))
+	    # ************** END OF REMOVE **********************
+
 
             # resistors 0x2E = fine adjustment, 0x2F coarse adjustment
-            self.ad5694 = self.tca.attach_device(5, AD5694, 0x0E, busnum=1)
+            self.ad5694 = self.tca.attach_device(4, AD5694, 0x0E, busnum=1)
             self.ad5694.set_up()
 
 	    """this is quick testing for the new DAC chip, 1 = FINE 4 = COARSE
@@ -65,13 +68,13 @@ class Backplane(I2CContainer):
 
             #set the resistance and number of positions for each ad5272
             #the fine (0x2E) is 256 and 20K
-            self.ad5272[0].set_num_wiper_pos(1024)
-            self.ad5272[0].set_total_resistance(20) #20K Ohms
+            #self.ad5272[0].set_num_wiper_pos(1024)
+            #self.ad5272[0].set_total_resistance(20) #20K Ohms
 
 
             #the course is 1024 and 100K
-            self.ad5272[1].set_num_wiper_pos(1024)
-            self.ad5272[1].set_total_resistance(20) #100K Ohms
+            #self.ad5272[1].set_num_wiper_pos(1024)
+            #self.ad5272[1].set_total_resistance(20) #100K Ohms
 
 	    # attach the clock and set default frequency
             self.si570 = self.tca.attach_device(1, SI570, 0x5d, 'SI570', busnum=1)
@@ -340,12 +343,12 @@ class Backplane(I2CContainer):
         self.resistor_non_volatile = value
 
     # allows the current value to be stored to the resistors that support this fuction - only 50 memory spaces!!!
-    def enable_value_storage(self, value):
-	    self.ad5272[value].enable_50TP("TRUE")
+    #def enable_value_storage(self, value):
+	    #self.ad5272[value].enable_50TP("TRUE")
 
     # store the value function for the adc_cal resistors
-    def store_value(self, value):
-	    self.ad5272[value].store_50TP("TRUE")
+#    def store_value(self, value):
+	#    self.ad5272[value].store_50TP("TRUE")
 
     def get_power_good(self, i):
         return self.power_good[i]
