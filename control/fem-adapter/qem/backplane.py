@@ -208,9 +208,15 @@ class Backplane(I2CContainer):
             self.resistors_raw[resistor] = int(0.5+(294000/400)*value/(390-390*value/400))
             self.tpl0102[1].set_wiper(0, self.resistors_raw[resistor])
         elif resistor == 3: # this is VDD_REST
-            self.resistors_raw[resistor] = int(0.5+(18200/0.0001)*(value-1.78)/(390*18200-390*(value-1.78)/0.0001))
+            
+	    #******* Add code here to change the pre-regulation stage of this output *********
+
+	    self.resistors_raw[resistor] = int(0.5+(18200/0.0001)*(value-1.78)/(390*18200-390*(value-1.78)/0.0001))
             self.tpl0102[2].set_wiper(0, self.resistors_raw[resistor])
         elif resistor == 4: # this is VRESET
+
+	    #******* Add code here to change the pre-regulation stage of this output *********
+
             self.resistors_raw[resistor] = int(0.5+(49900/0.0001)*value/(390*49900-390*value/0.0001))
             self.tpl0102[2].set_wiper(1, self.resistors_raw[resistor])
         elif resistor == 5: # this is VCTRL
@@ -236,9 +242,15 @@ class Backplane(I2CContainer):
             self.tpl0102[1].set_wiper(0, value)
             self.resistors[resistor] = 400 * (390 * value) / (390 * value + 294000)
         elif resistor == 3: # this is VDD_RST
+
+	    # *********** add code here to change the pre-regulation stage of this output **********
+
             self.tpl0102[2].set_wiper(0, value)
             self.resistors[resistor] = 0.0001 * (17800 + (18200 * (390 * value)) / (18200 + (390 * value)))
         elif resistor == 4: # this is VRESET
+
+	    # *********** Add code here to change the pre-regulation stage of this output **********
+
             self.tpl0102[2].set_wiper(1, value)
             self.resistors[resistor] = 0.0001 * (49900 * (390 * value)) / (49900 + (390 * value))
         elif resistor == 5: # this is VCTRL
