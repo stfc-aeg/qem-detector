@@ -27,10 +27,12 @@ class GPIOReset(object):
         check_cmd = subprocess.Popen(check, shell=True, stdout=subprocess.PIPE)
         output, error =  check_cmd.communicate()
         fpga_done = int(output.decode("utf8"), 0)
-
+	
+        print("trying..")
         while ((fpga_done & 0x00000800) < 1):
             check = "devmem 0x41210000"
             check_cmd = subprocess.Popen(check, shell=True, stdout=subprocess.PIPE)
             output, error =  check_cmd.communicate()
             fpga_done = int(output.decode("utf8"), 0)
-            fpga_done = (fpga_done & 0x00000800)
+            fpga_done = (fpga_done & 0x00000800) 
+        print("DONE")

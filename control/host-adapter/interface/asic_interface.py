@@ -601,7 +601,7 @@ class ASIC_Interface():
             print "%-32s" % ('-> Calibration started ...')
 
             #define number of sweep
-            n=1024
+            n=4095 #changed from 1024
             #define i and the starting point of the capture
             i=0
             self.backplane.set_resistor_register(6, 0) #setting AUXSAMPLE FINE to 0
@@ -650,7 +650,7 @@ class ASIC_Interface():
             print "%-32s" % ('-> Calibration started ...')
 
             #define the number of loops for the adc calibration
-            n=1024
+            n=4095 #changed from 1024
             #define i and the staring point
             i=0
             #set the default starting point for the COARSE value

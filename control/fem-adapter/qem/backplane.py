@@ -104,8 +104,8 @@ class Backplane(I2CContainer):
                 self.tpl0102[2].get_wiper(1),
                 self.tpl0102[3].get_wiper(0),
                 #self.tpl0102[4].get_wiper(0)
-                self.ad5694.read_dac_value(1),
-		self.ad5694.read_dac_value(4),
+                self.ad5694.read_dac_value(4),
+		self.ad5694.read_dac_value(1),
 	        #self.ad5272[0].get_wiper(),
 		#self.ad5272[1].get_wiper()
             ]
@@ -248,13 +248,13 @@ class Backplane(I2CContainer):
 
 	elif resistor == 6:
 	    self.resistors_raw[resistor] = int(value/20) #store the i2c value
-	    self.ad5694.set_from_voltage(1, value*0.000001) #this converts back to volts from uV
+	    self.ad5694.set_from_voltage(4, value*0.000001) #this converts back to volts from uV
             
             #self.resistors_raw[resistor] = int(value/79.10) # this is the fine value 70.058 mico-volts / step 0 - 17997.9 micro-volts (uV) updated to 79.10 11/07/18
             #self.ad5272[0].set_wiper(self.resistors_raw[resistor])
         elif resistor == 7:
 	    self.resistors_raw[resistor] = int(value/0.4)#convert to i2c value
-	    self.ad5694.set_from_voltage(4, value*0.001)#this is converting back to volts from mV
+	    self.ad5694.set_from_voltage(1, value*0.001)#this is converting back to volts from mV
 
             #self.resistors_raw[resistor] = int(value/1.51) # this is the coarse value for the 1.42mV / step range 0 - 1454.08 mV updated to 1.51 11/07/18
             #self.ad5272[1].set_wiper(self.resistors_raw[resistor])
@@ -284,13 +284,14 @@ class Backplane(I2CContainer):
 #            self.tpl0102[4].set_wiper(0, value)
 #            self.resistors[resistor] = 3.3 * (390 * value) / (390 * value + 32000)
         elif resistor == 6:
-            self.ad5694.set_from_value(1, value)
+            self.ad5694.set_from_value(4, value)
+	    print(value)
             self.resistors[resistor] = (value * 20) #setting the voltage
             
 	    #self.ad5272[0].set_wiper(value)
             #self.resistors[resistor] = (value * 79.10) # updated to 79.10 from 70.58 11/07/18
         elif resistor == 7:
-            self.ad5694.set_from_value(4, value)
+            self.ad5694.set_from_value(1, value)
             self.resistors[resistor] = (value * 0.4)
 
 	    #self.ad5272[1].set_wiper(value)
@@ -400,8 +401,8 @@ class Backplane(I2CContainer):
             self.tpl0102[2].get_wiper(1,True),
             self.tpl0102[3].get_wiper(0,True),
             #self.tpl0102[4].get_wiper(0,True)
-	    self.ad5694.read_dac_value(1, True),
 	    self.ad5694.read_dac_value(4, True),
+	    self.ad5694.read_dac_value(1, True),
 	    #self.ad5272[0].get_wiper(True),
 	    #self.ad5272[1].get_wiper(True)
 ]
@@ -448,4 +449,5 @@ class Backplane(I2CContainer):
                "VCTRL_POS", "AUXSAMPLE_SUM", "AUXSAMPLE_MEASURED"][i]
 
     def set_reset_fpga(self, reset):
+	print("set reset called") 
         self.gpio_reset.reset("0x20")
