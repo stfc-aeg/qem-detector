@@ -21,7 +21,7 @@ class AD5272(I2CDevice):
         #
 
         I2CDevice.__init__(self, address, **kwargs)
-	    self.write8(0x1C, 0x02) # enable the update of wiper position by default
+	self.write8(0x1C, 0x02) # enable the update of wiper position by default
 
         #Read back current wiper settings
         self.write8(0x08, 0x00) # Have to write code 0x0800 to initiate a read of the wiper 
@@ -94,7 +94,7 @@ class AD5272(I2CDevice):
         #
 
         self.__wiper_pos[wiper] = int((pd - self.__low_pd) / (self.__high_pd - self.__low_pd) * self.__wiper_pos)
-	    self.write8(((self.__wiper_pos & 0xFF00) + 0x400)>>8, (self.__wiper_pos & 0xFF))
+	self.write8(((self.__wiper_pos & 0xFF00) + 0x400)>>8, (self.__wiper_pos & 0xFF))
 
     def set_wiper(self, position):
         #Manually sets a wiper position
@@ -103,17 +103,17 @@ class AD5272(I2CDevice):
         #
 
         self.__wiper_pos = int(position)
-	    self.write8(((self.__wiper_pos & 0xFF00) + 0x400)>>8, (self.__wiper_pos & 0xFF))
+	self.write8(((self.__wiper_pos & 0xFF00) + 0x400)>>8, (self.__wiper_pos & 0xFF))
 
     def get_wiper(self, force=False):
         #Gets a wiper position
-  	    #:param: 
+  	#:param: 
         #:returns: Current position [0-255]
         #
 
         if force:
-	        self.write8(0x08, 0x00) # Have to write code 0x8000 to initiate a read of the wiper 
-	        tmp=self.readU16(0) # read the result into tmp variable
+	    self.write8(0x08, 0x00) # Have to write code 0x8000 to initiate a read of the wiper 
+	    tmp=self.readU16(0) # read the result into tmp variable
             self.__wiper_pos = ((tmp&0x03) << 8) + ((tmp&0xFF00) >> 8)
 
         return self.__wiper_pos

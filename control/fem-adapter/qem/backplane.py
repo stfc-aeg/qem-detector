@@ -51,8 +51,8 @@ class Backplane(I2CContainer):
             # resistors 0x2E = fine adjustment, 0x2F coarse adjustment
             self.ad5694 = self.tca.attach_device(5, AD5694, 0x0E, busnum=1)
             
-            self.ad5694.set_from_value(FINE, 0x22)
-            print(self.ad5694.read_dac_value(FINE))
+            self.ad5694.set_from_value(1, 0x19)
+            print(self.ad5694.read_dac_value(1))
 
 
             #set the resistance and number of positions for each ad5272
