@@ -18,9 +18,9 @@ class GPIOReset(object):
     def reset(self, command):
         """ Sends a command to reset the FPGA on board the FEM
         """
-        command = "devmem " + self.base_address + " " + self.width + " " + str(command)        
-        reset = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
-        output, error = reset.communicate()
+#        command = "devmem " + self.base_address + " " + self.width + " " + str(command)        
+ #       reset = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
+  #      output, error = reset.communicate()
         
 
         check = "devmem 0x41210000"
