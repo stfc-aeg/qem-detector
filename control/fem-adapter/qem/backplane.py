@@ -414,7 +414,7 @@ class Backplane(I2CContainer):
         self.resistors = [
             3.3 * (390 * self.resistors_raw[0]) / (390 * self.resistors_raw[0] + 32000),
             3.3 * (390 * self.resistors_raw[1]) / (390 * self.resistors_raw[1] + 32000),
-            400 * (390 * self.resistors_raw[2]) / (390 * self.resistors_raw[2] + 294000),
+            400.0 * (390.0 * self.resistors_raw[2]) / (390.0 * self.resistors_raw[2] + 294000.0),
             0.0001 * (17800 + (18200 * (390 * self.resistors_raw[3])) / (18200 + (390 * self.resistors_raw[3]))),
             0.0001 * (49900 * (390 * self.resistors_raw[4])) / (49900 + (390 * self.resistors_raw[4])),
             -3.775 + (1.225/22600 + .35*.000001) * (390 * self.resistors_raw[5] + 32400),
