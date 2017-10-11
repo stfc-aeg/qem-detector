@@ -43,7 +43,9 @@ class Backplane(I2CContainer):
 
         #Sensor readings
         self.voltages = [0.0] * 13
+        self.voltages_raw = [0.0] * 13
         self.currents = [0.0] * 13
+        self.currents_raw = [0.0] * 13
         self.power_good = [False] * 8
         self.psu_enabled = self.mcp23008[1].input(0)
         self.clock_freq = 21.0
@@ -53,7 +55,7 @@ class Backplane(I2CContainer):
             self.tpl0102[0].get_wiper(1) * 0.0097,
             self.tpl0102[1].get_wiper(0) * 0.29,
             0.0001 / (1.0/49900 + 1.0/self.tpl0102[2].get_wiper(0)/390.0),
-            0.0001 / (1.0/18200 + 1.0/self.tpl0102[2].get_wiper(1)/390.0),
+            0.0001 * (17800 + 1 / (1.0/18200 + 1.0/self.tpl0102[2].get_wiper(1)/390.0)),
             self.tpl0102[3].get_wiper(0) * 0.021 - 2,
             self.tpl0102[4].get_wiper(0) * 0.0097,
         ]
@@ -61,15 +63,19 @@ class Backplane(I2CContainer):
     def poll_all_sensors(self):
         #Currents
         for i in range(7):
-            self.currents[i] = self.ad7998[0].read_input_scaled(i) * self.CURRENT_MULTIPLIERS[i]
+            self.currents_raw[i] = self.ad7998[0].read_input_raw(i) & 0xfff
+            self.currents[i] = self.currents_raw[i] * self.CURRENT_MULTIPLIERS[i] / 4095.0
         for i in range(6):
-            self.currents[i + 7] = self.ad7998[2].read_input_scaled(i) * self.CURRENT_MULTIPLIERS[i + 7]
+            self.currents_raw[i + 7] = self.ad7998[2].read_input_raw(i) & 0xfff
+            self.currents[i + 7] = self.currents_raw[i + 7] * self.CURRENT_MULTIPLIERS[i + 7] / 4095.0
 
         #Voltages
         for i in range(7):
-            self.voltages[i] = self.ad7998[1].read_input_scaled(i) * 0.000732
+            self.voltages_raw[i] = self.ad7998[1].read_input_raw(i) & 0xfff
+            self.voltages[i] = self.voltages_raw[i] * 3 / 4095.0
         for i in range(6):
-            self.voltages[i + 7] = self.ad7998[3].read_input_scaled(i) * 1.2
+            self.voltages_raw[i + 7] = self.ad7998[3].read_input_raw(i) & 0xfff
+            self.voltages[i + 7] = self.voltages_raw[i] * 5 / 4095.0
 
         #Power good monitors
         self.power_good = self.mcp23008[0].input_pins([0,1,2,3,4,5,6,7,8])
@@ -85,7 +91,7 @@ class Backplane(I2CContainer):
             wiper = int(1.0 / (0.039/value - 390.0/49900))
             self.tpl0102[2].set_wiper(0, wiper)
         elif resistor == 4:
-            wiper = int(1.0 / (0.039 / (value - 17800) - 390.0/18200))
+            wiper = int(1.0 / (0.039 / (value - 1.78) - 390.0/18200))
             self.tpl0102[2].set_wiper(1, wiper)
         elif resistor == 5:
             self.tpl0102[3].set_PD(0, value)
@@ -93,6 +99,29 @@ class Backplane(I2CContainer):
             self.tpl0102[4].set_PD(0, value)
 
         self.resistors[resistor] = value
+
+    def set_resistor_value_raw(self, resistor, value):
+        if resistor == 0:
+            self.tpl0102[0].set_wiper(0, value)
+            self.resistors[resistor] = value * 0.0097
+        elif resistor == 1:
+            self.tpl0102[0].set_wiper(1, value)
+            self.resistors[resistor] = value * 0.0097
+        elif resistor == 2:
+            self.tpl0102[1].set_wiper(0, value)
+            self.resistors[resistor] = value * 0.29
+        elif resistor == 3:
+            self.tpl0102[2].set_wiper(0, value)
+            self.resistors[resistor] = 0.0001 / (1.0/49900 + 1.0/value/390.0)
+        elif resistor == 4:
+            self.tpl0102[2].set_wiper(1, value)
+            self.resistors[resistor] = 0.0001 * (17800 + 1 / (1.0/18200 + 1.0/value/390.0))
+        elif resistor == 5:
+            self.tpl0102[3].set_wiper(0, value)
+            self.resistors[resistor] = value * 0.021 - 2
+        elif resistor == 6:
+            self.tpl0102[4].set_wiper(0, value)
+            self.resistors[resistor] = value * 0.0097
 
     def get_resistor_value(self, resistor):
         return self.resistors[resistor]
@@ -123,8 +152,14 @@ class Backplane(I2CContainer):
     def get_current(self, i):
         return self.currents[i]
 
+    def get_current_raw(self, i):
+        return self.currents_raw[i]
+
     def get_voltage(self, i):
         return self.voltages[i]
+
+    def get_voltage_raw(self, i):
+        return self.voltages_raw[i]
 
     def get_adc_name(self, i):
         return ["VDD0_D18", "VDD_D25", "VDD_D18_PLL", "VDDO", "VDD_D18ADC",
