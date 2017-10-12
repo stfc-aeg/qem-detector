@@ -50,15 +50,28 @@ class Backplane(I2CContainer):
         self.psu_enabled = self.mcp23008[1].input(0)
         self.clock_freq = 21.0
         #Variable resistors
-        self.resistors = [
-            self.tpl0102[0].get_wiper(0) * 0.0097,
-            self.tpl0102[0].get_wiper(1) * 0.0097,
-            self.tpl0102[1].get_wiper(0) * 0.29,
-            0.0001 / (1.0/49900 + 1.0/self.tpl0102[2].get_wiper(0)/390.0),
-            0.0001 * (17800 + 1 / (1.0/18200 + 1.0/self.tpl0102[2].get_wiper(1)/390.0)),
-            self.tpl0102[3].get_wiper(0) * 0.021 - 2,
-            self.tpl0102[4].get_wiper(0) * 0.0097,
+        self.resistors_raw = [
+            self.tpl0102[0].get_wiper(0),
+            self.tpl0102[0].get_wiper(1),
+            self.tpl0102[1].get_wiper(0),
+            self.tpl0102[2].get_wiper(0),
+            self.tpl0102[2].get_wiper(1),
+            self.tpl0102[3].get_wiper(0),
+            self.tpl0102[4].get_wiper(0),
         ]
+        self.resistors = [
+            self.resistors_raw[0] * 0.0097,
+            self.resistors_raw[1]* 0.0097,
+            self.resistors_raw[2] * 0.29,
+            0,
+            0,
+            self.resistors_raw[5] * 0.021 - 2,
+            self.resistors_raw[6] * 0.0097,
+        ]
+        if not self.resistors_raw[3]==0: self.resistors[3] = 0.0001 / (1.0/49900 + 1.0/self.resistors_raw[3]/390.0)
+        if not self.resistors_raw[4]==0: self.resistors[4] =  0.0001 * (17800 + 1 / (1.0/18200 + 1.0/self.resistors_raw[4]/390.0))
+
+
 
     def poll_all_sensors(self):
         #Currents
@@ -88,10 +101,12 @@ class Backplane(I2CContainer):
         elif resistor == 2:
             self.tpl0102[1].set_PD(0, value)
         elif resistor == 3:
-            wiper = int(1.0 / (0.039/value - 390.0/49900))
+            if value == 0: wiper = 0
+            else: wiper = int(1.0 / (0.039/value - 390.0/49900))
             self.tpl0102[2].set_wiper(0, wiper)
         elif resistor == 4:
-            wiper = int(1.0 / (0.039 / (value - 1.78) - 390.0/18200))
+            if value == 1.78: wiper = 0
+            else: wiper = int(1.0 / (0.039 / (value - 1.78) - 390.0/18200))
             self.tpl0102[2].set_wiper(1, wiper)
         elif resistor == 5:
             self.tpl0102[3].set_PD(0, value)
@@ -112,19 +127,25 @@ class Backplane(I2CContainer):
             self.resistors[resistor] = value * 0.29
         elif resistor == 3:
             self.tpl0102[2].set_wiper(0, value)
-            self.resistors[resistor] = 0.0001 / (1.0/49900 + 1.0/value/390.0)
+            if value == 0: self.resistors[resistor] = 0
+            else: self.resistors[resistor] = 0.0001 / (1.0/49900 + 1.0/value/390.0)
         elif resistor == 4:
             self.tpl0102[2].set_wiper(1, value)
-            self.resistors[resistor] = 0.0001 * (17800 + 1 / (1.0/18200 + 1.0/value/390.0))
+            if value == 0: self.resistors[resistor] = 0
+            else: self.resistors[resistor] = 0.0001 * (17800 + 1 / (1.0/18200 + 1.0/value/390.0))
         elif resistor == 5:
             self.tpl0102[3].set_wiper(0, value)
             self.resistors[resistor] = value * 0.021 - 2
         elif resistor == 6:
             self.tpl0102[4].set_wiper(0, value)
             self.resistors[resistor] = value * 0.0097
+        self.resistors_raw[resistor] = value
 
     def get_resistor_value(self, resistor):
         return self.resistors[resistor]
+
+    def get_resistor_value_raw(self, resistor):
+        return self.resistors_raw[resistor]
 
     def get_resistor_name(self, resistor):
         return ["AUXRESET", "VCM", "DACEXTREF", "VDD_RST", "VRESET", "VCTRL", "AUXSAMPLE"][resistor]
