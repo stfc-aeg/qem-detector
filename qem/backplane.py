@@ -21,14 +21,14 @@ class Backplane(I2CContainer):
             self.tpl0102.append(self.tca.attach_device(0, TPL0102, 0x50 + i, busnum=1))
         for i in range(5):
             self.tpl0102[i].set_non_volatile(True)
-        self.tpl0102[0].set_terminal_PDs(0, 0, 2.5)
-        self.tpl0102[0].set_terminal_PDs(1, 0, 2.5)
-        self.tpl0102[1].set_terminal_PDs(0, 0, 100)
-        self.tpl0102[3].set_terminal_PDs(0, -2, 3.3)
-        self.tpl0102[4].set_terminal_PDs(0, 0, 2.5)
+        self.tpl0102[0].set_terminal_PDs(0, 0, 2.474)
+        self.tpl0102[0].set_terminal_PDs(1, 0, 2.474)
+        self.tpl0102[1].set_terminal_PDs(0, 0, 99.98)
+        self.tpl0102[3].set_terminal_PDs(0, -2.02, 3.37)
+        self.tpl0102[4].set_terminal_PDs(0, 0, 2.474)
 
         self.si570 = self.tca.attach_device(1, SI570, 0x55, busnum=1)
-        self.si570.set_frequency(21) #Default to 21MHz
+        self.si570.set_frequency(20) #Default to 20MHz
 
         self.ad7998 = []
         for i in range(4):
@@ -135,7 +135,7 @@ class Backplane(I2CContainer):
             else: self.resistors[resistor] = 0.0001 * (17800 + 1 / (1.0/18200 + 1.0/value/390.0))
         elif resistor == 5:
             self.tpl0102[3].set_wiper(0, value)
-            self.resistors[resistor] = value * 0.021 - 2
+            self.resistors[resistor] = value * 0.021 - 2.02
         elif resistor == 6:
             self.tpl0102[4].set_wiper(0, value)
             self.resistors[resistor] = value * 0.0097

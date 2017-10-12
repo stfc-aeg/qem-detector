@@ -45,7 +45,7 @@ class TPL0102(I2CDevice):
         if not wiper in [0,1]:
             raise I2CException("Select either wiper 0 or wiper 1")
 
-        self.__wiper_pos[wiper] = int(resistance / self.__tot_resistance * 256.0)
+        self.__wiper_pos[wiper] = int(resistance / self.__tot_resistance * 255.0)
         self.write8(wiper, self.__wiper_pos[wiper])
 
     def set_terminal_PDs(self, wiper, low, high):
@@ -70,7 +70,7 @@ class TPL0102(I2CDevice):
         if not wiper in [0,1]:
             raise I2CException("Select either wiper 0 or wiper 1")
 
-        self.__wiper_pos[wiper] = int((pd - self.__low_pd[wiper]) / (self.__high_pd[wiper] - self.__low_pd[wiper]) * 256.0)
+        self.__wiper_pos[wiper] = int((pd - self.__low_pd[wiper]) / (self.__high_pd[wiper] - self.__low_pd[wiper]) * 255.0)
         self.write8(wiper, self.__wiper_pos[wiper])
 
     def set_wiper(self, wiper, position):
