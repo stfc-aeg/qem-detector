@@ -59,12 +59,13 @@ if __name__ == '__main__':
     parsedArg = arg.split('=')
     if parsedArg[0] == 'url':
       base_url = parsedArg[1]
+      tester = resistor_test()
     elif parsedArg[0] == 'test':
       testCases = parsedArg[1]
     else: 
       print parsedArg[0] + ' is not a valid keyword'
       sys.exit()
-  tester = resistor_test(base_url)
+  if not base_url: tester = resistor_test()
   results = tester.testResistor(name,testCases)
   print 'At {}, in {}:'.format(name,tester.units[name])
   for i in range(len(results[0])): 

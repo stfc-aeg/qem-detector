@@ -19,6 +19,7 @@ class voltage_test():
       if cv['name'] == name:
         return cv['voltage_raw']['value']
     print (name + ' is not a valid current voltage')
+    sys.exit()
 
 
   def checkVoltage(self,name):
@@ -32,15 +33,26 @@ class voltage_test():
     return (expectRange, expected, measured)
 
 if __name__ == '__main__':
-  base_url = None
   if len(sys.argv) < 2:
-    print 'please input the name of the current voltage device to be tested'
+    print 'please input the name of the current voltage device or set (U46 or U40) of devices to be tested'
     sys.exit()
-  if len(sys.argv) == 3: base_url = sys.argv(2) 
-  tester = voltage_test(base_url)
+  if len(sys.argv) == 3: tester = voltage_test(sys.argv(2))
+  else: tester = voltage_test()
   name = sys.argv[1].replace(' ', '_')
-  checked = tester.checkVoltage(name)
-  if checked[0]:
-    print 'At {}s register:\n    expected range {:d} to {:d}, measured {:d}'.format(name, checked[1][0], checked[1][1], checked[2])
+  if name == 'U46':
+    for vc in ('VDD0', 'VDD_D18', 'VDD_D25', 'VDD_P18', 'VDD_A18_PLL','VDD_D18ADC', 'VDD_D18_PLL'):
+      checked = tester.checkVoltage(vc)
+      print 'At {}s register:\n    expected {:d}, measured {:d}'.format(vc, checked[1], checked[2])
+  elif name == 'U40':
+    for vc in ('VDD_RST', 'VDD_A33', 'VDD_D33', 'VCTRL_NEG', 'VRESET', 'VCTRL_POS'):
+      checked = tester.checkVoltage(vc)
+      if checked[0]:
+        print 'At {}s register:\n    expected range {:d} to {:d}, measured {:d}'.format(vc, checked[1][0], checked[1][1], checked[2])
+      else:
+        print 'At {}s register:\n    expected {:d}, measured {:d}'.format(vc, checked[1], checked[2])  
   else:
-    print 'At {}s register:\n    expected {:d}, measured {:d}'.format(name, checked[1], checked[2])
+    checked = tester.checkVoltage(name)
+    if checked[0]:
+      print 'At {}s register:\n    expected range {:d} to {:d}, measured {:d}'.format(name, checked[1][0], checked[1][1], checked[2])
+    else:
+      print 'At {}s register:\n    expected {:d}, measured {:d}'.format(name, checked[1], checked[2])  

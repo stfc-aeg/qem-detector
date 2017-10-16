@@ -33,12 +33,13 @@ if __name__ == '__main__':
     parsedArg = arg.split('=')
     if parsedArg[0] == 'url':
       base_url = parsedArg[1]
+      tester = oscillator_test(base_url)
     elif parsedArg[0] == 'test':
       testCases = map(float,parsedArg[1].split(','))
     else: 
       print parsedArg[0] + ' is not a valid keyword'
       sys.exit()
-  tester = oscillator_test(base_url)
+  if not base_url: tester = oscillator_test()
   if not testCases:  results = tester.testClock()
   else: results = tester.testClock(testCases)
   print 'At Crystal Oscillator, in MHz:'

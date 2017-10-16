@@ -24,6 +24,7 @@ class current_test():
         measured.append(cv['current_raw']['value'])
         return measured
     print (name + ' is not a valid current voltage')
+    sys.exit()
 
 
   def checkCurrent(self,name):
@@ -32,13 +33,21 @@ class current_test():
     return (expected, measured)
 
 if __name__ == '__main__':
-  base_url = None
   if len(sys.argv) < 2:
-    print 'please input the name of the current voltage device to be tested'
+    print 'please input the name of the current voltage device or set (U45 or U39) of devices to be tested'
     sys.exit()
-  if len(sys.argv) == 3: base_url = sys.argv(2)   
-  tester = current_test(base_url)
+  if len(sys.argv) == 3: tester = current_test(sys.argv(2))  
+  else: tester = current_test()
   name = sys.argv[1].replace(' ', '_')
-  checked = tester.checkCurrent(name)
-  print 'At {}s register:\n    expected {:d}, measured {:d} at default resistance\n    expected {:d}, measured {:d} with added resistor\n'.format(name, checked[0][0], checked[1][0], checked[0][1], checked[1][1])
+  checked = {}
+  if name == 'U45':
+    for vc in ('VDD0', 'VDD_D18', 'VDD_D25', 'VDD_P18', 'VDD_A18_PLL','VDD_D18ADC', 'VDD_D18_PLL'):
+      checked[vc] = tester.checkCurrent(vc) 
+  elif name == 'U39':
+    for vc in ('VDD_RST', 'VDD_A33', 'VDD_D33', 'VCTRL_NEG', 'VRESET', 'VCTRL_POS'):
+      checked[vc] = tester.checkCurrent(vc)
+  else:
+    checked[name] = tester.checkCurrent(name)
+  for name in checked:
+    print 'At {}s register:\n    expected {:d}, measured {:d} at default resistance\n    expected {:d}, measured {:d} with added resistor\n'.format(name, checked[name][0][0], checked[name][1][0], checked[name][0][1], checked[name][1][1])
 
