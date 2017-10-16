@@ -24,6 +24,7 @@ class current_test():
         measured.append(cv['current_raw']['value'])
         return measured
     print (name + ' is not a valid current voltage')
+    sys.exit()
 
 
   def checkCurrent(self,name):

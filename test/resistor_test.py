@@ -28,6 +28,7 @@ class resistor_test():
       if parsed['resistors'][i]['name'] == name:
         return i
     print (resistor + ' is not a valid resistor')
+    sys.exit()
 
 
   def testResistor(self,name,testCases=None):

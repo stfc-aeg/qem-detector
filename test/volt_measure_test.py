@@ -19,6 +19,7 @@ class voltage_test():
       if cv['name'] == name:
         return cv['voltage_raw']['value']
     print (name + ' is not a valid current voltage')
+    sys.exit()
 
 
   def checkVoltage(self,name):
