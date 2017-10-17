@@ -9,7 +9,6 @@ class oscillator_test():
 
   def changeClock(self,newClock):
   #sets the clock frequency to 'newClock' (MHz)
-    response = requests.get(self.clock_url)
     requests.put(self.clock_url, str(newClock) ,headers=self.headers)
     return
 
@@ -17,12 +16,13 @@ class oscillator_test():
      return(input('please input the measured frequency in MHz: '))
 
   def testClock(self,testCases=None):
+    currentClock = requests.get(self.clock_url).json()
     measuredTestCases = []
     if testCases is None: testCases = self.baseTestCases
     for testCase in testCases:
       self.changeClock(testCase)
       measuredTestCases.append(self.measureClock())
-    self.changeClock(20)
+    self.changeClock(currentClock['clock'])
     return (testCases,measuredTestCases) 
 
 if __name__ == '__main__':
