@@ -183,6 +183,6 @@ class Backplane(I2CContainer):
         return self.voltages_raw[i]
 
     def get_adc_name(self, i):
-        return ["VDD_D18", "VDD_D25", "VDD_D18_PLL", "VDD0", "VDD_D18ADC",
+        return ["VDD_D18", "VDD_D25", "VDD_D18_PLL", "VDDO", "VDD_D18ADC",
              "VDD_P18", "VDD_A18_PLL", "VDD_D33", "VDD_RST", "VRESET",
              "VDD_A33", "VCTRL_POS", "VCTRL_NEG"][i]
