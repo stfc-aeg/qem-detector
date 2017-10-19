@@ -96,23 +96,29 @@ class Backplane(I2CContainer):
     def set_resistor_value(self, resistor, value):
         if resistor == 0:
             self.tpl0102[0].set_PD(0, value)
+            self.resistors_raw[resistor] = value / 0.0097
         elif resistor == 1:
             self.tpl0102[0].set_PD(1, value)
+            self.resistors_raw[resistor] = value / 0.0097
         elif resistor == 2:
             self.tpl0102[1].set_PD(0, value)
+            self.resistors_raw[resistor] = value / 0.29
         elif resistor == 3:
             if value == 0: wiper = 0
             else: wiper = int(1.0 / (0.039/value - 390.0/49900))
             self.tpl0102[2].set_wiper(0, wiper)
+            self.resistors_raw[resistor] = wiper
         elif resistor == 4:
             if value == 1.78: wiper = 0
             else: wiper = int(1.0 / (0.039 / (value - 1.78) - 390.0/18200))
             self.tpl0102[2].set_wiper(1, wiper)
+            self.resistors_raw[resistor] = wiper
         elif resistor == 5:
             self.tpl0102[3].set_PD(0, value)
+            self.resistors_raw[resistor] = (value + 2.02) / 0.021
         elif resistor == 6:
             self.tpl0102[4].set_PD(0, value)
-
+            self.resistors_raw[resistor] = value / 0.0097
         self.resistors[resistor] = value
 
     def set_resistor_value_raw(self, resistor, value):
