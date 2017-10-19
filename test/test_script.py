@@ -4,42 +4,73 @@ from oscillator_test import oscillator_test
 from resistor_test import resistor_test
 import sys
 
-resistor_names = ('AUXSAMPLE','AUXRESET','VCM','DACEXTREF','VRESET','VDD_RST','VCTRL')
-vc_names = ('VDD0', 'VDD_D18', 'VDD_D25', 'VDD_P18', 'VDD_A18_PLL', 'VDD_D18ADC', 'VDD_D18_PLL', 'VDD_RST', 'VDD_A33', 'VDD_D33', 'VCTRL_NEG', 'VRESET', 'VCTRL_POS')
-
 if __name__ == '__main__':
-  base_url = None
-  set_url = None
-  if len(sys.argv) == 2:
-     base_url = sys.argv(2)
-     set_url = 'url=' + base_url
+  if len(sys.argv) < 2:
+    print 'please input the name of the type of test to be run'
+    sys.exit()
+  testType = sys.argv[1]
+  base_url = None 
 
-  if base_url: clock_tester = oscillator_test(set_url)
-  else: clock_tester = oscillator_test()
-  results = clock_tester.testClock()
-  print 'At Crystal Oscillator, in MHz:'
-  for i in range(len(results[0])): 
-    print '    expected {:.2f}, measured {:.2f}'.format(results[0][i], results[1][i])
+  if testType == 'oscillator':
+    testCases = None
+    for arg in sys.argv[1:]:
+      parsedArg = arg.split('=')
+      if parsedArg[0] == 'url':
+        base_url = parsedArg[1]
+        tester = oscillator_test(base_url)
+      elif parsedArg[0] == 'test':
+        testCases = map(float,parsedArg[1].split(','))
+      else: 
+        print parsedArg[0] + ' is not a valid keyword'
+        sys.exit()
+    if not base_url: tester = oscillator_test()
+    tester.clockTest(testCases)
+  elif testType == 'resistor':
+    if len(sys.argv) < 3:
+      print 'please input the name of the resistor to be tested'
+      sys.exit()
+    name = sys.argv[2]
+    testCases = None
+    testRaw = True
+    for arg in sys.argv[3:]:
+      parsedArg = arg.split('=')
+      if parsedArg[0] == 'url':
+        base_url = parsedArg[1]
+        tester = resistor_test(base_url)
+      elif parsedArg[0] == 'test':
+        testCases = map(float,parsedArg[1].split(','))
+      elif parsedArg[0] == 'raw':
+        testRaw = parsedArg[1]
+      else: 
+        print parsedArg[0] + ' is not a valid keyword'
+        sys.exit()
+    if not base_url: tester = resistor_test()
+    tester.resistorTest(name,testRaw,testCases)
+  elif testType == 'voltage_measure':
+    if len(sys.argv) < 3
+      print 'please input the name of the power supply or set (U46 or U40) of power supplies to be tested'
+      sys.exit()
+    name = sys.argv[2].replace(' ', '_')
+    for arg in sys.argv[3:]:
+      parsedArg = arg.split('=')
+      if parsedArg[0] == 'url':
+        base_url = parsedArg[1]
+        tester = voltage_test(base_url)
+    if not base_url: tester = voltage_test()
+    tester.voltageTest(name)
+  elif testType == 'current_measure':
+    if len(sys.argv) < 3:
+      print 'please input the name of the power supply or set (U45 or U39) of power supplies to be tested'
+      sys.exit()
+    name = sys.argv[2].replace(' ', '_')
+    for arg in sys.argv[3:]:
+      parsedArg = arg.split('=')
+      if parsedArg[0] == 'url':
+        base_url = parsedArg[1]
+        tester = current_test(base_url)
+    if not base_url: tester = current_test()
+    tester.currentTest(name)
+  else:
+    print 'please input the type of test to run (oscillator, resistor, voltage_measure or current_measure)'
+  
 
-  if base_url: resist_tester = resistor_test(base_url)
-  else: resist_tester = resistor_test()
-  for name in resistor_names:
-    results = resist_tester.testResistor(name)
-    print 'At {}, in {}:'.format(name,resist_tester.units[name])
-    for i in range(len(results[0])): 
-      print '    expected {:.2f}, measured {:.2f}'.format(results[0][i], results[1][i])
-
-  if base_url: volt_tester = voltage_test(base_url)
-  else: voltage_test()
-  for name in vc_names:
-    results = volt_tester.checkVoltage(name)
-    if results[0]:
-      print 'At {}s register:\n    expected range {:d} to {:d}, measured {:d}'.format(name, results[1][0], results[1][1], results[2])
-    else:
-      print 'At {}s register:\n    expected {:d}, measured {:d}'.format(name, results[1], results[2])
-
-  if base_url: current_tester = current_test(base_url)
-  else: current_tester = current_test()
-  for name in vc_names:
-    results = current_tester.checkCurrent(name)
-    print 'At {}s register:\n    expected {:d}, measured {:d} at default resistance\n    expected {:d}, measured {:d} with added resistor\n'.format(name, results[0][0], results[1][0], results[0][1], results[1][1])

@@ -17,9 +17,9 @@ class CurrentVoltage(object):
         self.param_tree = MetadataTree({
             "name" : self.backplane.get_adc_name(i),
             "current" : (self.get_current, {"units" : "mA"}),
-            "current_raw" : (self.get_current_raw,{"dp" : 0}),
+            "current_register" : (self.get_current_raw,{"dp" : 0}),
             "voltage" : (self.get_voltage, {"units" : "V"}),
-            "voltage_raw" : (self.get_voltage_raw,{"dp" : 0}),
+            "voltage_register" : (self.get_voltage_raw,{"dp" : 0}),
         })
 
     def get_current(self):
@@ -42,7 +42,7 @@ class Resistor(object):
         self.param_tree = MetadataTree({
             "name" : self.backplane.get_resistor_name(self.index),
             "value" : (self.get, self.set, {"units" : self.backplane.get_resistor_units(self.index)}),
-            "raw_value" : (self.raw_get,self.raw_set,{"dp" : 0, "min" : 0, "max" : 255}),
+            "register_value" : (self.raw_get,self.raw_set,{"dp" : 0, "min" : 0, "max" : 255}),
         })
 
     def get(self):
@@ -85,7 +85,6 @@ class BackplaneData(object):
             "power_good" : pw_good,
             "current_voltage" : [cv.param_tree for cv in self.current_voltage],
             "resistors" : [r.param_tree for r in self.resistors],
-            "test" : 'complete'
         })
 
     def get(self, path, metadata):

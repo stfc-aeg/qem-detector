@@ -1,4 +1,60 @@
 import sys, requests
+import Tkinter as tk
+import tkMessageBox
+
+
+class mainWindow(object):
+
+  def __init__(self,master):
+    self.master=master
+
+  def results(self, name, expected, measured):
+    self.resultsOut = resultsWindow(self.master, name, expected, measured)
+    if name == 'U45':
+      self.center_window(self.resultsOut, 255, 535)
+    elif name == 'U39':
+      self.center_window(self.resultsOut, 255, 460)
+    else:
+      self.center_window(self.resultsOut, 255, 85)
+    self.master.wait_window(self.resultsOut.top)
+
+  def center_window(self, window, width, height):
+    screen_width = window.top.winfo_screenwidth()
+    screen_height = window.top.winfo_screenheight()
+    x = (screen_width/2) - (width/2)
+    y = (screen_height/2) - (height/2)
+    window.top.geometry('%dx%d+%d+%d' % (width, height, x, y))
+
+
+class resultsWindow(object):
+
+  def __init__(self, master, name, expected, measured):
+    top = self.top = tk.Toplevel(master)
+    top.title('Results')
+    if name == 'U45':
+      names = ('VDDO', 'VDD_D18', 'VDD_D25', 'VDD_P18', 'VDD_A18_PLL','VDD_D18ADC', 'VDD_D18_PLL') 
+      for i in range(7):
+        tk.Label(top, text='At {}s register:'.format(names[i])).pack()
+        tk.Label(self.top, text='expected {:d}, measured {:d} at 10mA'.format(expected[i][0], measured[i][0])).pack()
+        tk.Label(self.top, text='expected {:d}, measured {:d} at 20mA'.format(expected[i][1], measured[i][1])).pack()
+        tk.Label(self.top, text=' ').pack()
+    elif name == 'U39':
+      names = ('VDD_RST', 'VDD_A33', 'VDD_D33', 'VCTRL_NEG', 'VRESET', 'VCTRL_POS')
+      for i in range(6):
+        tk.Label(top, text='At {}s register:'.format(names[i])).pack()
+        tk.Label(self.top, text='expected {:d}, measured {:d} at 10mA'.format(expected[i][0], measured[i][0])).pack()
+        tk.Label(self.top, text='expected {:d}, measured {:d} at 20mA'.format(expected[i][1], measured[i][1])).pack()
+        tk.Label(self.top, text=' ').pack()
+    else:
+      tk.Label(top, text='At {}s register:'.format(name)).pack()
+      tk.Label(self.top, text='expected {:d}, measured {:d} at 10mA'.format(expected[0], measured[0])).pack()
+      tk.Label(self.top, text='expected {:d}, measured {:d} at 20mA'.format(expected[1], measured[1])).pack()
+    tk.Button(top,text='OK', command=self.top.destroy).pack()    
+    self.top.bind('<Return>', self.cleanup)
+
+  def cleanup(self, event=None):
+    self.top.destroy()
+
 
 class current_test():
 
@@ -9,6 +65,9 @@ class current_test():
     self.neededVoltage = {'VDD_RST':3.3, 'VCTRL_NEG':-2, 'VRESET':3.3, 'VCTRL_POS':3.3}
     self.neededResistor ={'VDDO':180, 'VDD_D18':180, 'VDD_D25':220, 'VDD_P18':180, 'VDD_A18_PLL':180, 'VDD_D18ADC':180, 'VDD_D18_PLL':180, 'VDD_RST':330, 'VDD_A33':330, 'VDD_D33':330, 'VCTRL_NEG':330, 'VRESET':330, 'VCTRL_POS':330}
     self.plConnector = {'VDDO':75, 'VDD_D18':42, 'VDD_D25':74, 'VDD_P18':41, 'VDD_A18_PLL':76, 'VDD_D18ADC':33, 'VDD_D18_PLL':77, 'VDD_RST':34, 'VDD_A33':36, 'VDD_D33':35, 'VCTRL_NEG':78, 'VRESET':40, 'VCTRL_POS':78}
+    self.root = tk.Tk()
+    self.windowMain = mainWindow(self.root)
+    self.root.withdraw()   
 
 
   def checkCurrentName(self,name):
@@ -18,20 +77,39 @@ class current_test():
     for cv in parsedResponse['current_voltage']:
       if cv['name'] == name:
         if name in self.neededVoltage :
-          raw_input("Please adjust the relevant resistor so that {} is outputing {}V then press enter to continue".format(name, self.neededVoltage[name]))
-        raw_input("Please disconnect PL{} then press enter to continue".format(self.plConnector[name]))
+          tkMessageBox.showinfo('Action Required',"Please adjust the relevant resistor so that {} is outputing {}V".format(name, self.neededVoltage[name]))
+        tkMessageBox.showinfo('Action Required',"Please check PL{} is disconnected".format(self.plConnector[name]))
         measured.append(cv['current_raw']['value'])
-        raw_input("Please connect an additional {}R Resistor at PL{} then press enter to continue".format(self.neededResistor[name],self.plConnector[name]))
+        tkMessageBox.showinfo('Action Required',"Please connect an additional {}R Resistor at PL{}".format(self.neededResistor[name],self.plConnector[name]))
         measured.append(cv['current_raw']['value'])
         return measured
-    print (name + ' is not a valid current voltage')
+    tkMessageBox.showerror('Name Error',(name + ' is not a valid power supply'))
     sys.exit()
-
 
   def checkCurrent(self,name):
     measured = self.checkCurrentName(name)
     expected = self.expectedCurrent[name]
     return (expected, measured)
+
+  def currentTest(self, name):
+    if name == 'U45':
+      expected = []
+      measured = []
+      for vc in ('VDDO', 'VDD_D18', 'VDD_D25', 'VDD_P18', 'VDD_A18_PLL','VDD_D18ADC', 'VDD_D18_PLL'):
+        results = self.checkCurrent(vc)
+        expected.append(results[0])
+        measured.append(results[1])
+    elif name == 'U39':
+      expected = []
+      measured = []
+      for vc in ('VDD_RST', 'VDD_A33', 'VDD_D33', 'VCTRL_NEG', 'VRESET', 'VCTRL_POS'):
+        results = self.checkCurrent(vc)
+        expected.append(results[0])
+        measured.append(results[1])
+    else:
+      (expected, measured) = self.checkCurrent(name)
+    self.windowMain.results(name, expected, measured)
+
 
 if __name__ == '__main__':
   if len(sys.argv) < 2:
@@ -45,15 +123,4 @@ if __name__ == '__main__':
       tester = current_test(base_url)
   if not base_url: tester = current_test()
   name = sys.argv[1].replace(' ', '_')
-  checked = {}
-  if name == 'U45':
-    for vc in ('VDDO', 'VDD_D18', 'VDD_D25', 'VDD_P18', 'VDD_A18_PLL','VDD_D18ADC', 'VDD_D18_PLL'):
-      checked[vc] = tester.checkCurrent(vc) 
-  elif name == 'U39':
-    for vc in ('VDD_RST', 'VDD_A33', 'VDD_D33', 'VCTRL_NEG', 'VRESET', 'VCTRL_POS'):
-      checked[vc] = tester.checkCurrent(vc)
-  else:
-    checked[name] = tester.checkCurrent(name)
-  for name in checked:
-    print 'At {}s register:\n    expected {:d}, measured {:d} at default resistance\n    expected {:d}, measured {:d} with added resistor\n'.format(name, checked[name][0][0], checked[name][1][0], checked[name][0][1], checked[name][1][1])
-
+  tester.currentTest(name)

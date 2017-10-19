@@ -1,5 +1,67 @@
 
 import sys, requests, json
+import Tkinter as tk
+import tkMessageBox
+
+class mainWindow(object):
+
+  def __init__(self,master):
+    self.master=master
+
+  def popup(self, location, units):
+    self.popupIn = popupWindow(self.master, location, units)
+    self.center_window(self.popupIn, 370, 55)
+    self.master.wait_window(self.popupIn.top)
+
+  def results(self, name, units, expectedResistance, measuredResistance):
+    self.results = resultsWindow(self.master, name, units, expectedResistance, measuredResistance)
+    self.center_window(self.results, 210, (45 + 18 * len(expectedResistance)))
+    self.master.wait_window(self.results.top)
+
+  def entryValue(self):
+    return self.popupIn.value
+
+  def center_window(self, window, width, height):
+    screen_width = window.top.winfo_screenwidth()
+    screen_height = window.top.winfo_screenheight()
+    x = (screen_width/2) - (width/2)
+    y = (screen_height/2) - (height/2)
+    window.top.geometry('%dx%d+%d+%d' % (width, height, x, y))
+
+class popupWindow(object):
+
+  def __init__(self, master, location, units):
+    top = self.top = tk.Toplevel(master)
+    top.title('Input Needed')
+    tk.Label(top, text='Please input the measured voltage across {} in {}: '.format(location, units)).pack()
+    tk.Button(top,text='Enter', command=self.cleanup).pack(side=tk.RIGHT, padx=5)
+    self.measurement=tk.Entry(top, justify=tk.RIGHT)
+    self.measurement.pack(side=tk.RIGHT, padx=5, expand=True, fill=tk.X)
+    self.measurement.focus_set()
+    self.top.bind('<Return>', self.cleanup)
+
+  def cleanup(self, event=None):
+    try:
+      self.value = float(self.measurement.get())
+      self.top.destroy()
+    except ValueError:
+      tkMessageBox.showerror('Invalid Input','Please write a number in the entry box')
+
+
+class resultsWindow(object):
+
+  def __init__(self, master, name, units, expectedResistance, measuredResistance):
+    top = self.top = tk.Toplevel(master)
+    top.title('Results')
+    tk.Label(top, text='At {}, in {}:'.format(name,units)).pack()
+    for i in range(len(expectedResistance)): 
+      tk.Label(self.top, text='expected {:.2f}, measured {:.2f}'.format(expectedResistance[i],  measuredResistance[i])).pack()
+    tk.Button(top,text='OK', command=self.top.destroy).pack()    
+    self.top.bind('<Return>', self.cleanup)
+
+  def cleanup(self, event=None):
+    self.top.destroy()
+
 
 class resistor_test():
 
@@ -16,10 +78,13 @@ class resistor_test():
     self.expectedResistance['VDD_RST'] =[1.8,2.26,2.55,2.73,2.86,2.96,3.04,3.10,3.15,3.19,3.23,3.26,3.29,3.32,3.34,3.36]
     self.expectedResistance['VCTRL'] =[-2.02,-1.66,-1.30,-0.94,-0.58,-0.22,.14,.50,.86,1.22,1.57,1.81,2.29,2.65,3.01,3.37]
     self.testLocation = {'AUXSAMPLE':'AUXSAMPLE', 'AUXRESET':'AUXRESET', 'VCM':'VCM', 'DACEXTREF':'R104', 'VRESET':'VRESET', 'VDD_RST':'VDD_RST', 'VCTRL':'R42'}
-
+    self.root = tk.Tk()
+    self.windowMain = mainWindow(self.root)
+    self.root.withdraw()
 
   def measureResistor(self,name):
-     return(input('please input the measured voltage across {} in {}: '.format(self.testLocation[name],self.units[name])))
+    self.windowMain.popup(self.testLocation[name],self.units[name])
+    return self.windowMain.entryValue()
 
 
   def getResistorData(self,name,raw):
@@ -28,26 +93,57 @@ class resistor_test():
       if parsedResponse['resistors'][i]['name'] == name:
         if raw: return (i,parsedResponse['resistors'][i]['raw_value']['value'])
         else: return (i,parsedResponse['resistors'][i]['value'])
-    print (resistor + ' is not a valid resistor')
+    tkMessageBox.showerror('Name Error',(resistor + ' is not a valid resistor'))
+    sys.exit()
+
+  def expectedFromRaw(self, name, testCases):
+    expected = []
+    if name == 'VRESET': 
+      for test in testCases:
+        if test == 0: expected.append(0.0)
+        else: expected.append(0.0001 / (1.0/49900 + 1.0/test/390.0))
+    elif name == 'VDD_RST':
+      for test in testCases:
+        if test == 0: expected.append(0.0)
+        else: expected.append(0.0001 * (17800 + 1 / (1.0/18200 + 1.0/test/390.0)))
+    elif name == 'VCTRL':
+      for test in testCases:
+        expected.append(test * .021 - 2) 
+    elif name == 'DACEXTREF':
+      for test in testCases:
+        expected.append(test * .029)
+    else:
+      for test in testCases:
+        expected.append(test * .0097)
+    return expected
 
 
-  def testResistor(self,name,raw,testCases=None):
+  def checkResistor(self,name,raw,testCases):
     measuredResistance = []
     resistorData = self.getResistorData(name,raw)
-    if testCases == None: testCases = range(0,256,17)
-    else: testCases = json.loads(testCases)
+    if testCases == None: 
+      testCases = range(0,256,17)
+      expectedResistance = self.expectedResistance[name]
+    elif raw == True:
+      expectedResistance = self.expectedFromRaw(name, testCases)
+    else:
+      expectedResistance = testCases
     if raw == True: resistor_url = self.resistors_url + '/' + str(resistorData[0]) + '/raw_value'
     else: resistor_url = self.resistors_url + '/' + str(resistorData[0]) + '/value'
     if name == 'DACEXTREF': 
-      raw_input("Please supply 1V at pin 1 of PL43 to restrict current then press enter to continue")
+      tkMessageBox.showinfo('Action Required','Please supply 1V at pin 1 of PL43 to restrict current.')
     elif name == 'VRESET' :
-      raw_input("Please ensure the jumper is on pins 1 and 2 of of PL19 then press enter to continue")
+      tkMessageBox.showinfo('Action Required',"Please ensure the jumper is on pins 1 and 2 of PL19.")
     for testCase in testCases:
       changeResistor = requests.put(resistor_url, str(testCase), headers=self.headers)
       measuredResistance.append(self.measureResistor(name))
     requests.put(resistor_url, str(resistorData[1]), headers=self.headers)
-    return (self.expectedResistance[name], measuredResistance)
+    return (expectedResistance, measuredResistance)
     
+  def resistorTest(self,name,raw=True,testCases=None):
+    (expectedResistance, measuredResistance) = self.checkResistor(name,raw,testCases)
+    self.windowMain.results(name, self.units[name], expectedResistance, measuredResistance)
+
 
 if __name__ == '__main__':
   if len(sys.argv) < 2:
@@ -63,16 +159,11 @@ if __name__ == '__main__':
       base_url = parsedArg[1]
       tester = resistor_test(base_url)
     elif parsedArg[0] == 'test':
-      testCases = parsedArg[1]
+      testCases = map(float,parsedArg[1].split(','))
     elif parsedArg[0] == 'raw':
       testRaw = parsedArg[1]
-      print testRaw
     else: 
       print parsedArg[0] + ' is not a valid keyword'
       sys.exit()
   if not base_url: tester = resistor_test()
-  results = tester.testResistor(name,testRaw,testCases)
-  print 'At {}, in {}:'.format(name,tester.units[name])
-  for i in range(len(results[0])): 
-    print '    expected {:.2f}, measured {:.2f}'.format(results[0][i], results[1][i])
-
+  tester.resistorTest(name,testRaw,testCases)
