@@ -16,10 +16,10 @@ class CurrentVoltage(object):
 
         self.param_tree = MetadataTree({
             "name" : self.backplane.get_adc_name(i),
-            "current" : (self.get_current, {"units" : "mA"}),
-            "current_raw" : (self.get_current_raw,{"dp" : 0}),
+            "current_Voltage" : (self.get_current, {"units" : "mV"}),
+            "current_register" : (self.get_current_raw,{"dp" : 0}),
             "voltage" : (self.get_voltage, {"units" : "V"}),
-            "voltage_raw" : (self.get_voltage_raw,{"dp" : 0}),
+            "voltage_register" : (self.get_voltage_raw,{"dp" : 0}),
         })
 
     def get_current(self):
@@ -42,7 +42,7 @@ class Resistor(object):
         self.param_tree = MetadataTree({
             "name" : self.backplane.get_resistor_name(self.index),
             "value" : (self.get, self.set, {"units" : self.backplane.get_resistor_units(self.index)}),
-            "raw_value" : (self.raw_get,self.raw_set,{"dp" : 0, "min" : 0, "max" : 255}),
+            "register_value" : (self.raw_get,self.raw_set,{"dp" : 0, "min" : 0, "max" : 255}),
         })
 
     def get(self):
@@ -71,10 +71,10 @@ class BackplaneData(object):
             self.current_voltage.append(CurrentVoltage(self.backplane, i))
 
         self.resistors = []
-        for i in range(7):
+        for i in range(6):
             self.resistors.append(Resistor(self.backplane, i))
 
-        pw_good = {str(i) : pg.get for i,pg in enumerate(self.power_good)}
+        pw_good = {str(i+1) : pg.get for i,pg in enumerate(self.power_good)}
         pw_good.update({"list" : True, "description" : "Power good inputs from the MCP23008"})
 
         self.param_tree = MetadataTree({
@@ -85,7 +85,6 @@ class BackplaneData(object):
             "power_good" : pw_good,
             "current_voltage" : [cv.param_tree for cv in self.current_voltage],
             "resistors" : [r.param_tree for r in self.resistors],
-            "test" : 'complete'
         })
 
     def get(self, path, metadata):
