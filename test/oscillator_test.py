@@ -33,7 +33,7 @@ class popupWindow(object):
   def __init__(self,master):
     top = self.top = tk.Toplevel(master)
     top.title('Input Needed')
-    tk.Label(top, text='Please input the measured frequency in MHz:').pack()
+    tk.Label(top, text='Please input the measured frequency at PL22 in MHz:').pack()
     tk.Button(top,text='Enter', command=self.cleanup).pack(side=tk.RIGHT, padx=5)
     self.measurement=tk.Entry(top, justify=tk.RIGHT)
     self.measurement.pack(side=tk.RIGHT, padx=5, expand=True, fill=tk.X)

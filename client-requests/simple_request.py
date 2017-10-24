@@ -51,12 +51,12 @@ def changeClock(newClock):
 #sets the clock frequency to 'newClock' (MHz)
   clock_url = base_url + 'clock'
 
-  response = requests.get(clock_url)
-  #print response.content
+  response = requests.get(clock_url, headers=meta_headers)
+  print response.content
 
   requests.put(clock_url, str(newClock) ,headers=headers)
-  #response = requests.get(clock_url)
-  #print response.content
+  response = requests.get(clock_url)
+  print '\n\n' + response.content
   return
 
 
@@ -133,10 +133,10 @@ if __name__ == '__main__':
   if len(sys.argv) == 2:
     base_url = sys.argv[1]
   
-  print allData()
+  #print allData()
   #print checkGood()
   #print checkCurrentVoltageName('VDD P18')
-  #changeClock(21)
+  changeClock(25)
   #switchPsu()
   #changeResistorName('VRESET',0)
   #changeResistorNum(0,.90)

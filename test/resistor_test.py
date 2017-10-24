@@ -13,8 +13,9 @@ class mainWindow(object):
     self.center_window(self.popupIn, 370, 55)
     self.master.wait_window(self.popupIn.top)
 
-  def results(self, name, units, expectedResistance, measuredResistance):
-    self.results = resultsWindow(self.master, name, units, expectedResistance, measuredResistance)
+  def results(self, name, units, expectedResistance, measuredResistance, I2CResistance):
+    self.results = resultsWindow(self.master, name, units, expectedResistance, measuredResistance, I2CResistance)
+
     self.center_window(self.results, 210, (45 + 18 * len(expectedResistance)))
     self.master.wait_window(self.results.top)
 
@@ -33,7 +34,7 @@ class popupWindow(object):
   def __init__(self, master, location, units):
     top = self.top = tk.Toplevel(master)
     top.title('Input Needed')
-    tk.Label(top, text='Please input the measured voltage across {} in {}: '.format(location, units)).pack()
+    tk.Label(top, text='Please input the measured voltage between {} in {}: '.format(location, units)).pack()
     tk.Button(top,text='Enter', command=self.cleanup).pack(side=tk.RIGHT, padx=5)
     self.measurement=tk.Entry(top, justify=tk.RIGHT)
     self.measurement.pack(side=tk.RIGHT, padx=5, expand=True, fill=tk.X)
@@ -50,12 +51,16 @@ class popupWindow(object):
 
 class resultsWindow(object):
 
-  def __init__(self, master, name, units, expectedResistance, measuredResistance):
+  def __init__(self, master, name, units, expectedResistance, measuredResistance, I2CResistance):
     top = self.top = tk.Toplevel(master)
     top.title('Results')
     tk.Label(top, text='At {}, in {}:'.format(name,units)).pack()
-    for i in range(len(expectedResistance)): 
-      tk.Label(self.top, text='expected {:.2f}, measured {:.2f}'.format(expectedResistance[i],  measuredResistance[i])).pack()
+    if name in ('VCTRL', 'VRESET', 'VDD_RST') :
+      for i in range(len(expectedResistance)): 
+        tk.Label(self.top, text='expected {:.2f}, measured {:.2f}, I2C calculated {:.2f}'.format(expectedResistance[i],  measuredResistance[i], I2CResistance[i])).pack()
+    else:
+      for i in range(len(expectedResistance)): 
+        tk.Label(self.top, text='expected {:.2f}, measured {:.2f}'.format(expectedResistance[i],  measuredResistance[i])).pack()
     tk.Button(top,text='OK', command=self.top.destroy).pack()    
     self.top.bind('<Return>', self.cleanup)
 
@@ -77,7 +82,8 @@ class resistor_test():
     self.expectedResistance['VRESET'] = [0,.58,1.04,1.42,1.73,1.99,2.21,2.40,2.57,2.71,2.85,2.96,3.07,3.16,3.25,3.33]
     self.expectedResistance['VDD_RST'] =[1.8,2.26,2.55,2.73,2.86,2.96,3.04,3.10,3.15,3.19,3.23,3.26,3.29,3.32,3.34,3.36]
     self.expectedResistance['VCTRL'] =[-2.02,-1.66,-1.30,-0.94,-0.58,-0.22,.14,.50,.86,1.22,1.57,1.81,2.29,2.65,3.01,3.37]
-    self.testLocation = {'AUXSAMPLE':'AUXSAMPLE', 'AUXRESET':'AUXRESET', 'VCM':'VCM', 'DACEXTREF':'R104', 'VRESET':'VRESET', 'VDD_RST':'VDD_RST', 'VCTRL':'R42'}
+    self.testLocation = {'AUXSAMPLE':'PL45 Pin 2 and Ground', 'AUXRESET':'PL47 Pin 2 and Ground', 'VCM':'PL 46 Pin 2 and Ground', 'DACEXTREF':'PL43 Pin 1 and Ground', 'VRESET':'PL40 Pins 1 and 2', 'VDD_RST':'PL34 Pins 1 and 2', 'VCTRL':'PL78 Pins 1 and 2'}
+    self.i2cVoltageNum = {'VRESET':9, 'VDD_RST':8, 'VCTRL':(11,12)}
     self.root = tk.Tk()
     self.windowMain = mainWindow(self.root)
     self.root.withdraw()
@@ -91,9 +97,9 @@ class resistor_test():
     parsedResponse = requests.get(self.resistors_url, headers={'Accept': 'application/json;metadata=true'}).json()
     for i in range(len(parsedResponse['resistors'])):
       if parsedResponse['resistors'][i]['name'] == name:
-        if raw: return (i,parsedResponse['resistors'][i]['raw_value']['value'])
+        if raw == True: return (i,parsedResponse['resistors'][i]['register_value']['value'])
         else: return (i,parsedResponse['resistors'][i]['value'])
-    tkMessageBox.showerror('Name Error',(resistor + ' is not a valid resistor'))
+    tkMessageBox.showerror('Name Error',(name + ' is not a valid resistor'))
     sys.exit()
 
   def expectedFromRaw(self, name, testCases):
@@ -120,6 +126,8 @@ class resistor_test():
 
   def checkResistor(self,name,raw,testCases):
     measuredResistance = []
+    I2CResistance = []
+    voltage_url = ''
     resistorData = self.getResistorData(name,raw)
     if testCases == None: 
       testCases = range(0,256,17)
@@ -128,21 +136,34 @@ class resistor_test():
       expectedResistance = self.expectedFromRaw(name, testCases)
     else:
       expectedResistance = testCases
-    if raw == True: resistor_url = self.resistors_url + '/' + str(resistorData[0]) + '/raw_value'
+    if raw == True: resistor_url = self.resistors_url + '/' + str(resistorData[0]) + '/register_value'
     else: resistor_url = self.resistors_url + '/' + str(resistorData[0]) + '/value'
     if name == 'DACEXTREF': 
       tkMessageBox.showinfo('Action Required','Please supply 1V at pin 1 of PL43 to restrict current.')
     elif name == 'VRESET' :
       tkMessageBox.showinfo('Action Required',"Please ensure the jumper is on pins 1 and 2 of PL19.")
+    if name in self.i2cVoltageNum and name != 'VCTRL':
+      voltage_url = self.base_url + 'current_voltage/' + self.i2cVoltageNum[name] + '/voltage'
+    elif name == 'VCTRL':
+      voltage_urls = []
+      voltage_urls[0] = self.base_url + 'current_voltage/' + self.i2cVoltageNum[name][0] + '/voltage'
+      voltage_urls[1] = self.base_url + 'current_voltage/' + self.i2cVoltageNum[name][1] + '/voltage'
     for testCase in testCases:
       changeResistor = requests.put(resistor_url, str(testCase), headers=self.headers)
-      measuredResistance.append(self.measureResistor(name))
+      resistance = self.measureResistor(name)
+      measuredResistance.append(resistance)
+      if name == 'VCTRL':
+        if resistance > 0 : voltage_url = voltage_urls[0]
+        else voltage_url = voltage_urls[1]
+      if name in self.i2cVoltageNum:
+        I2CResistance.append(requests.get(self.voltage_url,headers={'Accept': 'application/json'}))
     requests.put(resistor_url, str(resistorData[1]), headers=self.headers)
-    return (expectedResistance, measuredResistance)
+    return (expectedResistance, measuredResistance, I2CResistance)
     
+
   def resistorTest(self,name,raw=True,testCases=None):
     (expectedResistance, measuredResistance) = self.checkResistor(name,raw,testCases)
-    self.windowMain.results(name, self.units[name], expectedResistance, measuredResistance)
+    self.windowMain.results(name, self.units[name], expectedResistance, measuredResistance, I2CResistance)
 
 
 if __name__ == '__main__':

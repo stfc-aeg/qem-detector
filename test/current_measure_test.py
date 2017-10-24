@@ -62,7 +62,6 @@ class current_test():
     self.current_url = base_url + 'current_voltage'
     self.metaheaders = {'Accept': 'application/json;metadata=true'}
     self.expectedCurrent = {'VDDO':(20,41), 'VDD_D18':(8,16), 'VDD_D25':(9,18), 'VDD_P18':(8,16), 'VDD_A18_PLL':(82,164), 'VDD_D18ADC':(8,16), 'VDD_D18_PLL':(82,164), 'VDD_RST':(20,41), 'VDD_A33':(20,41), 'VDD_D33':(20,41), 'VCTRL_NEG':(49,98), 'VRESET':(20,41), 'VCTRL_POS':(82,164)}
-    self.neededVoltage = {'VDD_RST':3.3, 'VCTRL_NEG':-2, 'VRESET':3.3, 'VCTRL_POS':3.3}
     self.neededResistor ={'VDDO':180, 'VDD_D18':180, 'VDD_D25':220, 'VDD_P18':180, 'VDD_A18_PLL':180, 'VDD_D18ADC':180, 'VDD_D18_PLL':180, 'VDD_RST':330, 'VDD_A33':330, 'VDD_D33':330, 'VCTRL_NEG':330, 'VRESET':330, 'VCTRL_POS':330}
     self.plConnector = {'VDDO':75, 'VDD_D18':42, 'VDD_D25':74, 'VDD_P18':41, 'VDD_A18_PLL':76, 'VDD_D18ADC':33, 'VDD_D18_PLL':77, 'VDD_RST':34, 'VDD_A33':36, 'VDD_D33':35, 'VCTRL_NEG':78, 'VRESET':40, 'VCTRL_POS':78}
     self.root = tk.Tk()
@@ -76,15 +75,27 @@ class current_test():
     measured = []
     for cv in parsedResponse['current_voltage']:
       if cv['name'] == name:
-        if name in self.neededVoltage :
-          tkMessageBox.showinfo('Action Required',"Please adjust the relevant resistor so that {} is outputing {}V".format(name, self.neededVoltage[name]))
+        if name in ('VDD_RST', 'VRESET') : changeResistor(name,255)
+        elif name == 'VCTRL_POS' : changeResistor('VCTRL',255)
+        elif name == 'VCTRL_NEG' : changeResistor('VCTRL',0)
         tkMessageBox.showinfo('Action Required',"Please check PL{} is disconnected".format(self.plConnector[name]))
-        measured.append(cv['current_raw']['value'])
+        measured.append(cv['current_register']['value'])
         tkMessageBox.showinfo('Action Required',"Please connect an additional {}R Resistor at PL{}".format(self.neededResistor[name],self.plConnector[name]))
-        measured.append(cv['current_raw']['value'])
+        measured.append(cv['current_register']['value'])
         return measured
     tkMessageBox.showerror('Name Error',(name + ' is not a valid power supply'))
     sys.exit()
+
+def changeResistor(resistor,value):
+  resist_url = self.base_url + 'resistors'
+  parsedResponse = requests.get(resist_url, headers=meta_headers).json()
+  for i in range(len(parsedResponse['resistors'])):
+    if parsedResponse['resistors'][i]['name'] == resistor:
+      resist_url = base_url + 'resistors/' + str(resistor) + '/register_value/value'
+      changeResistor = requests.put(resist_url, str(value), headers=headers)
+      return 
+  print (resistor + ' is not a valid resistor')
+
 
   def checkCurrent(self,name):
     measured = self.checkCurrentName(name)

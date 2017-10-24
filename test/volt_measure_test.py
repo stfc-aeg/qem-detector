@@ -87,7 +87,7 @@ class voltage_test():
     parsedResponse = requests.get(self.voltage_url, headers=self.metaheaders).json()
     for cv in parsedResponse['current_voltage']:
       if cv['name'] == name:
-        return cv['voltage_raw']['value']
+        return cv['voltage_register']['value']
     tkMessageBox.showerror('Name Error', name + ' is not a valid power supply')
     sys.exit()
 
@@ -95,8 +95,8 @@ class voltage_test():
     parsedResponse = requests.get((self.resistors_url), headers={'Accept': 'application/json;metadata=true'}).json()
     for i in range(len(parsedResponse['resistors'])):
       if parsedResponse['resistors'][i]['name'] == name:
-       return(i,parsedResponse['resistors'][i]['raw_value']['value'])
-    tkMessageBox.showerror('Name Error',(resistor + ' is not a valid resistor'))
+       return(i,parsedResponse['resistors'][i]['register_value']['value'])
+    tkMessageBox.showerror('Name Error',(name + ' is not a valid resistor'))
     sys.exit()
 
   def checkVoltage(self,name):
@@ -111,7 +111,7 @@ class voltage_test():
       if name[0:5] == 'VCTRL': resistor = 'VCTRL'
       else: resistor = name
       resistorData = self.getResistorData(resistor)
-      resistor_url = self.resistors_url + '/' + str(resistorData[0]) + '/raw_value'
+      resistor_url = self.resistors_url + '/' + str(resistorData[0]) + '/register_value'
       measured[0] = self.checkVoltageName(name)
       requests.put(resistor_url, '0', headers=self.headers)
       measured[1] = self.checkVoltageName(name)
