@@ -97,7 +97,7 @@ class resistor_test():
     parsedResponse = requests.get(self.resistors_url, headers={'Accept': 'application/json;metadata=true'}).json()
     for i in range(len(parsedResponse['resistors'])):
       if parsedResponse['resistors'][i]['name'] == name:
-        if raw == True: return (i,parsedResponse['resistors'][i]['register_value']['value'])
+        if raw: return (i,parsedResponse['resistors'][i]['register_value']['value'])
         else: return (i,parsedResponse['resistors'][i]['value'])
     tkMessageBox.showerror('Name Error',(name + ' is not a valid resistor'))
     sys.exit()
@@ -153,14 +153,13 @@ class resistor_test():
       resistance = self.measureResistor(name)
       measuredResistance.append(resistance)
       if name == 'VCTRL':
-        if resistance > 0 : voltage_url = voltage_urls[0]
-        else voltage_url = voltage_urls[1]
+        if resistance > 0: voltage_url = voltage_urls[0]
+        else: voltage_url = voltage_urls[1]
       if name in self.i2cVoltageNum:
         I2CResistance.append(requests.get(self.voltage_url,headers={'Accept': 'application/json'}))
     requests.put(resistor_url, str(resistorData[1]), headers=self.headers)
     return (expectedResistance, measuredResistance, I2CResistance)
     
-
   def resistorTest(self,name,raw=True,testCases=None):
     (expectedResistance, measuredResistance) = self.checkResistor(name,raw,testCases)
     self.windowMain.results(name, self.units[name], expectedResistance, measuredResistance, I2CResistance)

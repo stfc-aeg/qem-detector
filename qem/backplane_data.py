@@ -41,7 +41,7 @@ class Resistor(object):
         
         self.param_tree = MetadataTree({
             "name" : self.backplane.get_resistor_name(self.index),
-            "value" : (self.get, self.set, {"units" : self.backplane.get_resistor_units(self.index)}),
+            "value" : (self.get, self.set, {"units" : self.backplane.get_resistor_units(self.index), "min" : self.backplane.get_resistor_min(self.index), "max" : self.backplane.get_resistor_max(self.index)}),
             "register_value" : (self.raw_get,self.raw_set,{"dp" : 0, "min" : 0, "max" : 255}),
         })
 
@@ -74,13 +74,13 @@ class BackplaneData(object):
         for i in range(7):
             self.resistors.append(Resistor(self.backplane, i))
 
-        pw_good = {str(i) : pg.get for i,pg in enumerate(self.power_good)}
+        pw_good = {str(i+1) : pg.get for i,pg in enumerate(self.power_good)}
         pw_good.update({"list" : True, "description" : "Power good inputs from the MCP23008"})
 
         self.param_tree = MetadataTree({
             "name" : "QEM Backplane",
             "description" : "Testing information for the backplane on QEM.",
-            "clock" : (self.backplane.get_clock_frequency, self.backplane.set_clock_frequency, {"units" : "MHz", "description" : "Clock frequency for the SI570 oscillator"}),
+            "clock" : (self.backplane.get_clock_frequency, self.backplane.set_clock_frequency, {"units" : "MHz", "description" : "Clock frequency for the SI570 oscillator", "min" : 10, "max":945}),
             "psu_enabled" : (self.backplane.get_psu_enable, self.backplane.set_psu_enable, {"name" : "PSU Enabled"}),
             "power_good" : pw_good,
             "current_voltage" : [cv.param_tree for cv in self.current_voltage],
