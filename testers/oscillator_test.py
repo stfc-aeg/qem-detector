@@ -2,7 +2,6 @@ import sys, requests
 import Tkinter as tk
 import tkMessageBox
 
-
 class mainWindow(object):
 
   def __init__(self,master):

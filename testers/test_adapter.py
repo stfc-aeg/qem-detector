@@ -2,7 +2,7 @@
 from odin.adapters.adapter import ApiAdapter, ApiAdapterResponse, request_types, response_types
 from odin.adapters.metadata_tree import MetadataParameterError
 from tornado.escape import json_decode
-from test.test_script import Testing
+from test_script import Testing
 
 
 class TestingAdapter(ApiAdapter):

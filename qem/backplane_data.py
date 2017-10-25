@@ -82,6 +82,7 @@ class BackplaneData(object):
             "description" : "Testing information for the backplane on QEM.",
             "clock" : (self.backplane.get_clock_frequency, self.backplane.set_clock_frequency, {"units" : "MHz", "description" : "Clock frequency for the SI570 oscillator", "min" : 10, "max":945}),
             "psu_enabled" : (self.backplane.get_psu_enable, self.backplane.set_psu_enable, {"name" : "PSU Enabled"}),
+            "sensors_enabled":(self.backplane.get_sensors_enable, self.backplane.set_sensors_enable, {"name" : "sensors updating"}),
             "power_good" : pw_good,
             "current_voltage" : [cv.param_tree for cv in self.current_voltage],
             "resistors" : [r.param_tree for r in self.resistors],

@@ -10,7 +10,6 @@ from ad7998 import AD7998
 class Backplane(I2CContainer):
     
     CURRENT_RESISTANCE = [2.5, 1, 1, 1, 10, 1, 10, 1, 1, 1, 10, 1, 10]
-#    CURRENT_RESISTANCE = [1,1,1,1,1,1,1, 1,1,1,1,1,1]
 
     def __init__(self):
 
@@ -50,12 +49,15 @@ class Backplane(I2CContainer):
         self.currents_raw = [0.0] * 13
         self.power_good = [False] * 8
         self.psu_enabled = True
+        self.sensors_enabled = True
         self.clock_freq = 21.0
         #Variable resistors
         self.resistors_raw = [0] * 7
         self.resistors = [0.0] * 7
 
         self.channelLookup = ((0,2,3,4,5,6,7),(0,2,4,5,6,7))
+        self.updates_needed = 0
+
         self.set_resistor_value_raw(0,0)
         self.set_resistor_value_raw(1,50)
         self.set_resistor_value_raw(2,22) 
@@ -67,6 +69,8 @@ class Backplane(I2CContainer):
 
 
     def poll_all_sensors(self):
+  
+        if not (self.sensors_enabled or (self.updates_needed > 0)) : return 
         #Currents
         for i in range(7):
             j = self.channelLookup[0][i]        
@@ -88,9 +92,10 @@ class Backplane(I2CContainer):
             self.voltages[i + 7] = self.voltages_raw[i + 7] * 5 / 4095.0
         self.voltages[10] *= -1
 
-
         #Power good monitors
         self.power_good = self.mcp23008[0].input_pins([0,1,2,3,4,5,6,7,8])
+
+        if self.updates_needed > 0: self.updates_needed -= 1
 
     def set_resistor_value(self, resistor, value):
         if resistor == 0:
@@ -119,6 +124,7 @@ class Backplane(I2CContainer):
             self.tpl0102[4].set_PD(0, value)
             self.resistors_raw[resistor] = int(value / 0.0097)
         self.resistors[resistor] = value
+        if not self.sensors_enabled: self.updates_needed = 1          
 
     def set_resistor_value_raw(self, resistor, value):
         if resistor == 0:
@@ -138,9 +144,6 @@ class Backplane(I2CContainer):
             self.tpl0102[2].set_wiper(1, value)
             if value == 0: self.resistors[resistor] = 0
             else: self.resistors[resistor] = 0.0001 / (1.0/49900 + 1.0/value/390.0)
-       # elif resistor == 5:
-       #     self.tpl0102[3].set_wiper(0, value)
-       #     self.resistors[resistor] = value * 0.021 - 2.02
         elif resistor == 5:
             self.tpl0102[3].set_wiper(0, value)
             self.resistors[resistor] = value * 0.021 - 2.02
@@ -148,6 +151,8 @@ class Backplane(I2CContainer):
             self.tpl0102[4].set_wiper(0, value)
             self.resistors[resistor] = value * 0.0097
         self.resistors_raw[resistor] = value
+        if not self.sensors_enabled: self.updates_needed = 1          
+
 
     def get_resistor_value(self, resistor):
         return self.resistors[resistor]
@@ -183,6 +188,13 @@ class Backplane(I2CContainer):
     def set_psu_enable(self, value):
         self.psu_enabled = value
         self.mcp23008[1].output(0, MCP23008.HIGH if value else MCP23008.LOW)
+        if not self.sensors_enabled: self.updates_needed = 2
+
+    def get_sensors_enable(self):
+        return self.sensors_enabled
+
+    def set_sensors_enable(self, value):
+        self.sensors_enabled = value
 
     def get_current(self, i):
         return self.currents[i]
