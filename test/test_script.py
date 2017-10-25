@@ -2,6 +2,34 @@ from current_measure_test import current_test
 from volt_measure_test import voltage_test
 from oscillator_test import oscillator_test 
 from resistor_test import resistor_test
+from odin.adapters.metadata_tree import MetadataTree
+
+class Testing(object):
+
+    def __init__(self):
+ 
+        self.clock_tester = oscillator_test()
+
+        self.param_tree = MetadataTree({
+            "name" : "I2C Component Tests",
+            "description" : "Testing information for the backplane on QEM.",
+            "clock" : (return, self.clock_tester.clockTest),
+#            "resistors" : [r.param_tree for r in self.resistors],
+#            "voltage" : [cv.param_tree for cv in self.current_voltage],
+#            "current" : [cv.param_tree for cv in self.current_voltage],           
+        })
+
+    def get(self, path, metadata):
+        return self.param_tree.get(path)
+
+    def set(self, path, value):
+        self.param_tree.set(path, value)
+
+
+    def run_oscillator_test(self, testCases)
+
+
+
 import sys
 
 if __name__ == '__main__':

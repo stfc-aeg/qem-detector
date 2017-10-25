@@ -126,6 +126,7 @@ App.prototype.generate =
 
         document.getElementById("adapter-" + adapters[this.current_adapter]).classList.add("active");
 
+
         //Add overlays
         //Change frequency
         this.freq_overlay = document.createElement("div");
