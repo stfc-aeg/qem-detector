@@ -22,31 +22,59 @@ Button.prototype.update =
         if(data === this.oldValue) return;
 
         this.oldValue = data;
-        if(data)
+        if(this.meta.name === "Update Once")
         {
-            this.buttonElem.classList.remove("btn-danger");
-            this.buttonElem.classList.add("btn-success");
-            this.buttonElem.childNodes[0].nodeValue = "Disable";
+            if(data)
+            {
+                this.buttonElem.disabled = true;
+                this.buttonElem.childNodes[0].nodeValue = "Updating";
+            }
+            else
+            {
+                this.buttonElem.disabled = false;
+                this.buttonElem.childNodes[0].nodeValue = "Update";
+            }
         }
         else
         {
-            this.buttonElem.classList.remove("btn-success");
-            this.buttonElem.classList.add("btn-danger");
-            this.buttonElem.childNodes[0].nodeValue = "Enable";
+            if(data)
+            {
+                this.buttonElem.classList.remove("btn-danger");
+                this.buttonElem.classList.add("btn-success");
+                this.buttonElem.childNodes[0].nodeValue = "Disable";
+            }
+            else
+            {
+                this.buttonElem.classList.remove("btn-success");
+                this.buttonElem.classList.add("btn-danger");
+                this.buttonElem.childNodes[0].nodeValue = "Enable";
+            }
         }
-
     };
 
 Button.prototype.generate =
     function()
     {
-        var ret = `
-<button id="${this.getID()}" type="button" class="btn btn-toggle btn-danger"`;
-        if(this.meta.hasOwnProperty("description"))
+        if(this.meta.name === "Update Once")
         {
-            ret += `title="${this.meta.description}"`;
+            var ret = `
+<button id="${this.getID()}" type="button" class="btn btn-default"`;
+            if(this.meta.hasOwnProperty("description"))
+            {
+                ret += `title="${this.meta.description}"`;
+            }
+            ret += `>Update</button>`;
         }
-        ret += `>Enable</button>`;
+        else
+        {
+            var ret = `
+<button id="${this.getID()}" type="button" class="btn btn-toggle btn-danger"`;
+            if(this.meta.hasOwnProperty("description"))
+            {
+                ret += `title="${this.meta.description}"`;
+            }
+            ret += `>Enable</button>`;
+        }
         return ret;
     };
 

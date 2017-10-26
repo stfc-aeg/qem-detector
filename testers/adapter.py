@@ -15,12 +15,24 @@ class TestingAdapter(ApiAdapter):
     def get(self, path, request):
 
         try:
-            response = self.testing.get(path)
+            metadata = False
+            if "Accept" in request.headers:
+                splitted = request.headers["Accept"].split(';')
+
+                if len(splitted) > 1:
+                    splitted = splitted[1:]
+                    for arg in splitted:
+                        if '=' in arg:
+                            arg = arg.split('=')
+                            if arg[0] == "metadata":
+                                metadata = bool(arg[1])
+            response = self.tester.get(path, metadata)
             status_code = 200
+
         except Exception as e:
-            #Return the error
             response = {'error': str(e)}
             status_code = 400
+
         return ApiAdapterResponse(response, status_code=status_code)
     
 
@@ -29,7 +41,7 @@ class TestingAdapter(ApiAdapter):
         try:
             data = json_decode(request.body)
             self.testing.set(path, data)
-            response = self.testing.get(path, False)
+            response = self.tester.get(path, False)
             status_code = 200
         except MetadataParameterError as e:
             response = {'error': str(e)}

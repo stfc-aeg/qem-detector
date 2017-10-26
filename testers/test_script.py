@@ -8,13 +8,14 @@ class Tester(object):
 
     def __init__(self):
  
-        self.clock_tester = oscillator_test()
+#        self.clock_tester = oscillator_test()
+        self.volt_tester = voltage_test()
         self.param_tree = MetadataTree({
             "name" : "I2C Component Tests",
             "description" : "Testing information for the backplane on QEM.",
-            "clock" : (None, self.clock_tester.clockTest),
+#            "clock" : (None, self.clock_tester.clockTest),
 #            "resistors" : [r.param_tree for r in self.resistors],
-#            "voltage" : [cv.param_tree for cv in self.current_voltage],
+            "voltage" : (" ", self.volt_tester.voltageTest),
 #            "current" : [cv.param_tree for cv in self.current_voltage],           
         })
 
@@ -25,7 +26,7 @@ class Tester(object):
         self.param_tree.set(path, value)
 
 
-
+"""
 import sys
 
 if __name__ == '__main__':
@@ -96,5 +97,4 @@ if __name__ == '__main__':
     tester.currentTest(name)
   else:
     print 'please input the type of test to run (oscillator, resistor, voltage_measure or current_measure)'
-  
-
+"""

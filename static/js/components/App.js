@@ -15,7 +15,7 @@ function App()
                 function(data)
                 {
                     meta[adapter] = data;
-                }
+	        }
             );
         }
     );
@@ -110,7 +110,11 @@ App.prototype.generate =
             this.mount.appendChild(container);
 
             var adapter_name = Component.utils.getName(meta, key);
-            this.adapters[key] = new Adapter(this, container, adapter_name, meta[key]);
+            if (key === "testing"){
+                this.adapters[key] = new TestAdapter(this, container, adapter_name);
+            } else {
+                this.adapters[key] = new Adapter(this, container, adapter_name, meta[key]);
+            }
 
             //Update navbar
             var list_elem = document.createElement("li");

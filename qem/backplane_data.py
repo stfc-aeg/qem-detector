@@ -18,7 +18,7 @@ class CurrentVoltage(object):
             "name" : self.backplane.get_adc_name(i),
             "current" : (self.get_current, {"units" : "mA"}),
             "current_register" : (self.get_current_raw,{"dp" : 0}),
-            "voltage" : (self.get_voltage, {"units" : "V"}),
+            "voltage" : (self.get_voltage, {"units" : "V", "dp":3}),
             "voltage_register" : (self.get_voltage_raw,{"dp" : 0}),
         })
 
@@ -86,6 +86,7 @@ class BackplaneData(object):
             "power_good" : pw_good,
             "current_voltage" : [cv.param_tree for cv in self.current_voltage],
             "resistors" : [r.param_tree for r in self.resistors],
+            "update_required" : (self.backplane.get_update, self.backplane.set_update,{"name" : "Update Once"})
         })
 
     def get(self, path, metadata):

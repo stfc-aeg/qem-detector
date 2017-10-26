@@ -49,15 +49,15 @@ class Backplane(I2CContainer):
         self.currents_raw = [0.0] * 13
         self.power_good = [False] * 8
         self.psu_enabled = True
-        self.sensors_enabled = True
         self.clock_freq = 21.0
         #Variable resistors
         self.resistors_raw = [0] * 7
         self.resistors = [0.0] * 7
 
         self.channelLookup = ((0,2,3,4,5,6,7),(0,2,4,5,6,7))
-        self.updates_needed = 0
+        self.updates_needed = 1
 
+        self.set_sensors_enable(False)
         self.set_resistor_value_raw(0,0)
         self.set_resistor_value_raw(1,50)
         self.set_resistor_value_raw(2,22) 
@@ -86,11 +86,23 @@ class Backplane(I2CContainer):
             j = self.channelLookup[0][i]
             self.voltages_raw[i] = self.ad7998[1].read_input_raw(j) & 0xfff
             self.voltages[i] = self.voltages_raw[i] * 3 / 4095.0
-        for i in range(6):
+        for i in (0,1,2,4):
             j = self.channelLookup[1][i]
             self.voltages_raw[i + 7] = self.ad7998[3].read_input_raw(j) & 0xfff
             self.voltages[i + 7] = self.voltages_raw[i + 7] * 5 / 4095.0
-        self.voltages[10] *= -1
+        if self.resistors_raw[5] > 97:
+            j = self.channelLookup[1][5]
+            self.voltages_raw[12] = self.ad7998[3].read_input_raw(j) & 0xfff
+            self.voltages[12] = self.voltages_raw[12] * 5 / 4095.0
+            self.voltages_raw[10] = 0
+            self.voltages[10] = 0
+        else:
+            j = self.channelLookup[1][3]
+            self.voltages_raw[10] = self.ad7998[3].read_input_raw(j) & 0xfff
+            self.voltages[10] = -1 * (self.voltages_raw[10] * 5 / 4095.0)
+            self.voltages_raw[12] = 0   
+            self.voltages[12] = 0
+
 
         #Power good monitors
         self.power_good = self.mcp23008[0].input_pins([0,1,2,3,4,5,6,7,8])
@@ -188,13 +200,19 @@ class Backplane(I2CContainer):
     def set_psu_enable(self, value):
         self.psu_enabled = value
         self.mcp23008[1].output(0, MCP23008.HIGH if value else MCP23008.LOW)
-        if not self.sensors_enabled: self.updates_needed = 2
+        if not self.sensors_enabled: self.updates_needed = 3
 
     def get_sensors_enable(self):
         return self.sensors_enabled
 
     def set_sensors_enable(self, value):
         self.sensors_enabled = value
+
+    def get_update(self):
+        return (self.sensors_enabled or self.updates_needed > 0)
+
+    def set_update(self, value):
+        if value and not self.sensors_enabled: self.updates_needed = 1
 
     def get_current(self, i):
         return self.currents[i]
