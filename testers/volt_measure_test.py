@@ -1,3 +1,4 @@
+import sys, requests, time
 import Tkinter as tk
 import tkMessageBox
 
@@ -113,9 +114,13 @@ class voltage_test():
       resistor_url = self.resistors_url + '/' + str(resistorData[0]) + '/register_value'
       measured[0] = self.checkVoltageName(name)
       requests.put(resistor_url, '0', headers=self.headers)
-      measured[1] = self.checkVoltageName(name)
+      time.sleep(.1)
+      if name == 'VCTRL_NEG':  measured[2] = self.checkVoltageName(name)
+      else: measured[1] = self.checkVoltageName(name)
       requests.put(resistor_url, '255', headers=self.headers)
-      measured[2] = self.checkVoltageName(name)
+      time.sleep(.1)
+      if name == 'VCTRL_NEG':  measured[1] = self.checkVoltageName(name)
+      else: measured[2] = self.checkVoltageName(name)
       requests.put(resistor_url, str(resistorData[1]), headers=self.headers)
     return (expectRange, expected, measured)
 
