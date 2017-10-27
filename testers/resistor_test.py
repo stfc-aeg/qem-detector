@@ -72,6 +72,7 @@ class resistor_test():
 
   def __init__(self, base_url='http://beagle01.aeg.lan:8888/api/0.1/qem/'):
     self.resistors_url = base_url + 'resistors'
+    self.volt_urls = base_url + 'current_voltage/'
     self.headers = {'Content-Type': 'application/json'}
     self.units = {'AUXSAMPLE':'V','AUXRESET':'V','VCM':'V','DACEXTREF':'uV','VRESET':'V','VDD_RST':'V','VCTRL':'V'}
     self.expectedResistance = {}
@@ -83,7 +84,7 @@ class resistor_test():
     self.expectedResistance['VDD_RST'] =[1.8,2.26,2.55,2.73,2.86,2.96,3.04,3.10,3.15,3.19,3.23,3.26,3.29,3.32,3.34,3.36]
     self.expectedResistance['VCTRL'] =[-2.02,-1.66,-1.30,-0.94,-0.58,-0.22,.14,.50,.86,1.22,1.57,1.81,2.29,2.65,3.01,3.37]
     self.testLocation = {'AUXSAMPLE':'PL45 Pin 2 and Ground', 'AUXRESET':'PL47 Pin 2 and Ground', 'VCM':'PL 46 Pin 2 and Ground', 'DACEXTREF':'PL43 Pin 1 and Ground', 'VRESET':'PL40 Pins 1 and 2', 'VDD_RST':'PL34 Pins 1 and 2', 'VCTRL':'PL78 Pins 1 and 2'}
-    self.i2cVoltageNum = {'VRESET':9, 'VDD_RST':8, 'VCTRL':(11,12)}
+    self.i2cVoltageNum = {'VRESET':11, 'VDD_RST':7, 'VCTRL':(12,10)}
     self.root = tk.Tk()
     self.windowMain = mainWindow(self.root)
     self.root.withdraw()
@@ -143,11 +144,11 @@ class resistor_test():
     elif name == 'VRESET' :
       tkMessageBox.showinfo('Action Required',"Please ensure the jumper is on pins 1 and 2 of PL19.")
     if name in self.i2cVoltageNum and name != 'VCTRL':
-      voltage_url = self.base_url + 'current_voltage/' + self.i2cVoltageNum[name] + '/voltage'
+      voltage_url = self.volt_url + str(self.i2cVoltageNum[name]) + '/voltage'
     elif name == 'VCTRL':
       voltage_urls = []
-      voltage_urls[0] = self.base_url + 'current_voltage/' + self.i2cVoltageNum[name][0] + '/voltage'
-      voltage_urls[1] = self.base_url + 'current_voltage/' + self.i2cVoltageNum[name][1] + '/voltage'
+      voltage_urls[0] = self.volt_url + str(self.i2cVoltageNum[name][0]) + '/voltage'
+      voltage_urls[1] = self.volt_url + str(self.i2cVoltageNum[name][1]) + '/voltage'
     for testCase in testCases:
       changeResistor = requests.put(resistor_url, str(testCase), headers=self.headers)
       resistance = self.measureResistor(name)
@@ -156,12 +157,12 @@ class resistor_test():
         if resistance > 0: voltage_url = voltage_urls[0]
         else: voltage_url = voltage_urls[1]
       if name in self.i2cVoltageNum:
-        I2CResistance.append(requests.get(self.voltage_url,headers={'Accept': 'application/json'}))
+        I2CResistance.append(requests.get(voltage_url,headers={'Accept': 'application/json'}).json()['voltage'])
     requests.put(resistor_url, str(resistorData[1]), headers=self.headers)
     return (expectedResistance, measuredResistance, I2CResistance)
     
   def resistorTest(self,name,raw=True,testCases=None):
-    (expectedResistance, measuredResistance) = self.checkResistor(name,raw,testCases)
+    (expectedResistance, measuredResistance, I2CResistance) = self.checkResistor(name,raw,testCases)
     self.windowMain.results(name, self.units[name], expectedResistance, measuredResistance, I2CResistance)
 
 

@@ -110,11 +110,7 @@ App.prototype.generate =
             this.mount.appendChild(container);
 
             var adapter_name = Component.utils.getName(meta, key);
-            if (key === "testing"){
-                this.adapters[key] = new TestAdapter(this, container, adapter_name);
-            } else {
-                this.adapters[key] = new Adapter(this, container, adapter_name, meta[key]);
-            }
+            this.adapters[key] = new Adapter(this, container, adapter_name, meta[key]);
 
             //Update navbar
             var list_elem = document.createElement("li");
@@ -129,7 +125,6 @@ App.prototype.generate =
         }
 
         document.getElementById("adapter-" + adapters[this.current_adapter]).classList.add("active");
-
 
         //Add overlays
         //Change frequency
@@ -209,6 +204,8 @@ App.prototype.changeAdapter =
 
         this.current_adapter = adapter;
     };
+
+
 
 App.prototype.setError =
     function(data)
