@@ -50,22 +50,34 @@ class Backplane(I2CContainer):
         self.power_good = [False] * 8
         self.psu_enabled = True
         self.clock_freq = 21.0
-        #Variable resistors
-        self.resistors_raw = [0] * 7
-        self.resistors = [0.0] * 7
+        self.resistor_volatile = False
 
-        self.channelLookup = ((0,2,3,4,5,6,7),(0,2,4,5,6,7))
+        self.voltChannelLookup = ((0,2,3,4,5,6,7),(0,2,4,5,6,7))
         self.updates_needed = 1
-
         self.set_sensors_enable(False)
-        self.set_resistor_value_raw(0,0)
-        self.set_resistor_value_raw(1,50)
-        self.set_resistor_value_raw(2,22) 
-        self.set_resistor_value_raw(3,0)
-        self.set_resistor_value_raw(4,92)
-        self.set_resistor_value_raw(5,0)
-        self.set_resistor_value_raw(6,0)
 
+        self.resistors_raw = [
+            self.tpl0102[0].get_wiper(0),
+            self.tpl0102[0].get_wiper(1),
+            self.tpl0102[1].get_wiper(0),
+            self.tpl0102[2].get_wiper(0),
+            self.tpl0102[2].get_wiper(1),
+            self.tpl0102[3].get_wiper(0),
+            self.tpl0102[4].get_wiper(0)
+]
+
+        self.resistors = [
+            self.resistors_raw[0] * 0.0097,
+            self.resistors_raw[1] * 0.0097,
+            self.resistors_raw[2] * 0.29,
+            0,
+            0,
+            self.resistors_raw[5] * 0.021 - 2,
+            self.resistors_raw[6] * 0.0097,
+]
+
+        if not (self.resistors_raw[3] == 0): self.resistors[3] = 0.0001 / (1.0/49900 + 1.0/self.resistors_raw[3]/390.0)
+        if not (self.resistors_raw[4] == 0): self.resistors[4] =0.0001 / (1.0/18200 + 1.0/self.resistors_raw[4]/390.0)
 
 
     def poll_all_sensors(self):
@@ -73,31 +85,31 @@ class Backplane(I2CContainer):
         if not (self.sensors_enabled or (self.updates_needed > 0)) : return 
         #Currents
         for i in range(7):
-            j = self.channelLookup[0][i]        
+            j = self.voltChannelLookup[0][i]        
             self.currents_raw[i] = self.ad7998[0].read_input_raw(j) & 0xfff
             self.currents[i] = self.currents_raw[i] / self.CURRENT_RESISTANCE[i] * 5000 / 4095.0
         for i in range(6):
-            j = self.channelLookup[1][i]
+            j = self.voltChannelLookup[1][i]
             self.currents_raw[i + 7] = self.ad7998[2].read_input_raw(j) & 0xfff
             self.currents[i + 7] = self.currents_raw[i + 7] / self.CURRENT_RESISTANCE[i + 7] * 5000 / 4095.0
 
         #Voltages
         for i in range(7):
-            j = self.channelLookup[0][i]
+            j = self.voltChannelLookup[0][i]
             self.voltages_raw[i] = self.ad7998[1].read_input_raw(j) & 0xfff
             self.voltages[i] = self.voltages_raw[i] * 3 / 4095.0
         for i in (0,1,2,4):
-            j = self.channelLookup[1][i]
+            j = self.voltChannelLookup[1][i]
             self.voltages_raw[i + 7] = self.ad7998[3].read_input_raw(j) & 0xfff
             self.voltages[i + 7] = self.voltages_raw[i + 7] * 5 / 4095.0
         if self.resistors_raw[5] > 97:
-            j = self.channelLookup[1][5]
+            j = self.voltChannelLookup[1][5]
             self.voltages_raw[12] = self.ad7998[3].read_input_raw(j) & 0xfff
             self.voltages[12] = self.voltages_raw[12] * 5 / 4095.0
             self.voltages_raw[10] = 0
             self.voltages[10] = 0
         else:
-            j = self.channelLookup[1][3]
+            j = self.voltChannelLookup[1][3]
             self.voltages_raw[10] = self.ad7998[3].read_input_raw(j) & 0xfff
             self.voltages[10] = -1 * (self.voltages_raw[10] * 5 / 4095.0)
             self.voltages_raw[12] = 0   
@@ -183,6 +195,14 @@ class Backplane(I2CContainer):
 
     def get_resistor_max(self, resistor):
         return [2.474, 2.474, 99.98, 3.3, 3.3, 3.3, 2.474][resistor]
+
+    def get_resistor_volatile(self):
+        return self.resistor_volatile
+   
+    def set_resistor_volatile(self, value):       
+        for i in range(5): 
+            self.tpl0102[i].set_non_volatile(not value)
+        self.resistor_volatile = value
 
     def get_power_good(self, i):
         return self.power_good[i]

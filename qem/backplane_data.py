@@ -17,9 +17,9 @@ class CurrentVoltage(object):
         self.param_tree = MetadataTree({
             "name" : self.backplane.get_adc_name(i),
             "current" : (self.get_current, {"units" : "mA"}),
-            "current_register" : (self.get_current_raw,{"dp" : 0}),
             "voltage" : (self.get_voltage, {"units" : "V", "dp":3}),
             "voltage_register" : (self.get_voltage_raw,{"dp" : 0}),
+            "current_register" : (self.get_current_raw,{"dp" : 0}),
         })
 
     def get_current(self):
@@ -43,7 +43,7 @@ class Resistor(object):
             "name" : self.backplane.get_resistor_name(self.index),
             "value" : (self.get, self.set, {"units" : self.backplane.get_resistor_units(self.index), "min" : self.backplane.get_resistor_min(self.index), "max" : self.backplane.get_resistor_max(self.index)}),
             "register_value" : (self.raw_get,self.raw_set,{"dp" : 0, "min" : 0, "max" : 255}),
-        })
+       })
 
     def get(self):
         return self.backplane.get_resistor_value(self.index)
@@ -81,12 +81,13 @@ class BackplaneData(object):
             "name" : "QEM Backplane",
             "description" : "Testing information for the backplane on QEM.",
             "clock" : (self.backplane.get_clock_frequency, self.backplane.set_clock_frequency, {"units" : "MHz", "description" : "Clock frequency for the SI570 oscillator", "min" : 10, "max":945}),
-            "psu_enabled" : (self.backplane.get_psu_enable, self.backplane.set_psu_enable, {"name" : "PSU Enabled"}),
             "sensors_enabled":(self.backplane.get_sensors_enable, self.backplane.set_sensors_enable, {"name" : "sensors updating"}),
+            "update_required" : (self.backplane.get_update, self.backplane.set_update,{"name" : "Update Once"}),
+            "volatile" : (self.backplane.get_resistor_volatile, self.backplane.set_resistor_volatile, {"name": "Set Defaults", "description":"When setting resistor values setermines if the new value should be set as a temporary value or as the new default"}), 
+            "psu_enabled" : (self.backplane.get_psu_enable, self.backplane.set_psu_enable, {"name" : "PSU Enabled"}),
             "power_good" : pw_good,
             "current_voltage" : [cv.param_tree for cv in self.current_voltage],
             "resistors" : [r.param_tree for r in self.resistors],
-            "update_required" : (self.backplane.get_update, self.backplane.set_update,{"name" : "Update Once"})
         })
 
     def get(self, path, metadata):
