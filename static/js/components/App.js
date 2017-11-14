@@ -264,6 +264,12 @@ App.prototype.generate =
                         <input type="checkbox" id="resist-check-range" name="resistor_range" value="Test_Range" checked>
                         <label for="resist-check-range">Test Range?</label>
                     </div>
+                    <div id="test-resist-reverse-container" class="flex-container">
+                        <div>
+                            <input type="checkbox" id="resist-check-reverse" name="resistor_reverse" value="Test_Reverse">
+                            <label for="resist-check-reverse">Reverse Test Range?</label>
+                        </div>
+                    </div>
                     <div id="test-resist-cases-container" class="flex-container">
                         <h5>Test cases:</h5>
                         <div class="input-group">
@@ -314,9 +320,12 @@ App.prototype.generate =
            if(this.checked) {
                document.getElementById("test-resist-cases-container").style.display='none';
                document.getElementById("test-resist-range-container").style.display='flex';
+               document.getElementById("test-resist-reverse-container").style.display='flex';
            } else {
                document.getElementById("test-resist-cases-container").style.display='flex';
                document.getElementById("test-resist-range-container").style.display='none';
+               document.getElementById("test-resist-reverse-container").style.display='none';
+
            }
        });      
 
@@ -1136,7 +1145,11 @@ return;
                 }
             }
             var numCases = 1 + Math.floor((testCaseMax-testCaseMin)/testCaseStep);
-            testCases = Array.apply(null, Array(numCases)).map(function (_, i) {return (testCaseMin + testCaseStep*i);});
+            if(document.getElementById('resist-check-reverse').checked == true) {
+                testCases = Array.apply(null, Array(numCases)).map(function (_, i) {return (testCaseMax - testCaseStep*i);});
+            } else {
+                testCases = Array.apply(null, Array(numCases)).map(function (_, i) {return (testCaseMin + testCaseStep*i);});
+            }
         }
         for(var i=0; i<7; i++)
         {
