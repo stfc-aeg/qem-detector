@@ -257,6 +257,10 @@ App.prototype.generate =
                         <label for="resist-check-6">AUXSAMPLE</label>
                     </div>
                     <div>
+                        <input type="checkbox" id="resist-check-graph" name="resistor_graph" value="Generate_Graph" checked>
+                        <label for="resist-check-graph">Generate Graph?</label>
+                    </div>
+                    <div>
                         <input type="checkbox" id="resist-check-range" name="resistor_range" value="Test_Range" checked>
                         <label for="resist-check-range">Test Range?</label>
                     </div>
@@ -277,15 +281,12 @@ App.prototype.generate =
                         </div>
                         <h5>Step:</h5>
                         <div class="input-group" title="Resistance Register Values">
-                            <input type="number" id="test-resist-input-step" min=0 max=255 class="form-control text-right" aria-label="Step" placeholder="17" type="text">
+                            <input type="number" id="test-resist-input-step" min=1 max=255 class="form-control text-right" aria-label="Step" placeholder="17" type="text">
                         </div>
                     </div>
                     <div class="input-group-btn">
                         <button id="test-resist-button-0" class="btn btn-default" type="button">Run Manual Resistor Test</button>
                         <button id="test-resist-button-1" class="btn btn-default" type="button">Run Automatic Resistor Test</button>
-                    </div>
-                    <div>
-                         <canvas id="myChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -486,38 +487,199 @@ var volt_tests_html = "";
 var current_tests_html = "";
 var resistor_tests_html = [];
 var reporting = false;
+var report_graph = new Array(7);
+var report_graph_data = new Array(14);
 
 App.prototype.testReport =
     function() { 
         if (!reporting) {
             reporting = true;
+            report_graph =[[false,false],[false,false],[false,false],[false,false],[false,false],[false,false],[false,false]];
+            report_graph_data=[[[],[]],[[],[]],[[],[]],[[],[]],[[],[]],[[],[]],[[],[]]];
             $('#test-report-button').text("Stop Generating Report");
-            this.report_window_html = "<html><head><style>table, th, td {border: 1px solid black;border-collapse: collapse;padding: 5px;} td {text-align: right;}</style></head>";
-            this.report_window_html += `<body><h5>Backplane Serial Number: ${getSerialNumber()}</h5><h5>Date: ${getDate()}</h5>`;
+            this.report_window_html = `<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>table, th, td {border: 1px solid black;border-collapse: collapse;padding: 5px;} td {text-align: right;}</style>
+        <title>QEM Test Report</title>
+    </head>
+    <body>
+        <h5>Backplane Serial Number: ${getSerialNumber()}</h5>
+        <h5>Date: ${getDate()}</h5>`;
             this.clock_tests_html = "";
             this.volt_tests_html = "";
             this.current_tests_html = "";
-            this.resistor_tests_html = ["","","","","","",""];
+            this.resistor_tests_html = [["",""],["",""],["",""],["",""],["",""],["",""],["",""]];
         } else {
             reporting = false;
             $('#test-report-button').text("Start Generating Report");
-            this.clock_tests_html += "</tbody></table></div>";
-            this.volt_tests_html += "</tbody></table></div>";
-            this.current_tests_html += "</tbody></table></div>";
+            if(this.clock_tests_html.length>1) {
+                this.clock_tests_html += "</tbody></table></div>";
+            }
+            if(this.volt_tests_html.length>1) {
+                this.volt_tests_html += "</tbody></table></div>";
+            }
+            if(this.current_tests_html.length>1) {
+                this.current_tests_html += "</tbody></table></div>";
+            }
             this.report_window_html += this.clock_tests_html;
             this.report_window_html += this.volt_tests_html;
             this.report_window_html += this.current_tests_html;
-            for (var i=0;i<7;i++)
-            {
-                if (this.resistor_tests_html[i].length>1) {
-                    this.resistor_tests_html[i] += "</tbody></table></div>";
-                    this.report_window_html += this.resistor_tests_html[i];
+            for(var i=0;i<7;i++){
+                if (report_graph[i][0] || report_graph[i][1]){
+                    this.report_window_html += `
+        <script src="js/jquery-2.2.3.min.js" type="text/javascript"></script>
+        <script src="js/chart.js/dist/Chart.js" type="text/javascript"></script>`;
+                    break;
                 }
             }
+            for (var i=0;i<7;i++) {
+                if (this.resistor_tests_html[i][0].length>1) {
+                    this.resistor_tests_html[i][0] += "</tbody></table></div>";
+                    if (report_graph[i][0]) {
+                        var report_data = report_graph_data[i][0].toString().slice(0,-1).split("/,");
+                        this.resistor_tests_html[i][0] += `
+        <canvas id="chart_canvus_${i}_0"></canvas>
+        <script type="text/javascript">
+            $(document).ready(function() {`;
+                        if (report_data.length==1) {
+                            this.resistor_tests_html[i][0] += `
+                var resistor_data = [];`;
+                            var report_data_point = report_data[0].toString().split(",");
+                            for (var k=0;k<report_data_point.length;k++){
+                                this.resistor_tests_html[i][0] += `
+                resistor_data.push(${report_data_point[k].replace(";",",")});`;
+                            }
+                        } else {
+                            for (var j=0;j<report_data.length;j++) {
+                                this.resistor_tests_html[i][0] += `
+                var resistor_data_${j} = [];`;
+                                var report_data_point = report_data[j].toString().split(",");
+                                for (var k=0;k<report_data_point.length;k++){
+                                    this.resistor_tests_html[i][0] += `
+                resistor_data_${j}.push(${report_data_point[k].replace(";", ",")});`;
+                                }
+                            }
+                        }
+                        this.resistor_tests_html[i][0] += `
+                var ctx = $('#chart_canvus_${i}_0');
+                var resultsChart = new Chart(ctx, {
+                    type: "scatter",
+                    data: {
+                        datasets: [`;
+                        if (report_data.length==1) {
+                            this.resistor_tests_html[i][0] += `
+                            {data: resistor_data}`;
+                        } else {
+                            for (var j=0;j<report_data.length;j++) {
+                                this.resistor_tests_html[i][0] += `
+                            {
+                                label: "Test ${j+1}",
+                                data: resistor_data_${j}
+                            },`;
+                            }
+                        }
+                        this.resistor_tests_html[i][0] += `
+                        ]
+                    },
+                    options: {
+                        showLines: true,
+                        scales: {
+                            xAxes: [{
+                                ticks: {
+//                                    max: 255,
+//                                    stepSize: 16
+                                }
+                            }]
+                        },
+                        legend: {
+//                            display: false
+                        }
+                    }
+                });
+            });
+        </script>`;
+                    }
+
+                    this.report_window_html += this.resistor_tests_html[i][0];
+                }
+                if (this.resistor_tests_html[i][1].length>1) {
+                    this.resistor_tests_html[i][1] += "</tbody></table></div>";
+                    if (report_graph[i][1]) {
+                        var report_data = report_graph_data[i][1].toString().slice(0,-1).split("/,");
+                        this.resistor_tests_html[i][1] += `
+        <canvas id="chart_canvus_${i}_1"></canvas>
+        <script type="text/javascript">
+            $(document).ready(function() {`;
+                        if (report_data.length==1) {
+                            this.resistor_tests_html[i][1] += `
+                var resistor_data = [];`;
+                            var report_data_point = report_data[0].toString().split(",");
+                            for (var k=0;k<report_data_point.length;k++){
+                                this.resistor_tests_html[i][1] += `
+                resistor_data.push(${report_data_point[k].replace(";",",")});`;
+                            }
+                        } else {
+                            for (var j=0;j<report_data.length;j++) {
+                                this.resistor_tests_html[i][1] += `
+                var resistor_data_${j} = [];`;
+                                var report_data_point = report_data[j].toString().split(",");
+                                for (var k=0;k<report_data_point.length;k++){
+                                    this.resistor_tests_html[i][1] += `
+                resistor_data_${j}.push(${report_data_point[k].replace(";", ",")});`;
+                                }
+                            }
+                        }
+                        this.resistor_tests_html[i][1] += `
+                var ctx = $('#chart_canvus_${i}_1');
+                var resultsChart = new Chart(ctx, {
+                    type: "scatter",
+                    data: {
+                        datasets: [`;
+                        if (report_data.length==1) {
+                            this.resistor_tests_html[i][1] += `
+                            {data: resistor_data}`;
+                        } else {
+                            for (var j=0;j<report_data.length;j++) {
+                                this.resistor_tests_html[i][1] += `
+                            {
+                                label: "Test ${j+1}",
+                                data: resistor_data_${j}
+                            },`;
+                            }
+                        }
+                        this.resistor_tests_html[i][1] += `
+                        ]
+                    },
+                    options: {
+                        showLines: true,
+                        scales: {
+                            xAxes: [{
+                                ticks: {
+//                                    max: 255,
+//                                    stepSize: 16
+                                }
+                            }]
+                        },
+                        legend: {
+//                            display: false
+                        }
+                    }
+                });
+            });
+        </script>`;
+                    }
+                    this.report_window_html += this.resistor_tests_html[i][1];
+                }
+            }
+
             this.report_window_html += "</body></html>";
             report_window = window.open();
             report_window.document.write(this.report_window_html);
-            report_window.stop();
+            report_window.location.reload();
             report_window.print();
         }
     };
@@ -603,36 +765,125 @@ App.prototype.testVolt =
         $('#test-volt-button').attr('disabled', true);
         expectedValue = [2459,2459,3415,2459,2459,2459,2459,1474,2702,2702,1638,0,0];
         expectedMaxValue ={7:2702,10:0,11:2702,12:2702};
-        resistLocation = {7:3,10:5,11:4,12:5};
-        var promises = [];
-        var testSupplies = [];
-        var testLocation = [];
-        var baseValue = [];
+        resistLookup = {7:3,10:5,11:4,12:5};
+        var promises_static = [];
+        var promises_range = [[],[]];
+        var testSupplies = [[],[]];
         var expectedTest = [];
-        var expectedMax = {};
-        var testingRange = [];
+        var expectedMax = [];
+        var expectedMin = [];
+        var measuredMin = [];
+        var rangeLocation = [];
         parentThis = this;
-        for(var i=0; i<13; i++)
+        for(let i=0; i<13; i++)
         {
-            if(document.getElementById('volt-check-' + i).checked == true)
-            {
-                testSupplies.push(document.getElementById('volt-check-' + i).value);
-                expectedTest.push(expectedValue[i]);
+            var CTRL_NEG_checked = document.getElementById('volt-check-10').checked;
+            if(document.getElementById('volt-check-' + i).checked == true) {
                 if (i==7 || i>9) {
-                    expectedMax[testSupplies.length-1] = expectedMaxValue[i];
-                    testingRange.push(true);
+                    if(i==10 && document.getElementById('volt-check-12').checked == true) {
+                        continue;
+                    }
+                    testSupplies[1].push(document.getElementById('volt-check-' + i).value);
+                    expectedMin.push(expectedValue[i]);
+                    expectedMax.push(expectedMaxValue[i]);
+                    rangeLocation.push(i);
+                    if(i==12 && CTRL_NEG_checked) {
+                        promises_range[0].push(new Promise ((resolve,reject) => {
+                            var measuredMins = [0,0];
+                            apiPUT(parentThis.current_adapter, "resistors/" + resistLookup[i] + "/register_value",0)
+                            .done(
+                                function() {
+                                    setTimeout(function() {
+                                        apiGET(parentThis.current_adapter, "current_voltage", false)
+                                        .done(
+                                            function(measuredMin) {
+                                                measuredMins[0] = measuredMin["current_voltage"][i]["voltage_register"];
+                                                measuredMins[1] = measuredMin["current_voltage"][10]["voltage_register"];
+                                                resolve(measuredMins);
+                                            }
+                                        )
+                                        .fail(this.setError.bind(this));
+                                    }, 100);
+                                }
+                            )
+                            .fail(this.setError.bind(this));
+                        }));
+                    } else {
+                        promises_range[0].push(new Promise ((resolve,reject) => {
+                            apiPUT(parentThis.current_adapter, "resistors/" + resistLookup[i] + "/register_value",0)
+                            .done(
+                                function() {
+                                    setTimeout(function() {
+                                        apiGET(parentThis.current_adapter, "current_voltage/" + i  + "/voltage_register", false)
+                                        .done(
+                                            function(measuredMin) {
+                                                resolve(measuredMin);
+                                            }
+                                        )
+                                        .fail(this.setError.bind(this));
+                                    }, 100);
+                                }
+                            )
+                            .fail(this.setError.bind(this));
+                        }));
+                    }
                 } else {
-                    testingRange.push(false);
+                    testSupplies[0].push(document.getElementById('volt-check-' + i).value);
+                    expectedTest.push(expectedValue[i]);
+                    promises_static.push(apiGET(this.current_adapter, "current_voltage/" + i + "/voltage_register", false));
                 }
-                promises.push(apiGET(this.current_adapter, "current_voltage/" + i + "/voltage_register", false));
             }
         }
-        if(testSupplies.length == 0) {
+        if(testSupplies[0].length == 0 && testSupplies[1].length == 0) {
             alert("Please select the power supplies you wish to test");
             $('#test-volt-button').attr('disabled', false);
             return;
         }
-        $.when.apply($, promises).then(function() {
+        for (let i=0;i<promises_range[0].length;i++){
+            promises_range[0][i].then((measuredMin) => {
+                if (rangeLocation[i]==12 && CTRL_NEG_checked==true) {
+                    var measuredMaxs = [0,0]
+                    promises_range[1][i] = new Promise((resolve,reject) => {
+                        apiPUT(parentThis.current_adapter, "resistors/" + resistLookup[rangeLocation[i]] + "/register_value",255)
+                        .done(
+                            function() {
+                                setTimeout(function() {
+                                    apiGET(parentThis.current_adapter, "current_voltage", false)
+                                    .done(
+                                        function(measuredMax) {
+                                            measuredMaxs[0] = measuredMax["current_voltage"][rangeLocation[i]]["voltage_register"];
+                                            measuredMaxs[1] = measuredMax["current_voltage"][10]["voltage_register"];
+                                            resolve([measuredMin,measuredMaxs]);
+                                        }
+                                    )
+                                    .fail(this.setError.bind(this));
+                                }, 100);
+                            }
+                        )
+                        .fail(this.setError.bind(this));
+                    });
+                } else {
+                    promises_range[1][i] = new Promise((resolve,reject) => {
+                        apiPUT(parentThis.current_adapter, "resistors/" + resistLookup[rangeLocation[i]] + "/register_value",255)
+                        .done(
+                            function() {
+                                setTimeout(function() {
+                                    apiGET(parentThis.current_adapter, "current_voltage/" + rangeLocation[i]  + "/voltage_register", false)
+                                    .done(
+                                        function(measuredMax) {
+                                            resolve([measuredMin,measuredMax]);
+                                        }
+                                    )
+                                    .fail(this.setError.bind(this));
+                                }, 100);
+                            }
+                        )
+                        .fail(this.setError.bind(this));
+                    });
+                }
+            });
+        }
+        $.when.apply($, promises_static).then(function() {
             var volt_test_html = "";
             if(!reporting) {
                 volt_test_html += "<html><head><style>table, th, td {border: 1px solid black;border-collapse: collapse;padding: 5px;} td {text-align: right;}</style></head>";
@@ -641,47 +892,51 @@ App.prototype.testVolt =
             if(!reporting || parentThis.volt_tests_html.length==0) {
                 volt_test_html += "<h4>Voltage Test Results</h4><div class='table-container'><table>";
             }
-            if (!reporting && testingRange.every(x => x == false)) {
+            if (!reporting && expectedMax.length==0) {
                 volt_test_html += "<thead><tr><td></td><th>Expected</th><th>Measured</th></tr></thead><tbody>";
-                if(testSupplies.length==1) {
-                    volt_test_html += `<tr><th>${testSupplies[0]}</th><td>${expectedTest[0]}</td><td>${arguments[0]['voltage_register'].toString()}</td></tr>`;
+                if(testSupplies[0].length==1) {
+                    volt_test_html += `<tr><th>${testSupplies[0][0]}</th><td>${expectedTest[0]}</td><td>${arguments[0]['voltage_register'].toString()}</td></tr>`;
                 } else {
-                    for(var i=0; i<promises.length; i++)
+                    for(var i=0; i<promises_static.length; i++)
                     {
-                        volt_test_html += `<tr><th>${testSupplies[i]}</th><td>${expectedTest[i]}</td><td>${arguments[i][0]['voltage_register'].toString()}</td></tr>`;
+                        volt_test_html += `<tr><th>${testSupplies[0][i]}</th><td>${expectedTest[i]}</td><td>${arguments[i][0]['voltage_register'].toString()}</td></tr>`;
                     }
                 }
             } else {
                 if (!reporting || parentThis.volt_tests_html.length==0) {
-                    volt_test_html += "<thead><tr><td></td><th>Expected Min</th><th>Measured</th><th>Expected Max</th></tr></thead><tbody>";
+                    volt_test_html += "<thead><tr><td></td><th>Expected Min</th><th>Measured Min</th><th>Expected Max</th><th>Measured Max</th></tr></thead><tbody>";
                 } else {
                     volt_test_html += `<tr><th></th><td></td><td></td><td></td></tr>`;
                 }
-                if(testSupplies.length==1) {
-                    if(testingRange[i]) {
-                        volt_test_html += `<tr><th>${testSupplies[0]}</th><td>${expectedTest[0]}</td><td>${arguments[0]['voltage_register'].toString()}</td><td>${expectedMax[0]}</td></tr>`;
-                    } else {
-                        volt_test_html += `<tr><th>${testSupplies[0]}</th><td>${expectedTest[0]}</td><td>${arguments[0]['voltage_register'].toString()}</td><td></td></tr>`;
-                    }
+                if(testSupplies[0].length==1) {
+                    volt_test_html += `<tr><th>${testSupplies[0][0]}</th><td>${expectedTest[0]}</td><td>${arguments[0]['voltage_register'].toString()}</td><td></td><td></td></tr>`;
                 } else {
-                    for(var i=0; i<promises.length; i++){
-                        if(testingRange[i]) {
-                            volt_test_html += `<tr><th>${testSupplies[i]}</th><td>${expectedTest[i]}</td><td>${arguments[i][0]['voltage_register'].toString()}</td><td>${expectedMax[i]}</td></tr>`;
-                        } else {
-                            volt_test_html += `<tr><th>${testSupplies[i]}</th><td>${expectedTest[i]}</td><td>${arguments[i][0]['voltage_register'].toString()}</td><td></td></tr>`;
-                        }
+                    for(var i=0; i<promises_static.length; i++){
+                        volt_test_html += `<tr><th>${testSupplies[0][i]}</th><td>${expectedTest[i]}</td><td>${arguments[i][0]['voltage_register'].toString()}</td><td></td><td></td></tr>`;
                     }
                 }
             }
-            if(!reporting) {
-                volt_test_html += "</tbody></table></div></body></html>";
-                volt_test_window = window.open();
-                volt_test_window.document.write(volt_test_html);
-                volt_test_window.stop();
-            } else {
-                parentThis.volt_tests_html += volt_test_html;
-            }
-            $('#test-volt-button').attr('disabled', false);
+            Promise.all(promises_range[0]).then((results) => {
+                Promise.all(promises_range[1]).then((measured) => {
+                    for(var i=0; i<promises_range[1].length; i++){
+                        if (rangeLocation[i]==12 && CTRL_NEG_checked==true) {
+                            volt_test_html += `<tr><th>${testSupplies[1][i]}</th><td>${expectedMin[i]}</td><td>${measured[i][0][0].toString()}</td><td>${expectedMax[i]}</td><td>${measured[i][1][0].toString()}</td></tr>`;
+                            volt_test_html += `<tr><th>VCTRL_NEG</th><td>1638</td><td>${measured[i][0][1].toString()}</td><td>0</td><td>${measured[i][1][1].toString()}</td></tr>`;
+                        } else {
+                            volt_test_html += `<tr><th>${testSupplies[1][i]}</th><td>${expectedMin[i]}</td><td>${measured[i][0]['voltage_register'].toString()}</td><td>${expectedMax[i]}</td><td>${measured[i][1]['voltage_register'].toString()}</td></tr>`;
+                        }
+                    }
+                    if(!reporting) {
+                        volt_test_html += "</tbody></table></div></body></html>";
+                        volt_test_window = window.open();
+                        volt_test_window.document.write(volt_test_html);
+                        volt_test_window.stop();
+                    } else {
+                        parentThis.volt_tests_html += volt_test_html;
+                    }
+                    $('#test-volt-button').attr('disabled', false);
+                });
+            });
         }, function() {
             this.setError.bind(this);
         });
@@ -798,6 +1053,7 @@ App.prototype.testResist =
         $('#test-resist-button-0').attr('disabled', true);
         $('#test-resist-button-1').attr('disabled', true);
         var testCases = [];
+        var gen_graph = document.getElementById("resist-check-graph").checked;
         if (document.getElementById("test-resist-cases-container").style.display != "none") {
             var testCaseString = document.getElementById("test-resist-input-cases").value;
             if(testCaseString.length == 0)
@@ -891,7 +1147,7 @@ return;
                 expectedResist = [];
                 if (type==1) {
                     if (i>2 && i<6) {
-                        testingResistCalculate(i,testCases,this);
+                        testingResistCalculate(i,testCases,this,gen_graph);
                     } else {
                         alert("Automatic test may only be run on VDD RST, VRESET and VCTRL");
                         $('#test-resist-button-0').attr('disabled', false);
@@ -903,14 +1159,14 @@ return;
                     } else if(i==4) {
                         alert("Please ensure the jumper is on PL19 Pins 1 and 2");
                     }
-                    testingResist(i,testCases,this);
+                    testingResist(i,testCases,this,gen_graph);
                 }
             }
         }
     };
 
 
-function testingResist(resistor,testCases, parentThis) {
+function testingResist(resistor,testCases, parentThis, gen_graph) {
     if(testCases.length>0)
     {
         apiPUT(parentThis.current_adapter, "resistors/" + resistor + "/register_value",testCases[0])
@@ -927,7 +1183,7 @@ function testingResist(resistor,testCases, parentThis) {
                 var expected = expectResist(resistor,testCases[0]).toFixed(3);
                 expectedResist.push(expected);
                 testCases.shift();
-                testingResist(resistor,testCases, parentThis);
+                testingResist(resistor,testCases, parentThis, gen_graph);
             }
         )
         .fail(this.setError.bind(this));
@@ -936,35 +1192,111 @@ function testingResist(resistor,testCases, parentThis) {
     {
         var resist_test_html = ""
         if(!reporting) {
-            resist_test_html += "<html><head><style>table, th, td {border: 1px solid black;border-collapse: collapse;padding: 5px;} td {text-align: right;}</style></head>";
-            resist_test_html += `<body><h5>Backplane Serial Number: ${getSerialNumber()}</h5><h5>Date: ${getDate()}</h5>`;
+            resist_test_html += `<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>table, th, td {border: 1px solid black;border-collapse: collapse;padding: 5px;} td {text-align: right;}</style>
+        <title>QEM Resistor Test Report</title>
+    </head>
+    <body>
+        <h5>Backplane Serial Number: ${getSerialNumber()}</h5><h5>Date: ${getDate()}</h5>`;
+            if (gen_graph) {
+                resist_test_html += `
+        <script src="js/jquery-2.2.3.min.js" type="text/javascript"></script>
+        <script src="js/chart.js/dist/Chart.js" type="text/javascript"></script>`;
+            }
         }
-        if(!reporting || parentThis.resistor_tests_html[resistor].length==0){
-            resist_test_html += `<h4>${resistName[resistor]} Test Results</h4><div class='table-container'><table>`;
-            resist_test_html += "<thead><tr><th>Register</th><th>Expected</th><th>Measured</th></tr></thead><tbody>";
+        if(!reporting || parentThis.resistor_tests_html[resistor][0].length==0){
+            resist_test_html += `
+        <h4>${resistName[resistor]} Manual Test Results</h4>`;
+            if (!reporting && gen_graph==true) {
+                resist_test_html += `
+            <canvas id="chart_canvus_${resistor}"></canvas>`;
+            }
+            resist_test_html += `
+        <div class='table-container'>
+            <table>
+              <thead>
+                <tr><th>Register</th><th>Expected</th><th>Measured</th></tr>
+              </thead>
+              <tbody>`;
         } else {
-            resist_test_html += `<tr><td></td><td></td><td></td></tr>`;
+            resist_test_html += `
+                <tr><td></td><td></td><td></td></tr>`;
         }
         for(var i=0; i<measuredResist.length; i++)
         {
-            resist_test_html += `<tr><td>${resistTestCases[i]}</td><td>${expectedResist[i]}</td><td>${measuredResist[i]}</td></tr>`;
+            resist_test_html += `
+                <tr><td>${resistTestCases[i]}</td><td>${expectedResist[i]}</td><td>${measuredResist[i]}</td></tr>`;
         }
         if(!reporting) {
-            resist_test_html += "</tbody></table></div></body></html>";
+            resist_test_html += `
+              </tbody>
+            </table>
+        </div>`;
+            if(gen_graph) {
+                resist_test_html += `
+        <script type="text/javascript">
+            $(document).ready(function() {
+                var resistor_data = [];`;
+                for(var i=0; i<measuredResist.length; i++) {
+                    resist_test_html += `
+                resistor_data.push({x:${resistTestCases[i]},y:${measuredResist[i]}});`;
+                }
+                resist_test_html += `
+                var ctx = $('#chart_canvus_${resistor}');
+                var resultsChart = new Chart(ctx, {
+                    type: "scatter",
+                    data: {
+                        datasets: [{
+                            data: resistor_data
+                        }]
+                    },
+                    options: {
+                        showLines: true,
+                        scales: {
+                            xAxes: [{
+                                ticks: {
+//                                    max: 255,
+//                                    stepSize: 16
+                                }
+                            }]
+                        },
+                        legend: {
+                            display: false
+                        }
+                    }
+                });
+            });
+        </script>`;
+            }    
+            resist_test_html += `
+    </body>
+</html>`;
             resist_test_window = window.open();
             resist_test_window.document.write(resist_test_html);
-            resist_test_window.stop();
+            resist_test_window.location.reload();
         } else {
-            parentThis.resistor_tests_html[resistor] += resist_test_html;
+            parentThis.resistor_tests_html[resistor][0] += resist_test_html;
+            if(gen_graph) {
+                report_graph[resistor][0]=true;
+                var resistor_data = [];
+                for(var i=0; i<measuredResist.length; i++) {
+                    resistor_data.push(`{x:${resistTestCases[i]};y:${measuredResist[i]}}`);
+                }
+                report_graph_data[resistor][0].push(resistor_data + '/');
+            }
+
         }
         $('#test-resist-button-0').attr('disabled', false);
         $('#test-resist-button-1').attr('disabled', false);
     }
 }
 
-var myChart;
-
-function testingResistCalculate(resistor,testCases, parentThis) {
+function testingResistCalculate(resistor,testCases, parentThis, gen_graph) {
     if(testCases.length>0)
     {
         apiPUT(parentThis.current_adapter, "resistors/" + resistor + "/register_value",testCases[0])
@@ -989,7 +1321,7 @@ function testingResistCalculate(resistor,testCases, parentThis) {
                         function(measured)
                         {
                             measuredResist.push(measured['voltage'].toFixed(3));
-                            testingResistCalculate(resistor,testCases, parentThis);
+                            testingResistCalculate(resistor,testCases, parentThis, gen_graph);
                         }
                     )
                     .fail(this.setError.bind(this));
@@ -1002,51 +1334,103 @@ function testingResistCalculate(resistor,testCases, parentThis) {
     {
         var resist_test_html = "";
         if (!reporting) {
-            resist_test_html += "<html><head><style>table, th, td {border: 1px solid black;border-collapse: collapse;padding: 5px;} td {text-align: right;}</style></head>";
-            resist_test_html += `<body><script src="js/chart.js/dist/Chart.js" type="text/javascript"></script>`;
-            resist_test_html += `<h5>Backplane Serial Number: ${getSerialNumber()}</h5><h5>Date: ${getDate()}</h5>`;
+            resist_test_html += `<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>table, th, td {border: 1px solid black;border-collapse: collapse;padding: 5px;} td {text-align: right;}</style>
+        <title>QEM Resistor Test Report</title>
+    </head>
+    <body>
+        <h5>Backplane Serial Number: ${getSerialNumber()}</h5><h5>Date: ${getDate()}</h5>`;
+            if (gen_graph) {
+                resist_test_html += `
+        <script src="js/jquery-2.2.3.min.js" type="text/javascript"></script>
+        <script src="js/chart.js/dist/Chart.js" type="text/javascript"></script>`;
+            }
         }
-        if (!reporting || parentThis.resistor_tests_html[resistor].length==0){
-            resist_test_html += `<h4>${resistName[resistor]} Automatic Test Results</h4>`;
-//            resist_test_html += "<div><canvas id="myChart1"></canvas></div>";
-            resist_test_html += `<div class='table-container'><table>`;
-            resist_test_html += "<thead><tr><th>Register</th><th>Expected</th><th>Calculated</th></tr></thead><tbody>";
+        if (!reporting || parentThis.resistor_tests_html[resistor][1].length==0){
+            resist_test_html += `
+        <h4>${resistName[resistor]} Automatic Test Results</h4>`;
+            if (!reporting && gen_graph==true) {
+                resist_test_html += `
+            <canvas id="chart_canvus_${resistor}"></canvas>`;
+            }
+            resist_test_html += `
+        <div class='table-container'>
+            <table>
+              <thead>
+                <tr><th>Register</th><th>Expected</th><th>Calculated</th></tr>
+              </thead>
+              <tbody>`;
         } else {
-            resist_test_html += `<tr><td></td><td></td><td></td></tr>`;
+            resist_test_html += `
+                <tr><td></td><td></td><td></td></tr>`;
         }
         for(var i=0; i<measuredResist.length; i++)
         {
-            resist_test_html += `<tr><td>${resistTestCases[i]}</td><td>${expectedResist[i]}</td><td>${measuredResist[i]}</td></tr>`;
+            resist_test_html += `
+                <tr><td>${resistTestCases[i]}</td><td>${expectedResist[i]}</td><td>${measuredResist[i]}</td></tr>`;
         }
         if (!reporting) {
-            resist_test_html += "</tbody></table></div></body></html>";
+            resist_test_html += `
+              </tbody>
+            </table>
+        </div>`;
+            if(gen_graph) {
+                resist_test_html += `
+        <script type="text/javascript">
+            $(document).ready(function() {
+                var resistor_data = [];`;
+                for(var i=0; i<measuredResist.length; i++) {
+                    resist_test_html += `
+                resistor_data.push({x:${resistTestCases[i]},y:${measuredResist[i]}});`;
+                }
+                resist_test_html += `
+                var ctx = $('#chart_canvus_${resistor}');
+                var resultsChart = new Chart(ctx, {
+                    type: "scatter",
+                    data: {
+                        datasets: [{
+                            data: resistor_data
+                        }]
+                    },
+                    options: {
+                        showLines: true,
+                        scales: {
+                            xAxes: [{
+                                ticks: {
+//                                    max: 255,
+//                                    stepSize: 16
+                                }
+                            }]
+                        },
+                        legend: {
+                            display: false
+                        }
+                    }
+                });
+            });
+        </script>`;
+            }    
+            resist_test_html += `
+    </body>
+</html>`;
             resist_test_window = window.open();
             resist_test_window.document.write(resist_test_html);
-            resist_test_window.stop();
-
-            var resistor_data = [];
-            for(var i=0; i<measuredResist.length; i++) {
-                var p = {x:resistTestCases[i],y:measuredResist[i]}
-                resistor_data.push(p);
-            }
-            var ctx = document.getElementById("myChart");
-            if (parentThis.myChart != null) {
-               parentThis.myChart.destroy();
-            }
-            parentThis.myChart = new Chart(ctx, {
-                type: 'scatter',
-                data: {
-                    datasets: [{
-                        label: 'Tester 1',
-                        data: resistor_data
-                    }]
-                },
-                options: {
-                    showLines: true,
-                }
-            });
+            resist_test_window.location.reload();
         } else {
-            parentThis.resistor_tests_html[resistor] += resist_test_html;
+            parentThis.resistor_tests_html[resistor][1] += resist_test_html;
+            if(gen_graph) {
+                report_graph[resistor][1]=true;
+                var resistor_data = [];
+                for(var i=0; i<measuredResist.length; i++) {
+                    resistor_data.push(`{x:${resistTestCases[i]};y:${measuredResist[i]}}`);
+                }
+                report_graph_data[resistor][1].push(resistor_data + "/");
+            }
         }
         $('#test-resist-button-0').attr('disabled', false);
         $('#test-resist-button-1').attr('disabled', false);

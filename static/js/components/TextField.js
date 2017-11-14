@@ -74,6 +74,7 @@ TextField.prototype.onClick =
         var val = this.textElem.value;
         if(this.float) val = parseFloat(val);
         this.app.put(this.getPath(), val);
+        this.textElem.value = "";
     };
 
 Component.registerComponent(TextField);

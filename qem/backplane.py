@@ -44,7 +44,7 @@ class Backplane(I2CContainer):
         self.currents_raw = [0.0] * 13
         self.power_good = [False] * 8
         self.psu_enabled = True
-        self.clock_freq = 21.0
+        self.clock_freq = 20.0
         self.resistor_volatile = False
 
         self.voltChannelLookup = ((0,2,3,4,5,6,7),(0,2,4,5,6,7))
@@ -96,7 +96,6 @@ class Backplane(I2CContainer):
             self.voltages_raw[i + 7] = self.ad7998[3].read_input_raw(j) & 0xfff
             self.voltages[i + 7] = self.voltages_raw[i + 7] * 5 / 4095.0
         self.voltages[10] *= -1
-
 
         #Power good monitors
         self.power_good = self.mcp23008[0].input_pins([0,1,2,3,4,5,6,7,8])
@@ -153,7 +152,6 @@ class Backplane(I2CContainer):
         self.resistors_raw[resistor] = value
         if not self.sensors_enabled: self.updates_needed = 1          
 
-
     def get_resistor_value(self, resistor):
         return self.resistors[resistor]
 
@@ -209,6 +207,33 @@ class Backplane(I2CContainer):
 
     def set_update(self, value):
         if value and not self.sensors_enabled: self.updates_needed = 1
+
+    def set_reset(self, value):
+        self.mcp23008[1].setup(0, MCP23008.OUT)
+        for i in range(5):
+            self.tpl0102[i].set_non_volatile(True)
+        self.resistor_volatile = False
+        self.set_clock_frequency(20)
+        self.resistors_raw = [
+            self.tpl0102[0].get_wiper(0,True),
+            self.tpl0102[0].get_wiper(1,True),
+            self.tpl0102[1].get_wiper(0,True),
+            self.tpl0102[2].get_wiper(0,True),
+            self.tpl0102[2].get_wiper(1,True),
+            self.tpl0102[3].get_wiper(0,True),
+            self.tpl0102[4].get_wiper(0,True)
+]
+        self.resistors = [
+            3.3 * (390 * self.resistors_raw[0]) / (390 * self.resistors_raw[0] + 32000),
+            3.3 * (390 * self.resistors_raw[1]) / (390 * self.resistors_raw[1] + 32000),
+            400 * (390 * self.resistors_raw[2]) / (390 * self.resistors_raw[2] + 294000),
+            0.0001 * (17800 + (18200 * (390 * self.resistors_raw[3])) / (18200 + (390 * self.resistors_raw[3]))),
+            0.0001 * (49900 * (390 * self.resistors_raw[4])) / (49900 + (390 * self.resistors_raw[4])),
+            -3.775 + (1.225/22600 + .35*.000001) * (390 * self.resistors_raw[5] + 32400),
+            3.3 * (390 * self.resistors_raw[6]) / (390 * self.resistors_raw[6] + 32000),
+]
+        self.set_psu_enable(True)
+       
 
     def get_current(self, i):
         return self.currents[i]

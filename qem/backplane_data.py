@@ -88,6 +88,7 @@ class BackplaneData(object):
             "power_good" : pw_good,
             "current_voltage" : [cv.param_tree for cv in self.current_voltage],
             "resistors" : [r.param_tree for r in self.resistors],
+            "reset" : (False, self.backplane.set_reset,{"name" : "Reset Server"}),
         })
 
     def get(self, path, metadata):
