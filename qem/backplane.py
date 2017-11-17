@@ -21,11 +21,6 @@ class Backplane(I2CContainer):
             self.tpl0102.append(self.tca.attach_device(0, TPL0102, 0x50 + i, busnum=1))
         for i in range(5):
             self.tpl0102[i].set_non_volatile(True)
-        self.tpl0102[0].set_terminal_PDs(0, 0, 2.474)
-        self.tpl0102[0].set_terminal_PDs(1, 0, 2.474)
-        self.tpl0102[1].set_terminal_PDs(0, 0, 175.7)
-        self.tpl0102[3].set_terminal_PDs(0, -2.02, 3.37)
-        self.tpl0102[3].set_terminal_PDs(0, 0, 2.474)
 
         self.si570 = self.tca.attach_device(1, SI570, 0x5d, 'SI570', busnum=1)
         self.si570.set_frequency(20) #Default to 20MHz
@@ -49,60 +44,58 @@ class Backplane(I2CContainer):
         self.currents_raw = [0.0] * 13
         self.power_good = [False] * 8
         self.psu_enabled = True
-        self.clock_freq = 21.0
-        #Variable resistors
-        self.resistors_raw = [0] * 7
-        self.resistors = [0.0] * 7
+        self.clock_freq = 20.0
+        self.resistor_volatile = False
 
-        self.channelLookup = ((0,2,3,4,5,6,7),(0,2,4,5,6,7))
+        self.voltChannelLookup = ((0,2,3,4,5,6,7),(0,2,4,5,6,7))
         self.updates_needed = 1
-
         self.set_sensors_enable(False)
-        self.set_resistor_value_raw(0,0)
-        self.set_resistor_value_raw(1,50)
-        self.set_resistor_value_raw(2,22) 
-        self.set_resistor_value_raw(3,0)
-        self.set_resistor_value_raw(4,92)
-        self.set_resistor_value_raw(5,0)
-        self.set_resistor_value_raw(6,0)
 
+        self.resistors_raw = [
+            self.tpl0102[0].get_wiper(0),
+            self.tpl0102[0].get_wiper(1),
+            self.tpl0102[1].get_wiper(0),
+            self.tpl0102[2].get_wiper(0),
+            self.tpl0102[2].get_wiper(1),
+            self.tpl0102[3].get_wiper(0),
+            self.tpl0102[4].get_wiper(0)
+]
 
+        self.resistors = [
+            3.3 * (390 * self.resistors_raw[0]) / (390 * self.resistors_raw[0] + 32000),
+            3.3 * (390 * self.resistors_raw[1]) / (390 * self.resistors_raw[1] + 32000),
+            400 * (390 * self.resistors_raw[2]) / (390 * self.resistors_raw[2] + 294000),
+            0.0001 * (17800 + (18200 * (390 * self.resistors_raw[3])) / (18200 + (390 * self.resistors_raw[3]))),
+            0.0001 * (49900 * (390 * self.resistors_raw[4])) / (49900 + (390 * self.resistors_raw[4])),
+            -3.775 + (1.225/22600 + .35*.000001) * (390 * self.resistors_raw[5] + 32400),
+            3.3 * (390 * self.resistors_raw[6]) / (390 * self.resistors_raw[6] + 32000),
+]
 
     def poll_all_sensors(self):
   
         if not (self.sensors_enabled or (self.updates_needed > 0)) : return 
+
         #Currents
         for i in range(7):
-            j = self.channelLookup[0][i]        
-            self.currents_raw[i] = self.ad7998[0].read_input_raw(j) & 0xfff
+            j = self.voltChannelLookup[0][i]        
+            self.currents_raw[i] = (self.ad7998[0].read_input_raw(j) & 0xfff)
             self.currents[i] = self.currents_raw[i] / self.CURRENT_RESISTANCE[i] * 5000 / 4095.0
+
         for i in range(6):
-            j = self.channelLookup[1][i]
-            self.currents_raw[i + 7] = self.ad7998[2].read_input_raw(j) & 0xfff
+            j = self.voltChannelLookup[1][i]
+            self.currents_raw[i + 7] = (self.ad7998[2].read_input_raw(j) & 0xfff)
             self.currents[i + 7] = self.currents_raw[i + 7] / self.CURRENT_RESISTANCE[i + 7] * 5000 / 4095.0
 
         #Voltages
         for i in range(7):
-            j = self.channelLookup[0][i]
+            j = self.voltChannelLookup[0][i]
             self.voltages_raw[i] = self.ad7998[1].read_input_raw(j) & 0xfff
             self.voltages[i] = self.voltages_raw[i] * 3 / 4095.0
-        for i in (0,1,2,4):
-            j = self.channelLookup[1][i]
+        for i in range(6):
+            j = self.voltChannelLookup[1][i]
             self.voltages_raw[i + 7] = self.ad7998[3].read_input_raw(j) & 0xfff
             self.voltages[i + 7] = self.voltages_raw[i + 7] * 5 / 4095.0
-        if self.resistors_raw[5] > 97:
-            j = self.channelLookup[1][5]
-            self.voltages_raw[12] = self.ad7998[3].read_input_raw(j) & 0xfff
-            self.voltages[12] = self.voltages_raw[12] * 5 / 4095.0
-            self.voltages_raw[10] = 0
-            self.voltages[10] = 0
-        else:
-            j = self.channelLookup[1][3]
-            self.voltages_raw[10] = self.ad7998[3].read_input_raw(j) & 0xfff
-            self.voltages[10] = -1 * (self.voltages_raw[10] * 5 / 4095.0)
-            self.voltages_raw[12] = 0   
-            self.voltages[12] = 0
-
+        self.voltages[10] *= -1
 
         #Power good monitors
         self.power_good = self.mcp23008[0].input_pins([0,1,2,3,4,5,6,7,8])
@@ -111,60 +104,53 @@ class Backplane(I2CContainer):
 
     def set_resistor_value(self, resistor, value):
         if resistor == 0:
-            self.tpl0102[0].set_PD(0, value)
-            self.resistors_raw[resistor] = int(value / 0.0097)
+            self.resistors_raw[resistor] = int(0.5+(32000/3.3)*value/(390-390*value/3.3))
+            self.tpl0102[0].set_wiper(0, self.resistors_raw[resistor])
         elif resistor == 1:
-            self.tpl0102[0].set_PD(1, value)
-            self.resistors_raw[resistor] = int(value / 0.0097)
+            self.resistors_raw[resistor] = int(0.5+(32000/3.3)*value/(390-390*value/3.3))
+            self.tpl0102[0].set_wiper(1, self.resistors_raw[resistor])
         elif resistor == 2:
-            self.tpl0102[1].set_PD(0, value)
-            self.resistors_raw[resistor] = int(value / 0.29)
+            self.resistors_raw[resistor] = int(0.5+(294000/400)*value/(390-390*value/400))
+            self.tpl0102[1].set_wiper(0, self.resistors_raw[resistor])
         elif resistor == 3:
-            if value == 1.78: wiper = 0
-            else: wiper = int(1.0 / (0.039 / (value - 1.78) - 390.0/18200))
-            self.tpl0102[2].set_wiper(0, wiper)
-            self.resistors_raw[resistor] = wiper
+            self.resistors_raw[resistor] = int(0.5+(18200/0.0001)*(value-1.78)/(390*18200-390*(value-1.78)/0.0001))
+            self.tpl0102[2].set_wiper(0, self.resistors_raw[resistor])
         elif resistor == 4:
-            if value == 0: wiper = 0
-            else: wiper = int(1.0 / (0.039/value - 390.0/49900))
-            self.tpl0102[2].set_wiper(1, wiper)
-            self.resistors_raw[resistor] = wiper
+            self.resistors_raw[resistor] = int(0.5+(49900/0.0001)*value/(390*49900-390*value/0.0001))
+            self.tpl0102[2].set_wiper(1, self.resistors_raw[resistor])
         elif resistor == 5:
-            self.tpl0102[3].set_PD(0, value)
-            self.resistors_raw[resistor] = int((value + 2.02) / 0.021)
+            self.resistors_raw[resistor] = int(0.5+((value+3.775)/(1.225/22600+.35*.000001)-32400)/390)
+            self.tpl0102[3].set_wiper(1, self.resistors_raw[resistor])
         elif resistor == 6:
-            self.tpl0102[4].set_PD(0, value)
-            self.resistors_raw[resistor] = int(value / 0.0097)
+            self.resistors_raw[resistor] = int(0.5+(32000/3.3)*value/(390-390*value/3.3))
+            self.tpl0102[4].set_wiper(0, self.resistors_raw[resistor])
         self.resistors[resistor] = value
         if not self.sensors_enabled: self.updates_needed = 1          
 
     def set_resistor_value_raw(self, resistor, value):
         if resistor == 0:
             self.tpl0102[0].set_wiper(0, value)
-            self.resistors[resistor] = value * 0.0097
+            self.resistors[resistor] = 3.3 * (390 * value) / (390 * value + 32000)
         elif resistor == 1:
             self.tpl0102[0].set_wiper(1, value)
-            self.resistors[resistor] = value * 0.0097
+            self.resistors[resistor] = 3.3 * (390 * value) / (390 * value + 32000)
         elif resistor == 2:
             self.tpl0102[1].set_wiper(0, value)
-            self.resistors[resistor] = value * 0.29
+            self.resistors[resistor] = 400 * (390 * value) / (390 * value + 294000)
         elif resistor == 3:
             self.tpl0102[2].set_wiper(0, value)
-            if value == 0: self.resistors[resistor] = 1.78
-            else: self.resistors[resistor] = 0.0001 * (17800 + 1 / (1.0/18200 + 1.0/value/390.0))
+            self.resistors[resistor] = 0.0001 * (17800 + (18200 * (390 * value)) / (18200 + (390 * value)))
         elif resistor == 4:
             self.tpl0102[2].set_wiper(1, value)
-            if value == 0: self.resistors[resistor] = 0
-            else: self.resistors[resistor] = 0.0001 / (1.0/49900 + 1.0/value/390.0)
+            self.resistors[resistor] = 0.0001 * (49900 * (390 * value)) / (49900 + (390 * value))
         elif resistor == 5:
             self.tpl0102[3].set_wiper(0, value)
-            self.resistors[resistor] = value * 0.021 - 2.02
+            self.resistors[resistor] = -3.775 + (1.225/22600 + .35*.000001) * (390 * value + 32400)
         elif resistor == 6:
             self.tpl0102[4].set_wiper(0, value)
-            self.resistors[resistor] = value * 0.0097
+            self.resistors[resistor] = 3.3 * (390 * value) / (390 * value + 32000)
         self.resistors_raw[resistor] = value
         if not self.sensors_enabled: self.updates_needed = 1          
-
 
     def get_resistor_value(self, resistor):
         return self.resistors[resistor]
@@ -183,6 +169,14 @@ class Backplane(I2CContainer):
 
     def get_resistor_max(self, resistor):
         return [2.474, 2.474, 99.98, 3.3, 3.3, 3.3, 2.474][resistor]
+
+    def get_resistor_volatile(self):
+        return self.resistor_volatile
+   
+    def set_resistor_volatile(self, value):       
+        for i in range(5): 
+            self.tpl0102[i].set_non_volatile(not value)
+        self.resistor_volatile = value
 
     def get_power_good(self, i):
         return self.power_good[i]
@@ -213,6 +207,33 @@ class Backplane(I2CContainer):
 
     def set_update(self, value):
         if value and not self.sensors_enabled: self.updates_needed = 1
+
+    def set_reset(self, value):
+        self.mcp23008[1].setup(0, MCP23008.OUT)
+        for i in range(5):
+            self.tpl0102[i].set_non_volatile(True)
+        self.resistor_volatile = False
+        self.set_clock_frequency(20)
+        self.resistors_raw = [
+            self.tpl0102[0].get_wiper(0,True),
+            self.tpl0102[0].get_wiper(1,True),
+            self.tpl0102[1].get_wiper(0,True),
+            self.tpl0102[2].get_wiper(0,True),
+            self.tpl0102[2].get_wiper(1,True),
+            self.tpl0102[3].get_wiper(0,True),
+            self.tpl0102[4].get_wiper(0,True)
+]
+        self.resistors = [
+            3.3 * (390 * self.resistors_raw[0]) / (390 * self.resistors_raw[0] + 32000),
+            3.3 * (390 * self.resistors_raw[1]) / (390 * self.resistors_raw[1] + 32000),
+            400 * (390 * self.resistors_raw[2]) / (390 * self.resistors_raw[2] + 294000),
+            0.0001 * (17800 + (18200 * (390 * self.resistors_raw[3])) / (18200 + (390 * self.resistors_raw[3]))),
+            0.0001 * (49900 * (390 * self.resistors_raw[4])) / (49900 + (390 * self.resistors_raw[4])),
+            -3.775 + (1.225/22600 + .35*.000001) * (390 * self.resistors_raw[5] + 32400),
+            3.3 * (390 * self.resistors_raw[6]) / (390 * self.resistors_raw[6] + 32000),
+]
+        self.set_psu_enable(True)
+       
 
     def get_current(self, i):
         return self.currents[i]

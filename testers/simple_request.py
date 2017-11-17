@@ -4,8 +4,14 @@ import sys, requests, json
 
 base_url = 'http://beagle01.aeg.lan:8888/api/0.1/qem/'
 headers = {'Content-Type': 'application/json'}
-meta_headers = {'Accept': 'application/json;metadata=true"'}
+meta_headers = {'Accept': 'application/json;metadata=true'}
 
+
+def baseData():
+# returns current state excluding metadata
+  theWholeLot = requests.get(base_url, headers={'Accept':'application/json'})
+
+  return theWholeLot.content
 
 
 def allData():
@@ -26,8 +32,8 @@ def checkGood():
   notGood = ''
 
   for i in range(len(parsed['power_good'])): 
-    if not parsed['power_good'][str(i)]:
-      notGood += (str(i) + ', ')
+    if not parsed['power_good'][str(i+1)]:
+      notGood += (str(i+1) + ', ')
   if notGood != '': return 'Power is not good on pins ' + notGood[:-2]
   else: return 'Power is good'
 
@@ -39,7 +45,7 @@ def checkCurrentVoltageName(name):
   name = name.replace(' ', '_')
   response = requests.get(voltage_url, headers=meta_headers)
   parsed = json.loads(response.text)
-  #print parsed['current_voltage']
+#  print parsed['current_voltage']
   for cv in parsed['current_voltage']:
     if cv['name'] == name:
       return ('{:.' + str(cv['voltage']['dp']) + 'f}V, {:.' + str(cv['current']['dp']) + 'f}mA').format(cv['voltage']['value'], cv['current']['value'])
@@ -133,10 +139,11 @@ if __name__ == '__main__':
   if len(sys.argv) == 2:
     base_url = sys.argv[1]
   
+  print baseData()
   #print allData()
   #print checkGood()
-  #print checkCurrentVoltageName('VDD P18')
-  changeClock(25)
+  #print checkCurrentVoltageName('VCTRL NEG')
+  #changeClock(25)
   #switchPsu()
   #changeResistorName('VRESET',0)
   #changeResistorNum(0,.90)

@@ -44,7 +44,7 @@
 ---------------------------- */
 
 .parent-column {
-    padding: 0 20px;
+    padding: 0 16px;
     background-color: #fbfbfb;
     border-right: #b8c4cb 2px solid;
     z-index: 50;
@@ -61,7 +61,7 @@
 }
 
 .last {
-    padding-left: 20px;
+    padding-left: 16px;
 }
 
 .last .horizontal {

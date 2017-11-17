@@ -88,7 +88,7 @@ class TPL0102(I2CDevice):
         self.__wiper_pos[wiper] = int(position)
         self.write8(wiper, self.__wiper_pos[wiper])
 
-    def get_wiper(self, wiper):
+    def get_wiper(self, wiper, force=False):
         """Gets a wiper position
         :param wiper: Wiper to get 0=A, 1=B
         :returns: Current position [0-255]
@@ -96,6 +96,9 @@ class TPL0102(I2CDevice):
 
         if not wiper in [0,1]:
                         raise I2CException("Select either wiper 0 or wiper 1")
+
+        if force:
+            self.__wiper_pos = [self.readU8(0), self.readU8(1)]
 
         return self.__wiper_pos[wiper]
 

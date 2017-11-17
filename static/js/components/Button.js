@@ -35,7 +35,7 @@ Button.prototype.update =
                 this.buttonElem.childNodes[0].nodeValue = "Update";
             }
         }
-        else
+        else if(this.meta.name != "Reset Server")       
         {
             if(data)
             {
@@ -64,6 +64,16 @@ Button.prototype.generate =
                 ret += `title="${this.meta.description}"`;
             }
             ret += `>Update</button>`;
+        }
+        else if(this.meta.name === "Reset Server")
+        {
+            var ret = `
+<button id="${this.getID()}" type="button" class="btn btn-default"`;
+            if(this.meta.hasOwnProperty("description"))
+            {
+                ret += `title="${this.meta.description}"`;
+            }
+            ret += `>Reset</button>`;
         }
         else
         {
