@@ -51,6 +51,13 @@ def checkCurrentVoltageName(name):
       return ('{:.' + str(cv['voltage']['dp']) + 'f}V, {:.' + str(cv['current']['dp']) + 'f}mA').format(cv['voltage']['value'], cv['current']['value'])
   print (name + ' is not a valid current voltage')
 
+def setUpdating(state):
+  update_url = base_url + 'sensors_enabled'
+
+  requests.put(update_url, str(state) ,headers=headers)
+  response = requests.get(update_url)
+  print '\n\n' + response.content
+  return
 
 
 def changeClock(newClock):
@@ -114,7 +121,7 @@ def changeResistorNum(resistor,value):
 
 
 def incrementResistors():
-# increase all resistors by .001V (uA for resistor[2])
+# increase all resistors register by 5
   resist_url = base_url + 'resistors'
   response = requests.get(resist_url)
   parsed = json.loads(response.text)
@@ -124,8 +131,8 @@ def incrementResistors():
   values = []
 
   for i in range(len(parsed['resistors'])):
-    resist_urls.append(resist_url + '/' + str(i) + '/value')
-    values.append(float(parsed['resistors'][i]['value']) + 0.001)
+    resist_urls.append(resist_url + '/' + str(i) + '/register')
+    values.append(float(parsed['resistors'][i]['register']) + 5)
     requests.put(resist_urls[i], str(values[i]), headers=headers)
 
   #response = requests.get(resist_url)
@@ -139,11 +146,12 @@ if __name__ == '__main__':
   if len(sys.argv) == 2:
     base_url = sys.argv[1]
   
-  print baseData()
+  #print baseData()
   #print allData()
   #print checkGood()
   #print checkCurrentVoltageName('VCTRL NEG')
-  #changeClock(25)
+  setUpdating(1);
+  #changeClock(20)
   #switchPsu()
   #changeResistorName('VRESET',0)
   #changeResistorNum(0,.90)
