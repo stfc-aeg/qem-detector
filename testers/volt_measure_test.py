@@ -94,7 +94,7 @@ class voltage_test():
     parsedResponse = requests.get((self.resistors_url), headers={'Accept': 'application/json;metadata=true'}).json()
     for i in range(len(parsedResponse['resistors'])):
       if parsedResponse['resistors'][i]['name'] == name:
-       return(i,parsedResponse['resistors'][i]['register_value']['value'])
+       return(i,parsedResponse['resistors'][i]['register']['value'])
     tkMessageBox.showerror('Name Error',(name + ' is not a valid resistor'))
     sys.exit()
 
@@ -110,7 +110,7 @@ class voltage_test():
       if name[0:5] == 'VCTRL': resistor = 'VCTRL'
       else: resistor = name
       resistorData = self.getResistorData(resistor)
-      resistor_url = self.resistors_url + '/' + str(resistorData[0]) + '/register_value'
+      resistor_url = self.resistors_url + '/' + str(resistorData[0]) + '/register'
       measured[0] = self.checkVoltageName(name)
       requests.put(resistor_url, '0', headers=self.headers)
       measured[1] = self.checkVoltageName(name)

@@ -41,8 +41,8 @@ class Resistor(object):
         
         self.param_tree = MetadataTree({
             "name" : self.backplane.get_resistor_name(self.index),
-            "value" : (self.get, self.set, {"units" : self.backplane.get_resistor_units(self.index), "min" : self.backplane.get_resistor_min(self.index), "max" : self.backplane.get_resistor_max(self.index)}),
-            "register_value" : (self.raw_get,self.raw_set,{"dp" : 0, "min" : 0, "max" : 255}),
+            "resistance" : (self.get, self.set, {"units" : self.backplane.get_resistor_units(self.index), "min" : self.backplane.get_resistor_min(self.index), "max" : self.backplane.get_resistor_max(self.index)}),
+            "register" : (self.raw_get,self.raw_set,{"dp" : 0, "min" : 0, "max" : 255}),
        })
 
     def get(self):

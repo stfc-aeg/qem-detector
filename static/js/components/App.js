@@ -34,6 +34,7 @@ function App()
 
 App.prototype.freq_overlay = null;
 App.prototype.query_overlay = null;
+App.prototype.logging_overlay = null;
 App.prototype.update_delay = 0.2;
 App.prototype.dark_mode = false;
 
@@ -81,8 +82,9 @@ App.prototype.generate =
             </a>
             <ul class="dropdown-menu">
                 <li><a href="#" id="update-freq">Update Frequency</a></li>
-                <li><a href="#" id="toggle-dark">Toggle Dark</a></li>
+                <li><a href="#" id="switch-logging">Logging</a></li>
                 <li><a href="#" id="raw-query">Raw Query</a></li>
+                <li><a href="#" id="toggle-dark">Toggle Dark</a></li>
             </ul>
         </li>
     </ul>
@@ -90,6 +92,7 @@ App.prototype.generate =
         this.mount.appendChild(navbar);
         document.getElementById("update-freq").addEventListener("click", this.updateFrequency.bind(this));
         document.getElementById("toggle-dark").addEventListener("click", this.toggleDark.bind(this));
+        document.getElementById("switch-logging").addEventListener("click", this.switchLogging.bind(this));
         this.documentBody = document.getElementsByTagName("body")[0];
         document.getElementById("raw-query").addEventListener("click", this.rawQuery.bind(this));
         var nav_list = document.getElementById("adapter-links");
@@ -393,6 +396,34 @@ App.prototype.generate =
         document.getElementById("query-cancel").addEventListener("click", this.queryCancel.bind(this));
         document.getElementById("query-put").addEventListener("click", this.queryPut.bind(this));
         document.getElementById("query-get").addEventListener("click", this.queryGet.bind(this));
+
+
+        this.logging_overlay = document.createElement("div");
+        this.logging_overlay.classList.add("overlay-background");
+        this.logging_overlay.classList.add("hidden");
+        this.logging_overlay.innerHTML = `
+<div class="overlay-logging">
+    <h5>Raw query:</h5>
+    <div class="overlay-logging-padding">
+        <label>URL:</label>
+        <div class="input-group">
+            <input class="form-control text-right" id="logging-url" placeholder="localhost" type="text">
+        </div>
+        <label>Port:</label>
+        <div class="input-group">
+            <input class="form-control text-right" id="logging-port" placeholder="8086" type="text">
+        </div>
+        <div class="overlay-control-buttons">
+            <button class="btn btn-primary" id="logging-toggle" type="button">Start</button>
+            <button class="btn btn-danger" id="logging-cancel" type="button">Cancel</button>
+        </div>
+    <div>
+</div></div> 
+</div>
+`;
+        this.mount.appendChild(this.logging_overlay);
+        document.getElementById("logging-toggle").addEventListener("click", this.loggingToggle.bind(this));
+        document.getElementById("logging-cancel").addEventListener("click", this.loggingCancel.bind(this));
 
         //Add footer
         var footer = document.createElement("div");
@@ -871,7 +902,7 @@ App.prototype.testVolt =
                     if(i==12 && CTRL_NEG_checked) {
                         promises_range[0].push(new Promise ((resolve,reject) => {
                             var measuredMins = [0,0];
-                            apiPUT(parentThis.current_adapter, "resistors/" + resistLookup[i] + "/register_value",0)
+                            apiPUT(parentThis.current_adapter, "resistors/" + resistLookup[i] + "/register",0)
                             .done(
                                 function() {
                                     setTimeout(function() {
@@ -891,7 +922,7 @@ App.prototype.testVolt =
                         }));
                     } else {
                         promises_range[0].push(new Promise ((resolve,reject) => {
-                            apiPUT(parentThis.current_adapter, "resistors/" + resistLookup[i] + "/register_value",0)
+                            apiPUT(parentThis.current_adapter, "resistors/" + resistLookup[i] + "/register",0)
                             .done(
                                 function() {
                                     setTimeout(function() {
@@ -925,7 +956,7 @@ App.prototype.testVolt =
                 if (rangeLocation[i]==12 && CTRL_NEG_checked==true) {
                     var measuredMaxs = [0,0]
                     promises_range[1][i] = new Promise((resolve,reject) => {
-                        apiPUT(parentThis.current_adapter, "resistors/" + resistLookup[rangeLocation[i]] + "/register_value",255)
+                        apiPUT(parentThis.current_adapter, "resistors/" + resistLookup[rangeLocation[i]] + "/register",255)
                         .done(
                             function() {
                                 setTimeout(function() {
@@ -945,7 +976,7 @@ App.prototype.testVolt =
                     });
                 } else {
                     promises_range[1][i] = new Promise((resolve,reject) => {
-                        apiPUT(parentThis.current_adapter, "resistors/" + resistLookup[rangeLocation[i]] + "/register_value",255)
+                        apiPUT(parentThis.current_adapter, "resistors/" + resistLookup[rangeLocation[i]] + "/register",255)
                         .done(
                             function() {
                                 setTimeout(function() {
@@ -1310,7 +1341,7 @@ App.prototype.testResist =
 function testingResist(resistor,testCases, parentThis, gen_graph) {
     if(testCases.length>0)
     {
-        apiPUT(parentThis.current_adapter, "resistors/" + resistor + "/register_value",testCases[0])
+        apiPUT(parentThis.current_adapter, "resistors/" + resistor + "/register",testCases[0])
         .done(
             function()
             {
@@ -1420,7 +1451,7 @@ function testingResist(resistor,testCases, parentThis, gen_graph) {
 function testingResistCalculate(resistor,testCases, parentThis, gen_graph) {
     if(testCases.length>0)
     {
-        apiPUT(parentThis.current_adapter, "resistors/" + resistor + "/register_value",testCases[0])
+        apiPUT(parentThis.current_adapter, "resistors/" + resistor + "/register",testCases[0])
         .done(
             function()
             {
@@ -1659,6 +1690,25 @@ App.prototype.queryGet =
         )
         .fail(this.setError.bind(this));
     };
+
+App.prototype.switchLogging =
+    function()
+    {
+        this.logging_overlay.classList.remove("hidden");
+    };
+
+App.prototype.loggingCancel =
+    function()
+    {
+        this.logging_overlay.classList.add("hidden");
+    };
+
+App.prototype.loggingSwitch =
+    function()
+    {
+        this.logging_overlay.classList.add("hidden");
+    };
+
 
 App.prototype.getCookie =
     function(key)

@@ -98,8 +98,8 @@ class resistor_test():
     parsedResponse = requests.get(self.resistors_url, headers={'Accept': 'application/json;metadata=true'}).json()
     for i in range(len(parsedResponse['resistors'])):
       if parsedResponse['resistors'][i]['name'] == name:
-        if raw: return (i,parsedResponse['resistors'][i]['register_value']['value'])
-        else: return (i,parsedResponse['resistors'][i]['value'])
+        if raw: return (i,parsedResponse['resistors'][i]['register']['value'])
+        else: return (i,parsedResponse['resistors'][i]['resistance'])
     tkMessageBox.showerror('Name Error',(name + ' is not a valid resistor'))
     sys.exit()
 
