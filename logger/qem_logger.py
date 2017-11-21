@@ -166,5 +166,5 @@ class qemLogger(object):
 
 if __name__ == '__main__':
     
-    logger = qemLogger('te7aegserver.te.rl.ac.uk',8086)
+    logger = qemLogger('localbranch',8086)
     logger.run()
