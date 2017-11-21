@@ -6,7 +6,7 @@ setup(
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     description='QEM Backplane plugin for ODIN framework',
-    url='https://github.com/jamesh1999/odin-control',
+    url='https://github.com/timcnicholls/odin',
     author='Tim Nicholls',
     author_email='tim.nicholls@stfc.ac.uk',
     packages=find_packages(),
