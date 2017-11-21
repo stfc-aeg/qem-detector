@@ -4,9 +4,14 @@ import sys, requests, json
 
 base_url = 'http://beagle01.aeg.lan:8888/api/0.1/qem/'
 headers = {'Content-Type': 'application/json'}
-meta_headers = {'Accept': 'application/json;metadata=true"'}
+meta_headers = {'Accept': 'application/json;metadata=true'}
 
 
+def baseData():
+# returns current state excluding metadata
+  theWholeLot = requests.get(base_url, headers={'Accept':'application/json'})
+
+  return theWholeLot.content
 
 def allData():
 # returns current state including metadata
@@ -26,8 +31,8 @@ def checkGood():
   notGood = ''
 
   for i in range(len(parsed['power_good'])): 
-    if not parsed['power_good'][str(i)]:
-      notGood += (str(i) + ', ')
+    if not parsed['power_good'][str(i+1)]:
+      notGood += (str(i+1) + ', ')
   if notGood != '': return 'Power is not good on pins ' + notGood[:-2]
   else: return 'Power is good'
 
@@ -40,6 +45,9 @@ def checkCurrentVoltageName(name):
   response = requests.get(voltage_url, headers=meta_headers)
   parsed = json.loads(response.text)
   #print parsed['current_voltage']
+  for cv in parsed['current_voltage']:
+    if cv['name'] == name:
+      return ('{:.' + str(cv['voltage']['dp']) + 'f}V, {:.' + str(cv['current']['dp']) + 'f}mA').format(cv['voltage']['value'], cv['current']['value'])
   for cv in parsed['current_voltage']:
     if cv['name'] == name:
       return ('{:.' + str(cv['voltage']['dp']) + 'f}V, {:.' + str(cv['current']['dp']) + 'f}mA').format(cv['voltage']['value'], cv['current']['value'])
@@ -97,6 +105,9 @@ def changeResistorNum(resistor,value):
   #response = requests.get(resist_url)
   #print response.content
 
+  #response = requests.get(resist_url)
+  #print response.content
+
   changeResistor = requests.put(resist_url, str(value), headers=headers)
 
 
@@ -108,7 +119,10 @@ def changeResistorNum(resistor,value):
 
 
 def incrementResistors():
-# increase all resistors by .001V (uA for resistor[2])
+# increase all resistors register by 5
+  resist_url = base_url + 'resistors'
+  response = requests.get(resist_url)
+  parsed = json.loads(response.text)
   resist_url = base_url + 'resistors'
   response = requests.get(resist_url)
   parsed = json.loads(response.text)
@@ -123,6 +137,9 @@ def incrementResistors():
     requests.put(resist_urls[i], str(values[i]), headers=headers)
 
   #response = requests.get(resist_url)
+    requests.put(resist_urls[i], str(values[i]), headers=headers)
+
+  #response = requests.get(resist_url)
   #print response.content
   return
 
@@ -133,6 +150,7 @@ if __name__ == '__main__':
   if len(sys.argv) == 2:
     base_url = sys.argv[1]
   
+  #print baseData()
   #print allData()
   #print checkGood()
   #print checkCurrentVoltageName('VDD P18')

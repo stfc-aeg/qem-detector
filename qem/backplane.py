@@ -7,6 +7,13 @@ from tpl0102 import TPL0102
 from si570 import SI570
 from ad7998 import AD7998
 
+#try :
+#    from logger.qem_logger import qemLogger
+#except:
+#    var logger_imported = True
+#else:
+#    var logger_imported = False
+
 class Backplane(I2CContainer):
     
     CURRENT_RESISTANCE = [2.5, 1, 1, 1, 10, 1, 10, 1, 1, 1, 10, 1, 10]
@@ -36,6 +43,12 @@ class Backplane(I2CContainer):
             self.mcp23008[0].setup(i, MCP23008.IN)
         self.mcp23008[1].output(0, MCP23008.HIGH)
         self.mcp23008[1].setup(0, MCP23008.OUT)
+
+#        if logger_imported:
+#            self.logger_state = 0
+#            self.logger = None
+#        else:
+#            self.logger_state = -1
 
         #Sensor readings
         self.voltages = [0.0] * 13
@@ -208,12 +221,33 @@ class Backplane(I2CContainer):
     def set_update(self, value):
         if value and not self.sensors_enabled: self.updates_needed = 1
 
+#    def get_logger_state(self):
+#        return self.logger_state
+
+#    def set_logger_state(self, [url,port]):
+#        if self.logger_state == 0:
+#            self.logger_state = 1
+#            self.logger = qemLogger(url,port)
+#            self.logger.run()
+#        elif self.logger_state == 1:
+#            self.logger_state = 0
+#            if self.logger != None
+#                self.logger.shutdown()
+#                self.logger = None
+
     def set_reset(self, value):
         self.mcp23008[1].setup(0, MCP23008.OUT)
         for i in range(5):
             self.tpl0102[i].set_non_volatile(True)
         self.resistor_volatile = False
         self.set_clock_frequency(20)
+
+#        if self.logger_state == 1:
+#            self.logger_state = 0
+#            if self.logger != None:
+#                self.logger.shutdown()
+#                self.logger = None
+
         self.resistors_raw = [
             self.tpl0102[0].get_wiper(0,True),
             self.tpl0102[0].get_wiper(1,True),

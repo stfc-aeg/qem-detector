@@ -86,15 +86,15 @@ class current_test():
     tkMessageBox.showerror('Name Error',(name + ' is not a valid power supply'))
     sys.exit()
 
-def changeResistor(resistor,value):
-  resist_url = self.base_url + 'resistors'
-  parsedResponse = requests.get(resist_url, headers=meta_headers).json()
-  for i in range(len(parsedResponse['resistors'])):
-    if parsedResponse['resistors'][i]['name'] == resistor:
-      resist_url = base_url + 'resistors/' + str(resistor) + '/register_value/value'
-      changeResistor = requests.put(resist_url, str(value), headers=headers)
-      return 
-  print (resistor + ' is not a valid resistor')
+  def changeResistor(resistor,value):
+    resist_url = self.base_url + 'resistors'
+    parsedResponse = requests.get(resist_url, headers=meta_headers).json()
+    for i in range(len(parsedResponse['resistors'])):
+      if parsedResponse['resistors'][i]['name'] == resistor:
+        resist_url = base_url + 'resistors/' + str(resistor) + '/register_value/value'
+        changeResistor = requests.put(resist_url, str(value), headers=headers)
+        return 
+    print (resistor + ' is not a valid resistor')
 
 
   def checkCurrent(self,name):

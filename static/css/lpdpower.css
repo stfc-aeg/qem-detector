@@ -427,3 +427,36 @@ body {
     width:100%;
 }
 
+.overlay-logging {
+    background-color: #fff;
+    width: 400px;
+    height: 330px;
+    margin-top: -125px;
+    margin-left: -200px;
+    left: 50%;
+    top: 50%;
+    position: absolute;
+    border-radius: 3px;
+}
+.dark .overlay-logging {
+    background-color: #35414e;
+}
+
+.overlay-logging h5 {
+    padding: 20px;
+    font-size: 1.2em;
+    color: white;
+    font-weight: 800;
+    margin: 0;
+    background-color: #1f2127;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+}
+
+.overlay-logging > div{
+    padding: 40px;
+}
+
+.overlay-logging .input-group {
+    width:100%;
+}

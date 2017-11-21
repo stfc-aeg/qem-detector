@@ -89,6 +89,7 @@ class BackplaneData(object):
             "current_voltage" : [cv.param_tree for cv in self.current_voltage],
             "resistors" : [r.param_tree for r in self.resistors],
             "reset" : (False, self.backplane.set_reset,{"name" : "Reset Server"}),
+#            "logger_state" : (self.backplane.get_logger_state, self.backplane.set_logger_state,{"name" : "Logger State"}),
         })
 
     def get(self, path, metadata):

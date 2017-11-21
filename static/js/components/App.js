@@ -403,7 +403,7 @@ App.prototype.generate =
         this.logging_overlay.classList.add("hidden");
         this.logging_overlay.innerHTML = `
 <div class="overlay-logging">
-    <h5>Raw query:</h5>
+    <h5>Logging:</h5>
     <div class="overlay-logging-padding">
         <label>URL:</label>
         <div class="input-group">
@@ -886,12 +886,18 @@ App.prototype.testVolt =
         var expectedMin = [];
         var measuredMin = [];
         var rangeLocation = [];
+        var checkedDisabled = false;
         parentThis = this;
         for(let i=0; i<13; i++)
         {
             var CTRL_NEG_checked = document.getElementById('volt-check-10').checked;
             if(document.getElementById('volt-check-' + i).checked == true) {
+                if(document.getElementById('volt-check-' + i).disabled) {
+                    checkedDisabled = true;
+                    continue;
+                }
                 if (i==7 || i>9) {
+                    $(`#resist-check-${resistLookup[i]}`).attr('disabled', true);
                     if(i==10 && document.getElementById('volt-check-12').checked == true) {
                         continue;
                     }
@@ -947,9 +953,15 @@ App.prototype.testVolt =
             }
         }
         if(testSupplies[0].length == 0 && testSupplies[1].length == 0) {
-            alert("Please select the power supplies you wish to test");
-            $('#test-volt-button').attr('disabled', false);
-            return;
+             if(checkedDisabled) {
+                 alert("Supplies directly linked to resistors currently being tested cannot themselves be tested")
+                 $('#test-volt-button').attr('disabled', false);
+                 return;
+             } else {
+                alert("Please select the power supplies you wish to test");
+                $('#test-volt-button').attr('disabled', false);
+                return;
+            }
         }
         for (let i=0;i<promises_range[0].length;i++){
             promises_range[0][i].then((measuredMin) => {
@@ -1046,6 +1058,7 @@ App.prototype.testVolt =
             Promise.all(promises_range[0]).then((results) => {
                 Promise.all(promises_range[1]).then((measured) => {
                     for(var i=0; i<promises_range[1].length; i++){
+                        $(`#resist-check-${resistLookup[rangeLocation[i]]}`).attr('disabled', false);
                         if (rangeLocation[i]==12 && CTRL_NEG_checked==true) {
                             volt_test_html += `
                 <tr><th>${testSupplies[1][i]}</th><td>${expectedMin[i]}</td><td>${measured[i][0][0].toString()}</td><td>${expectedMax[i]}</td><td>${measured[i][1][0].toString()}</td></tr>
@@ -1091,6 +1104,7 @@ App.prototype.testCurrent =
         testSupplies = [];
         expectedTest = [];
         parentThis = this;
+        var checkedDisabed = false;
 
         alert(`Please remove all resistors from the PL connectors`);
         apiPUT(parentThis.current_adapter, "update_required", true)
@@ -1099,16 +1113,26 @@ App.prototype.testCurrent =
                 setTimeout(function() {          
                     for(var i=0; i<13; i++) {
                         if(document.getElementById('volt-check-' + i).checked == true) {
-                            testLocation.push(i)
-                            testSupplies.push(document.getElementById('volt-check-' + i).value);
-                            expectedTest.push(expectedValue[i]);
-                            promisesBase.push(apiGET(parentThis.current_adapter, "current_voltage/" + i + "/current_register", false));
+                            if(document.getElementById('volt-check-' + i).disabled) {
+                                checkedDisabled = true;
+                            } else {
+                                testLocation.push(i);
+                                testSupplies.push(document.getElementById('volt-check-' + i).value);
+                                expectedTest.push(expectedValue[i]);
+                                promisesBase.push(apiGET(parentThis.current_adapter, "current_voltage/" + i + "/current_register", false));
+                            }
                         }
                     }
                     if(testSupplies.length == 0) {
-                        alert("Please select the power supplies you wish to test");
-                        $('#test-current-button').attr('disabled', false);
-                        return;
+                        if(checkedDisabled) {
+                            alert("Supplies directly linked to resistors currently being tested cannot themselves be tested")
+                            $('#test-current-button').attr('disabled', false);
+                            return;
+                        } else {
+                            alert("Please select the power supplies you wish to test");
+                            $('#test-current-button').attr('disabled', false);
+                            return;
+                        }
                     }
                     $.when.apply($, promisesBase).then(function() {
                         currentMeasuredBase = arguments;
@@ -1312,8 +1336,21 @@ App.prototype.testResist =
         }
         for(var i=0; i<7; i++)
         {
-            if(document.getElementById('resist-check-' + i).checked == true)
-            {
+            if(document.getElementById('resist-check-' + i).checked == true) {
+                if(document.getElementById('resist-check-' + i).disabled) {
+                    alert("Tests may not be run on active resistors.\nPlease wait for the voltage test to finish.");
+                    $('#test-resist-button-0').attr('disabled', false);
+                    $('#test-resist-button-1').attr('disabled', false);
+                    break;
+                }
+                if (i==3) {
+                    $('#volt-check-7').attr('disabled', true);
+                } else if (i==4) {
+                    $('#volt-check-11').attr('disabled', true);
+                } else if (i==5) {
+                    $('#volt-check-10').attr('disabled', true);
+                    $('#volt-check-12').attr('disabled', true);
+                }
                 resistTestCases = testCases.slice(0);
                 measuredResist = [];
                 expectedResist = [];
@@ -1445,6 +1482,14 @@ function testingResist(resistor,testCases, parentThis, gen_graph) {
         }
         $('#test-resist-button-0').attr('disabled', false);
         $('#test-resist-button-1').attr('disabled', false);
+        if (resistor==3) {
+            $('#volt-check-7').attr('disabled', false);
+        } else if (resistor==4) {
+            $('#volt-check-11').attr('disabled', false);
+        } else if (resistor==5) {
+            $('#volt-check-10').attr('disabled', false);
+            $('#volt-check-12').attr('disabled', false);
+        }
     }
 }
 
@@ -1567,6 +1612,15 @@ function testingResistCalculate(resistor,testCases, parentThis, gen_graph) {
         }
         $('#test-resist-button-0').attr('disabled', false);
         $('#test-resist-button-1').attr('disabled', false);
+        if (resistor==3) {
+            $('#volt-check-7').attr('disabled', false);
+        } else if (resistor==4) {
+            $('#volt-check-11').attr('disabled', false);
+        } else if (resistor==5) {
+            $('#volt-check-10').attr('disabled', false);
+            $('#volt-check-12').attr('disabled', false);
+        }
+
     }
 }
 
@@ -1694,7 +1748,15 @@ App.prototype.queryGet =
 App.prototype.switchLogging =
     function()
     {
+//        apiGET(this.current_adapter, "logger_state", false)
+//        .done(
+//            function(data)
+//            {
+//                document.getElementById("query-body").value = JSON.stringify(data);
         this.logging_overlay.classList.remove("hidden");
+//            }
+//        )
+//        .fail(this.setError.bind(this));
     };
 
 App.prototype.loggingCancel =
@@ -1703,7 +1765,7 @@ App.prototype.loggingCancel =
         this.logging_overlay.classList.add("hidden");
     };
 
-App.prototype.loggingSwitch =
+App.prototype.loggingToggle =
     function()
     {
         this.logging_overlay.classList.add("hidden");
