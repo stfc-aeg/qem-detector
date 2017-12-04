@@ -388,8 +388,7 @@ App.prototype.generate =
             <button class="btn btn-primary" id="query-get" type="button">GET</button>
             <button class="btn btn-danger" id="query-cancel" type="button">Cancel</button>
         </div>
-    <div>
-</div></div> 
+    </div>
 </div>
 `;
         this.mount.appendChild(this.query_overlay);
@@ -417,8 +416,7 @@ App.prototype.generate =
             <button class="btn btn-primary" id="logging-toggle" type="button">Start</button>
             <button class="btn btn-danger" id="logging-cancel" type="button">Cancel</button>
         </div>
-    <div>
-</div></div> 
+    </div>
 </div>
 `;
         this.mount.appendChild(this.logging_overlay);
@@ -1748,15 +1746,7 @@ App.prototype.queryGet =
 App.prototype.switchLogging =
     function()
     {
-//        apiGET(this.current_adapter, "logger_state", false)
-//        .done(
-//            function(data)
-//            {
-//                document.getElementById("query-body").value = JSON.stringify(data);
         this.logging_overlay.classList.remove("hidden");
-//            }
-//        )
-//        .fail(this.setError.bind(this));
     };
 
 App.prototype.loggingCancel =

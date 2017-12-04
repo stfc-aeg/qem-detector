@@ -72,6 +72,7 @@ TextField.prototype.onClick =
     function()
     {
         var val = this.textElem.value;
+        if (val == null || val=="") val = oldValue;
         if(this.float) val = parseFloat(val);
         this.app.put(this.getPath(), val);
         this.textElem.value = "";
