@@ -17,6 +17,6 @@ cd ../odin-control
 python setup.py install
 
 #Setup the script to run the server
+cd ..
 mkdir bin
 cp odin-qem/scripts/qem.sh bin
-chmod 755 bin/qem.sh
