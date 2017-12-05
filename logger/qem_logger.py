@@ -1,11 +1,4 @@
 import sys
-
-try:
-    from influxdb import InfluxDBClient
-except ImportError:
-    print "influxdb not found";
-    sys.exit(0)
-
 import logging
 import requests
 import json
@@ -13,6 +6,11 @@ import datetime
 import time
 import signal
 
+try:
+    from influxdb import InfluxDBClient
+except ImportError:
+    logging.warning("influxdb not found, logging unavailable");
+    sys.exit(0)
 
 db_name='qem_test'
 pscu_host='beagle01.aeg.lan'
