@@ -1628,9 +1628,9 @@ function expectResist(resistor,test) {
     } else if(resistor==3) {   
           return(0.0001 * (17800 + (18200 * (390 * test)) / (18200 + (390 * test))));
     } else if(resistor==5) {
-        return (test * .021 - 2.02);
+	return  -3.775 + (1.225/22600 + .35*.000001) * (390 * test + 32400);
     } else if(resistor==2) {
-        return (400 * (test * 390/(test * 390 + 294000)));
+        return (400.0 * (test * 390/(test * 390 + 294000)));
     } else {
         return (3.3 * (390 * test) / (390 * test + 32000));
     }
