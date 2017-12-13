@@ -1,8 +1,10 @@
 #!/bin/bash
-#Setup the Odin Server with QEM adapter to run as a service
+#Setup the Odin Server with QEM adapter to run with a script
+
+#Gain root privelige
+su -
 
 #Switch to a virtual environment
-su -
 virtualenv --system-site-packages venv2.7
 source venv2.7/bin/activate
 
