@@ -23,7 +23,7 @@ class Backplane(I2CContainer):
     def __init__(self):
         #Set up I2C devices
         signal.signal(signal.SIGALRM, self.connect_handler)
-        signal.alarm(5)
+        signal.alarm(6)
         try:
             self.tca = TCA9548(0x70, busnum=1)
 
@@ -49,7 +49,7 @@ class Backplane(I2CContainer):
             self.mcp23008[1].setup(0, MCP23008.OUT)
         except Exception, exc:
             logging.error(exc)
-            sys.exit(1)
+            sys.exit(0)
         finally:
             signal.alarm(0)
             if logger_imported:
