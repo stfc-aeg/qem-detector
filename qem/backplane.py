@@ -68,7 +68,10 @@ class Backplane(I2CContainer):
                 3.3 * (390 * self.resistors_raw[6]) / (390 * self.resistors_raw[6] + 32000),
 ]
         except Exception, exc:
-            logging.error(exc)
+            if exc == 13:
+                logging.error("I2C Communications not enabled for user. Try 'su -;chmod 666 /dev/i2c-1'")
+            else:
+                logging.error(exc)
             sys.exit(0)
         finally:
             signal.alarm(0)
