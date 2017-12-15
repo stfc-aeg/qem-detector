@@ -47,17 +47,7 @@ class Backplane(I2CContainer):
                 self.mcp23008[0].setup(i, MCP23008.IN)
             self.mcp23008[1].output(0, MCP23008.HIGH)
             self.mcp23008[1].setup(0, MCP23008.OUT)
-        except Exception, exc:
-            logging.error(exc)
-            sys.exit(0)
-        finally:
-            signal.alarm(0)
-            if logger_imported:
-                self.logger_state = u"0"
-                self.logger = None
-            else:
-                self.logger_state = u"N/A"
-
+            
             #Resistor readings
             self.resistors_raw = [
                 self.tpl0102[0].get_wiper(0),
@@ -68,7 +58,6 @@ class Backplane(I2CContainer):
                 self.tpl0102[3].get_wiper(0),
                 self.tpl0102[4].get_wiper(0)
 ]
-
             self.resistors = [
                 3.3 * (390 * self.resistors_raw[0]) / (390 * self.resistors_raw[0] + 32000),
                 3.3 * (390 * self.resistors_raw[1]) / (390 * self.resistors_raw[1] + 32000),
@@ -78,7 +67,16 @@ class Backplane(I2CContainer):
                 -3.775 + (1.225/22600 + .35*.000001) * (390 * self.resistors_raw[5] + 32400),
                 3.3 * (390 * self.resistors_raw[6]) / (390 * self.resistors_raw[6] + 32000),
 ]
-
+        except Exception, exc:
+            logging.error(exc)
+            sys.exit(0)
+        finally:
+            signal.alarm(0)
+            if logger_imported:
+                self.logger_state = u"0"
+                self.logger = None
+            else:
+                self.logger_state = u"N/A"
 
         #Placeholders for sensor readings
         self.voltages = [0.0] * 13
