@@ -4,9 +4,8 @@
 #Gain root privelige
 su -
 
-#Switch to a virtual environment
-virtualenv --system-site-packages venv2.7
-source venv2.7/bin/activate
+#Allow access to I2C
+chmod 666 /dev/i2c-1
 
 #Install the adapter and server
 git config --global http.sslVerify false
