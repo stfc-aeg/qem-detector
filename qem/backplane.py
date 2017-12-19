@@ -1,4 +1,7 @@
-import sys, signal, logging
+import sys
+import signal
+import logging
+import math
 
 from i2c_device import I2CDevice, I2CException
 from i2c_container import I2CContainer
@@ -47,16 +50,6 @@ class Backplane(I2CContainer):
                 self.mcp23008[0].setup(i, MCP23008.IN)
             self.mcp23008[1].output(0, MCP23008.HIGH)
             self.mcp23008[1].setup(0, MCP23008.OUT)
-        except Exception, exc:
-            logging.error(exc)
-            sys.exit(0)
-        finally:
-            signal.alarm(0)
-            if logger_imported:
-                self.logger_state = u"0"
-                self.logger = None
-            else:
-                self.logger_state = u"N/A"
 
             #Resistor readings
             self.resistors_raw = [
@@ -79,6 +72,16 @@ class Backplane(I2CContainer):
                 3.3 * (390 * self.resistors_raw[6]) / (390 * self.resistors_raw[6] + 32000),
 ]
 
+        except Exception, exc:
+            logging.error(exc)
+            sys.exit(0)
+        finally:
+            signal.alarm(0)
+            if logger_imported:
+                self.logger_state = u"0"
+                self.logger = None
+            else:
+                self.logger_state = u"N/A"
 
         #Placeholders for sensor readings
         self.voltages = [0.0] * 13
@@ -89,11 +92,11 @@ class Backplane(I2CContainer):
         self.psu_enabled = True
         self.clock_freq = 20.0
         self.resistor_volatile = False
+        self.temperature = 0
 
         self.voltChannelLookup = ((0,2,3,4,5,6,7),(0,2,4,5,6,7))
         self.updates_needed = 1
         self.set_sensors_enable(False)
-
 
     def connect_handler(self, signum, frame):
         raise Exception("Timeout on I2C connection, Shutting Down") 
@@ -129,6 +132,10 @@ class Backplane(I2CContainer):
                 self.voltages_raw[i + 7] = self.ad7998[3].read_input_raw(j) & 0xfff
                 self.voltages[i + 7] = self.voltages_raw[i + 7] * 5 / 4095.0
             self.voltages[10] *= -1
+
+            temp_volt = (self.ad7998[3].read_input_raw(3) & 0xfff) * 5.0 / 4095.0
+            ln_x = math.log(1.5*temp_volt/(5.0-temp_volt))
+            self.temperature = 1.0/(0.00335402 + ln_x*(0.00025624 + ln_x*(0.00000260597 + ln_x*0.0000000632926)))-273.15
 
             #Power good monitors
             self.power_good = self.mcp23008[0].input_pins([0,1,2,3,4,5,6,7,8])
@@ -275,6 +282,8 @@ class Backplane(I2CContainer):
 ]
         self.set_psu_enable(True)
        
+    def get_temp(self):
+        return self.temperature
 
     def get_current(self, i):
         return self.currents[i]
