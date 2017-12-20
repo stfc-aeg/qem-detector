@@ -131,7 +131,12 @@ class Backplane(I2CContainer):
                 self.voltages[i + 7] = self.voltages_raw[i + 7] * 5 / 4095.0
             self.voltages[10] *= -1
 
-            self.temperature = self.ad7998[3].read_input_raw(3) & 0xfff
+            #first calculate the voltage from the register
+            temp_volt = (self.ad7998[3].read_input_raw(3) & 0xfff) * 5.0 / 4095.0
+			#then calculate the natural log of the calculated resistance (5V potential divider with 15K resistor) divided by the resistance at 25 degrees celcius(10K)
+            ln_x = math.log(1.5*temp_volt/(5.0-temp_volt))
+			#then calulate the temperature using formula from the data sheet of thermistor NTCALUG03A103G and convert from Kelvin
+            self.temperature = 1.0/(0.00335402 + ln_x*(0.00025624 + ln_x*(0.00000260597 + ln_x*0.0000000632926)))-273.15
 
             #Power good monitors
             self.power_good = self.mcp23008[0].input_pins([0,1,2,3,4,5,6,7,8])
