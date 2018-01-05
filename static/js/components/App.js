@@ -1224,7 +1224,7 @@ var stepTest = 1;
 resistName = ["AUXRESET","VCM","DACEXTREF","VDD RST","VRESET","VCTRL","AUXSAMPLE"];
 lookupResistVolt = {3:7,4:11,5:[12,10]};
 resistLocation = ["PL47 Pin 2 and Ground","PL46 Pin 2 and Ground","PL43 Pin 1 and Ground","PL34 Pins 1 and 2","PL40 Pins 1 and 2","PL78 Pins 1 and 2","PL45 Pin 2 and Ground"];
-resistUnits = ["V","V","mA","V","V","V","V"];
+resistUnits = ["V","V","uA","V","V","V","V"];
 
 App.prototype.testResist =
     function(type)
@@ -1510,17 +1510,28 @@ function testingResistCalculate(resistor,testCases, parentThis, gen_graph) {
                 } else {
                     var ResistVolt = lookupResistVolt[resistor];
                 }
-                setTimeout(function() {
-                    apiGET(parentThis.current_adapter, "current_voltage/" + ResistVolt + "/voltage", false)
-                    .done(
-                        function(measured)
-                        {
-                            measuredResist.push(measured['voltage'].toFixed(3));
-                            testingResistCalculate(resistor,testCases, parentThis, gen_graph);
-                        }
+		var not_changed = true
+		do{
+                    apiGET(parentThis.current_adapter, "resistors/" + resistor + "/register", false)
+	            .done(
+		        function(read)
+		        {
+			    if(read==testCases[0]) {
+				not_changed = false
+                                apiGET(parentThis.current_adapter, "current_voltage/" + ResistVolt + "/voltage", false)
+                                .done(
+                                    function(measured)
+                                    {
+                                        measuredResist.push(measured['voltage'].toFixed(3));
+                                        testingResistCalculate(resistor,testCases, parentThis, gen_graph);
+                                    }
+		                )
+			    }
+  	 	        }
+                        .fail(this.setError.bind(this));
                     )
-                    .fail(this.setError.bind(this));
-                }, 40);
+		    .fail(this.setError.bind(this));
+	         while(not_changed)
             }
         )
         .fail(this.setError.bind(this));
