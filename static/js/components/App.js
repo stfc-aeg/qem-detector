@@ -1096,13 +1096,15 @@ App.prototype.testCurrent =
     function()
     {
         $('#test-current-button').attr('disabled', true);
-        expectedValue = [[20,41],[8,16],[9,18],[8,16],[82,164],[8,16],[82,164],[20,41],[20,41],[20,41],[49,98],[20,41],[82,164]];
+        expectedValue = [['20-20','41'],['8','16'],['9','18'],['8','16'],['82','164'],['8','16'],['82','164'],['20','41'],['20','41'],['20','41'],['49','98'],['20','41'],['82','164']];
         var promisesBase = [];
+	var promisesInitialize = []
         var testLocation = [];
         testSupplies = [];
         expectedTest = [];
         parentThis = this;
-        var checkedDisabed = false;
+        var checkedDisabled = false;
+        var bothCTRL = false;
 
         alert(`Please remove all resistors from the PL connectors`);
         apiPUT(parentThis.current_adapter, "update_required", true)
@@ -1113,6 +1115,37 @@ App.prototype.testCurrent =
                         if(document.getElementById('volt-check-' + i).checked == true) {
                             if(document.getElementById('volt-check-' + i).disabled) {
                                 checkedDisabled = true;
+                            } else if(i==7 || i>10){
+                                promisesInitialize.push(new Promise ((resolve,reject) => {
+                                    apiPUT(parentThis.current_adapter, "resistors/" + resistLookup[i] + "/register",255)
+                                    .done(
+                                        function() {
+                                            testLocation.push(i);
+                                            testSupplies.push(document.getElementById('volt-check-' + i).value);
+                                            expectedTest.push(expectedValue[i]);
+                                            promisesBase.push(apiGET(parentThis.current_adapter, "current_voltage/" + i + "/current_register", false));
+			                }
+                                    )
+                                    .fail(this.setError.bind(this));
+                                }));
+                            } else if(i==10) {
+                                if(document.getElementById('volt-check-12').checked){
+                                    bothCTRL = true;
+                                    continue;
+                                } else {
+                                    promisesInitialize.push(new Promise ((resolve,reject) => {
+                                        apiPUT(parentThis.current_adapter, "resistors/" + resistLookup[i] + "/register",0)
+                                        .done(
+                                            function() {
+                                                testLocation.push(i);
+                                                testSupplies.push(document.getElementById('volt-check-' + i).value);
+                                                expectedTest.push(expectedValue[i]);
+                                                promisesBase.push(apiGET(parentThis.current_adapter, "current_voltage/" + i + "/current_register", false));
+			                    }
+                                        )
+                                        .fail(this.setError.bind(this));
+                                    }));
+                                }
                             } else {
                                 testLocation.push(i);
                                 testSupplies.push(document.getElementById('volt-check-' + i).value);
@@ -1132,20 +1165,22 @@ App.prototype.testCurrent =
                             return;
                         }
                     }
-                    $.when.apply($, promisesBase).then(function() {
-                        currentMeasuredBase = arguments;
-                        getSecondMeasure(parentThis,testLocation,[]);
-                    }, function() {
-                        this.setError.bind(this);
-                    });
+                    Promise.all(promisesInitialize]).then((results) => {
+                        $.when.apply($, promisesBase).then(function() {
+                            currentMeasuredBase = arguments;
+                            getSecondMeasure(parentThis,testLocation,[],bothCTRL);
+                        }, function() {
+                            this.setError.bind(this);
+                        });
+		    });
                 }, 40);
             }
         )
         .fail(this.setError.bind(this));
     };
 
-function getSecondMeasure(parentThis, location, results) {
-    neededResistor = [180,180,220,180,180,180,180,330,330,330,330,330,330];
+function getSecondMeasure(parentThis, location, results, bothCTRL) {
+    neededResistor = [100,100,220,100,100,100,100,330,330,330,330,330,330];
     neededConnector = [75,42,74,41,76,33,77,34,36,35,78,40,78];
 
     if(location.length>0) {
@@ -1156,11 +1191,32 @@ function getSecondMeasure(parentThis, location, results) {
                 setTimeout(function() {
                     apiGET(parentThis.current_adapter, "current_voltage/" + location[0] + "/current_register", false)
                     .done(
-                        function(measured)
-                        {
+                        function(measured) {
                             location.shift();
                             results.push(measured['current_register']);
-                            getSecondMeasure(parentThis,location,results);
+                            if(bothCTRL && location[0]==12) {
+                                apiPUT(parentThis.current_adapter, "resistors/" + resistLookup[10] + "/register",0)
+                                .done(
+                                    function() {
+                                        location.push(10);
+                                        testSupplies.push(document.getElementById('volt-check-10').value);
+                                        expectedTest.push(expectedValue[10]);
+                                        apiGET(parentThis.current_adapter, "current_voltage/10/current_register", false)
+                                        .done(
+                                            function(results) {
+						if(testSupplies.length==2) {
+						    currentMeasuredBase[0] = [currentMeasuedBase[0]]
+						}
+   						currentMeasuredBase.push([results]);
+			                        getSecondMeasure(parentThis,location,results, bothCTRL);
+					    }
+					)
+					.fail(this.setError.bind(this));
+			            }
+                                )
+                                .fail(this.setError.bind(this));
+			    }
+                            getSecondMeasure(parentThis,location,results, bothCTRL);
                         }
                     )
                     .fail(this.setError.bind(this));
