@@ -31,7 +31,7 @@ class Backplane(I2CContainer):
             for i in range(5):
                 self.tpl0102.append(self.tca.attach_device(0, TPL0102, 0x50 + i, busnum=1))
             for i in range(5):
-                self.tpl0102[i].set_non_volatile(True)
+                self.tpl0102[i].set_non_volatile(False)
 
             self.si570 = self.tca.attach_device(1, SI570, 0x5d, 'SI570', busnum=1)
             self.si570.set_frequency(20) #Default to 20MHz
@@ -89,7 +89,7 @@ class Backplane(I2CContainer):
         self.power_good = [False] * 8
         self.psu_enabled = True
         self.clock_freq = 20.0
-        self.resistor_volatile = False
+        self.resistor_volatile = True
         self.temperature = 0
 
         self.voltChannelLookup = ((0,2,3,4,5,6,7),(0,2,4,5,6,7))
