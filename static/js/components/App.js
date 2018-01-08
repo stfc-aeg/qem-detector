@@ -1180,26 +1180,26 @@ App.prototype.testCurrent =
         .fail(this.setError.bind(this));
     };
 
-function getSecondMeasure(parentThis, location, results, bothCTRL) {
+function getSecondMeasure(parentThis, testLocation, results, bothCTRL) {
     neededResistor = [100,100,220,100,100,100,100,330,330,330,330,330,330];
     neededConnector = [75,42,74,41,76,33,77,34,36,35,78,40,78];
 
-    if(location.length>0) {
-        alert(`Please input a ${neededResistor[location[0]]}R resistor across PL${neededConnector[location[0]]}`);
+    if(testLocation.length>0) {
+        alert(`Please input a ${neededResistor[testLocation[0]]}R resistor across PL${neededConnector[testLocation[0]]}`);
         apiPUT(parentThis.current_adapter, "update_required", true)
         .done(
             function() {
                 setTimeout(function() {
-                    apiGET(parentThis.current_adapter, "current_voltage/" + location[0] + "/current_register", false)
+                    apiGET(parentThis.current_adapter, "current_voltage/" + testLocation[0] + "/current_register", false)
                     .done(
                         function(measured) {
-                            location.shift();
+                            testLocation.shift();
                             results.push(measured['current_register']);
-                            if(bothCTRL && location[0]==12) {
+                            if(bothCTRL && testLocation[0]==12) {
                                 apiPUT(parentThis.current_adapter, "resistors/" + resistLookup[10] + "/register",0)
                                 .done(
                                     function() {
-                                        location.push(10);
+                                        testLocation.push(10);
                                         testSupplies.push(document.getElementById('volt-check-10').value);
                                         expectedTest.push(expectedValue[10]);
                                         apiGET(parentThis.current_adapter, "current_voltage/10/current_register", false)
@@ -1209,7 +1209,7 @@ function getSecondMeasure(parentThis, location, results, bothCTRL) {
                                                     currentMeasuredBase[0] = [currentMeasuedBase[0]]
                                                 }
                                                    currentMeasuredBase.push([results]);
-                                                getSecondMeasure(parentThis,location,results, bothCTRL);
+                                                getSecondMeasure(parentThis,testLocation,results, bothCTRL);
                                             }
                                         )
                                         .fail(this.setError.bind(this));
@@ -1217,7 +1217,7 @@ function getSecondMeasure(parentThis, location, results, bothCTRL) {
                                 )
                                 .fail(this.setError.bind(this));
                             }
-                            getSecondMeasure(parentThis,location,results, bothCTRL);
+                            getSecondMeasure(parentThis,testLocation,results, bothCTRL);
                         }
                     )
                     .fail(this.setError.bind(this));
@@ -1567,28 +1567,26 @@ function testingResistCalculate(resistor,testCases, parentThis, gen_graph) {
                 } else {
                     var ResistVolt = lookupResistVolt[resistor];
                 }
-                var not_changed = true
-                do {
+                while(true) {
                     apiGET(parentThis.current_adapter, "resistors/" + resistor + "/register", false)
                     .done(
-                        function(read)
-                        {
-                            if(read==testCases[0]) {
-                                not_changed = false
-                                apiGET(parentThis.current_adapter, "current_voltage/" + ResistVolt + "/voltage", false)
-                                .done(
-                                    function(measured)
-                                    {
-                                        measuredResist.push(measured['voltage'].toFixed(3));
-                                        testingResistCalculate(resistor,testCases, parentThis, gen_graph);
-                                    }
-                                )
+                        function(read) {
+                            if(read['register']==testCases[0]) {
+                                break
                             }
-                           }
+                        }   
                         .fail(this.setError.bind(this));
                     )
                     .fail(this.setError.bind(this));
-                } while(not_changed);
+                }
+				apiGET(parentThis.current_adapter, "current_voltage/" + ResistVolt + "/voltage", false)
+                .done(
+                    function(measured) {
+                            measuredResist.push(measured['voltage'].toFixed(3));
+                            testingResistCalculate(resistor,testCases, parentThis, gen_graph);
+                        }
+                )
+				.fail(this.setError.bind(this));
             }
         )
         .fail(this.setError.bind(this));
