@@ -1,4 +1,4 @@
-import sys, signal, logging
+import sys, signal, logging, math
 
 from i2c_device import I2CDevice, I2CException
 from i2c_container import I2CContainer

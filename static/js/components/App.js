@@ -16,7 +16,7 @@ function App()
                 function(data)
                 {
                     meta[adapter] = data;
-	        }
+                }
             );
         }
     );
@@ -1096,9 +1096,9 @@ App.prototype.testCurrent =
     function()
     {
         $('#test-current-button').attr('disabled', true);
-        expectedValue = [['20-20','41'],['8','16'],['9','18'],['8','16'],['82','164'],['8','16'],['82','164'],['20','41'],['20','41'],['20','41'],['49','98'],['20','41'],['82','164']];
+        expectedValue = [[20,41],[8,16],[9,18],[8,16],[82,164],[8,16],[82,164],[20,41],[20,41],[20,41],[49,98],[20,41],[82,164]];
         var promisesBase = [];
-	var promisesInitialize = []
+        var promisesInitialize = []
         var testLocation = [];
         testSupplies = [];
         expectedTest = [];
@@ -1115,33 +1115,34 @@ App.prototype.testCurrent =
                         if(document.getElementById('volt-check-' + i).checked == true) {
                             if(document.getElementById('volt-check-' + i).disabled) {
                                 checkedDisabled = true;
-                            } else if(i==7 || i>10){
+                            } else if(i==7 || i>10) {
                                 promisesInitialize.push(new Promise ((resolve,reject) => {
                                     apiPUT(parentThis.current_adapter, "resistors/" + resistLookup[i] + "/register",255)
                                     .done(
-                                        function() {
+                                        function(results) {
                                             testLocation.push(i);
                                             testSupplies.push(document.getElementById('volt-check-' + i).value);
                                             expectedTest.push(expectedValue[i]);
                                             promisesBase.push(apiGET(parentThis.current_adapter, "current_voltage/" + i + "/current_register", false));
-			                }
+                                            resolve(results);
+                                        }
                                     )
                                     .fail(this.setError.bind(this));
                                 }));
                             } else if(i==10) {
                                 if(document.getElementById('volt-check-12').checked){
                                     bothCTRL = true;
-                                    continue;
                                 } else {
                                     promisesInitialize.push(new Promise ((resolve,reject) => {
                                         apiPUT(parentThis.current_adapter, "resistors/" + resistLookup[i] + "/register",0)
                                         .done(
-                                            function() {
+                                            function(results) {
                                                 testLocation.push(i);
                                                 testSupplies.push(document.getElementById('volt-check-' + i).value);
                                                 expectedTest.push(expectedValue[i]);
                                                 promisesBase.push(apiGET(parentThis.current_adapter, "current_voltage/" + i + "/current_register", false));
-			                    }
+                                                resolve(results);
+                                            }
                                         )
                                         .fail(this.setError.bind(this));
                                     }));
@@ -1165,14 +1166,14 @@ App.prototype.testCurrent =
                             return;
                         }
                     }
-                    Promise.all(promisesInitialize]).then((results) => {
+                    Promise.all(promisesInitialize).then((results) => {
                         $.when.apply($, promisesBase).then(function() {
                             currentMeasuredBase = arguments;
                             getSecondMeasure(parentThis,testLocation,[],bothCTRL);
                         }, function() {
                             this.setError.bind(this);
                         });
-		    });
+                    });
                 }, 40);
             }
         )
@@ -1204,23 +1205,23 @@ function getSecondMeasure(parentThis, location, results, bothCTRL) {
                                         apiGET(parentThis.current_adapter, "current_voltage/10/current_register", false)
                                         .done(
                                             function(results) {
-						if(testSupplies.length==2) {
-						    currentMeasuredBase[0] = [currentMeasuedBase[0]]
-						}
-   						currentMeasuredBase.push([results]);
-			                        getSecondMeasure(parentThis,location,results, bothCTRL);
-					    }
-					)
-					.fail(this.setError.bind(this));
-			            }
+                                                if(testSupplies.length==2) {
+                                                    currentMeasuredBase[0] = [currentMeasuedBase[0]]
+                                                }
+                                                   currentMeasuredBase.push([results]);
+                                                getSecondMeasure(parentThis,location,results, bothCTRL);
+                                            }
+                                        )
+                                        .fail(this.setError.bind(this));
+                                    }
                                 )
                                 .fail(this.setError.bind(this));
-			    }
+                            }
                             getSecondMeasure(parentThis,location,results, bothCTRL);
                         }
                     )
                     .fail(this.setError.bind(this));
-                }, 40);
+      	        }, 40);
             }
         )
         .fail(this.setError.bind(this));
@@ -1566,14 +1567,14 @@ function testingResistCalculate(resistor,testCases, parentThis, gen_graph) {
                 } else {
                     var ResistVolt = lookupResistVolt[resistor];
                 }
-		var not_changed = true
-		do{
+                var not_changed = true
+                do {
                     apiGET(parentThis.current_adapter, "resistors/" + resistor + "/register", false)
-	            .done(
-		        function(read)
-		        {
-			    if(read==testCases[0]) {
-				not_changed = false
+                    .done(
+                        function(read)
+                        {
+                            if(read==testCases[0]) {
+                                not_changed = false
                                 apiGET(parentThis.current_adapter, "current_voltage/" + ResistVolt + "/voltage", false)
                                 .done(
                                     function(measured)
@@ -1581,19 +1582,17 @@ function testingResistCalculate(resistor,testCases, parentThis, gen_graph) {
                                         measuredResist.push(measured['voltage'].toFixed(3));
                                         testingResistCalculate(resistor,testCases, parentThis, gen_graph);
                                     }
-		                )
-			    }
-  	 	        }
+                                )
+                            }
+                           }
                         .fail(this.setError.bind(this));
                     )
-		    .fail(this.setError.bind(this));
-	         while(not_changed)
+                    .fail(this.setError.bind(this));
+                } while(not_changed);
             }
         )
         .fail(this.setError.bind(this));
-    }
-    else
-    {
+    } else {
         var resist_test_html = "";
         if (!reporting) {
             resist_test_html = htmlHead("Resistor Test");
@@ -1695,7 +1694,7 @@ function expectResist(resistor,test) {
     } else if(resistor==3) {   
           return(0.0001 * (17800 + (18200 * (390 * test)) / (18200 + (390 * test))));
     } else if(resistor==5) {
-	return  -3.775 + (1.225/22600 + .35*.000001) * (390 * test + 32400);
+        return  -3.775 + (1.225/22600 + .35*.000001) * (390 * test + 32400);
     } else if(resistor==2) {
         return (400.0 * (test * 390/(test * 390 + 294000)));
     } else {
