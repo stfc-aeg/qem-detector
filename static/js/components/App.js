@@ -34,7 +34,7 @@ function App()
 App.prototype.freq_overlay = null;
 App.prototype.query_overlay = null;
 App.prototype.logging_overlay = null;
-App.prototype.update_delay = 1.2;
+App.prototype.update_delay = 0.2;
 App.prototype.dark_mode = false;
 
 //Submit GET request then update the current adapter with new data
@@ -1210,16 +1210,15 @@ function getSecondMeasure(parentThis, testLocation, results, CTRLswitch) {
                                             testLocation.push(10);
                                             testSupplies.push(document.getElementById('volt-check-10').value);
                                             expectedTest.push(expectedValue[10]);
-                                            setTimeout(function() {
-                                                apiGET(parentThis.current_adapter, "current_voltage/10/current_register", false)
-                                                .done(
-                                                    function(baseResult) {
-                                                        CTRLNegBase = baseResult['current_register'];
-                                                        testLocation.shift();
-                                                        getSecondMeasure(parentThis,testLocation,results, false);
-                                                    }
-                                                )
-                                            }, 100);
+                                            alert("Please remove the 330R resistor from PL78")
+                                            apiGET(parentThis.current_adapter, "current_voltage/10/current_register", false)
+                                            .done(
+                                                function(baseResult) {
+                                                    CTRLNegBase = baseResult['current_register'];
+                                                    testLocation.shift();
+                                                    getSecondMeasure(parentThis,testLocation,results, false);
+                                                }
+                                            )
                                         }
                                     )
                                 } else {
