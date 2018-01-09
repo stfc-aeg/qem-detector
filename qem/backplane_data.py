@@ -84,7 +84,7 @@ class BackplaneData(object):
             "clock" : (self.backplane.get_clock_frequency, self.backplane.set_clock_frequency, {"units" : "MHz", "description" : "Clock frequency for the SI570 oscillator", "min" : 10, "max":945}),
             "sensors_enabled":(self.backplane.get_sensors_enable, self.backplane.set_sensors_enable, {"name" : "sensors updating"}),
             "update_required" : (self.backplane.get_update, self.backplane.set_update,{"name" : "Update Once"}),
-            "volatile" : (self.backplane.get_resistor_volatile, self.backplane.set_resistor_volatile, {"name": "Set Defaults", "description":"When setting resistor values setermines if the new value should be set as a temporary value or as the new default"}), 
+            "non_volatile" : (self.backplane.get_resistor_non_volatile, self.backplane.set_resistor_non_volatile, {"name": "Set Defaults", "description":"When setting resistor values setermines if the new value should be set as a temporary value or as the new default"}), 
             "psu_enabled" : (self.backplane.get_psu_enable, self.backplane.set_psu_enable, {"name" : "PSU Enabled"}),
             "power_good" : pw_good,
             "current_voltage" : [cv.param_tree for cv in self.current_voltage],

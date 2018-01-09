@@ -89,7 +89,7 @@ class Backplane(I2CContainer):
         self.power_good = [False] * 8
         self.psu_enabled = True
         self.clock_freq = 20.0
-        self.resistor_volatile = True
+        self.resistor_non_volatile = False
         self.temperature = 0
 
         self.voltChannelLookup = ((0,2,3,4,5,6,7),(0,2,4,5,6,7))
@@ -215,13 +215,13 @@ class Backplane(I2CContainer):
     def get_resistor_max(self, resistor):
         return [2.474, 2.474, 99.98, 3.3, 3.3, 3.3, 2.474][resistor]
 
-    def get_resistor_volatile(self):
-        return self.resistor_volatile
+    def get_resistor_non_volatile(self):
+        return self.resistor_non_volatile
 
-    def set_resistor_volatile(self, value):
+    def set_resistor_non_volatile(self, value):
         for i in range(5):
-            self.tpl0102[i].set_non_volatile(not value)
-        self.resistor_volatile = value
+            self.tpl0102[i].set_non_volatile(value)
+        self.resistor_non_volatile = value
 
     def get_power_good(self, i):
         return self.power_good[i]
@@ -257,7 +257,7 @@ class Backplane(I2CContainer):
         self.mcp23008[1].setup(0, MCP23008.OUT)
         for i in range(5):
             self.tpl0102[i].set_non_volatile(False)
-        self.resistor_volatile = True
+        self.resistor_non_volatile = False
         self.set_clock_frequency(20)
         self.resistors_raw = [
             self.tpl0102[0].get_wiper(0,True),

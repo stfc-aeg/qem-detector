@@ -1,4 +1,3 @@
-    
 function App()
 {
     this.mount = document.getElementById("app");
@@ -35,7 +34,7 @@ function App()
 App.prototype.freq_overlay = null;
 App.prototype.query_overlay = null;
 App.prototype.logging_overlay = null;
-App.prototype.update_delay = 0.2;
+App.prototype.update_delay = 1.2;
 App.prototype.dark_mode = false;
 
 //Submit GET request then update the current adapter with new data
@@ -869,13 +868,14 @@ App.prototype.testClock =
     };
 
 
+resistLookup = {7:3,10:5,11:4,12:5};
+
 App.prototype.testVolt =
     function()
     {
         $('#test-volt-button').attr('disabled', true);
         expectedValue = [2459,2459,3415,2459,2459,2459,2459,1474,2702,2702,1638,0,0];
         expectedMaxValue ={7:2702,10:0,11:2702,12:2702};
-        resistLookup = {7:3,10:5,11:4,12:5};
         var promises_static = [];
         var promises_range = [[],[]];
         var testSupplies = [[],[]];
@@ -918,7 +918,6 @@ App.prototype.testVolt =
                                                 resolve(measuredMins);
                                             }
                                         )
-                                        .fail(this.setError.bind(this));
                                     }, 100);
                                 }
                             )
@@ -936,7 +935,6 @@ App.prototype.testVolt =
                                                 resolve(measuredMin);
                                             }
                                         )
-                                        .fail(this.setError.bind(this));
                                     }, 100);
                                 }
                             )
@@ -978,7 +976,6 @@ App.prototype.testVolt =
                                             resolve([measuredMin,measuredMaxs]);
                                         }
                                     )
-                                    .fail(this.setError.bind(this));
                                 }, 100);
                             }
                         )
@@ -996,7 +993,6 @@ App.prototype.testVolt =
                                             resolve([measuredMin,measuredMax]);
                                         }
                                     )
-                                    .fail(this.setError.bind(this));
                                 }, 100);
                             }
                         )
@@ -1098,8 +1094,9 @@ App.prototype.testCurrent =
         $('#test-current-button').attr('disabled', true);
         expectedValue = [[20,41],[8,16],[9,18],[8,16],[82,164],[8,16],[82,164],[20,41],[20,41],[20,41],[49,98],[20,41],[82,164]];
         var promisesBase = [];
-        var promisesInitialize = []
+        var promisesInitialize = [];
         var testLocation = [];
+        var testInitializing = [];
         testSupplies = [];
         expectedTest = [];
         parentThis = this;
@@ -1116,35 +1113,41 @@ App.prototype.testCurrent =
                             if(document.getElementById('volt-check-' + i).disabled) {
                                 checkedDisabled = true;
                             } else if(i==7 || i>10) {
+                                testInitializing.push(i);
                                 promisesInitialize.push(new Promise ((resolve,reject) => {
-                                    apiPUT(parentThis.current_adapter, "resistors/" + resistLookup[i] + "/register",255)
+                                    apiPUT(parentThis.current_adapter, "resistors/" + resistLookup[i] + "/register", 255)
                                     .done(
                                         function(results) {
-                                            testLocation.push(i);
-                                            testSupplies.push(document.getElementById('volt-check-' + i).value);
-                                            expectedTest.push(expectedValue[i]);
-                                            promisesBase.push(apiGET(parentThis.current_adapter, "current_voltage/" + i + "/current_register", false));
-                                            resolve(results);
+                                            var j = testInitializing.shift();
+                                            testLocation.push(j);
+                                            testSupplies.push(document.getElementById('volt-check-' + j).value);
+                                            expectedTest.push(expectedValue[j]);
+                                            setTimeout(function() {          
+                                                promisesBase.push(apiGET(parentThis.current_adapter, "current_voltage/" + j + "/current_register", false));
+                                                resolve(results);
+                                            }, 50);
                                         }
                                     )
-                                    .fail(this.setError.bind(this));
                                 }));
                             } else if(i==10) {
                                 if(document.getElementById('volt-check-12').checked){
                                     bothCTRL = true;
                                 } else {
+                                    testInitializing.push(i);
                                     promisesInitialize.push(new Promise ((resolve,reject) => {
                                         apiPUT(parentThis.current_adapter, "resistors/" + resistLookup[i] + "/register",0)
                                         .done(
                                             function(results) {
-                                                testLocation.push(i);
-                                                testSupplies.push(document.getElementById('volt-check-' + i).value);
-                                                expectedTest.push(expectedValue[i]);
-                                                promisesBase.push(apiGET(parentThis.current_adapter, "current_voltage/" + i + "/current_register", false));
-                                                resolve(results);
+                                                var j = testInitializing.shift();
+                                                testLocation.push(j);
+                                                testSupplies.push(document.getElementById('volt-check-' + j).value);
+                                                expectedTest.push(expectedValue[j]);
+                                                setTimeout(function() {          
+                                                    promisesBase.push(apiGET(parentThis.current_adapter, "current_voltage/" + j + "/current_register", false));
+                                                    resolve(results);
+                                                }, 100);
                                             }
                                         )
-                                        .fail(this.setError.bind(this));
                                     }));
                                 }
                             } else {
@@ -1155,32 +1158,36 @@ App.prototype.testCurrent =
                             }
                         }
                     }
-                    if(testSupplies.length == 0) {
-                        if(checkedDisabled) {
-                            alert("Supplies directly linked to resistors currently being tested cannot themselves be tested")
-                            $('#test-current-button').attr('disabled', false);
-                            return;
-                        } else {
-                            alert("Please select the power supplies you wish to test");
-                            $('#test-current-button').attr('disabled', false);
-                            return;
-                        }
-                    }
-                    Promise.all(promisesInitialize).then((results) => {
-                        $.when.apply($, promisesBase).then(function() {
-                            currentMeasuredBase = arguments;
-                            getSecondMeasure(parentThis,testLocation,[],bothCTRL);
-                        }, function() {
-                            this.setError.bind(this);
-                        });
-                    });
+                    $.when.apply($, promisesInitialize).then(function() {
+                        setTimeout(function() {
+                            if(testSupplies.length == 0) {
+                                if(checkedDisabled) {
+                                    alert("Supplies directly linked to resistors currently being tested cannot themselves be tested")
+                                    $('#test-current-button').attr('disabled', false);
+                                    return;
+                                } else {
+                                    alert("Please select the power supplies you wish to test");
+                                    $('#test-current-button').attr('disabled', false);
+                                    return;
+                                }
+                            }
+                            $.when.apply($, promisesBase).then(function() {
+                                currentMeasuredBase = arguments;
+                                getSecondMeasure(parentThis,testLocation,[],bothCTRL);
+                            }, function() {
+                                this.setError.bind(this);
+                            });
+                       }, 400);
+                   });
                 }, 40);
             }
         )
         .fail(this.setError.bind(this));
     };
 
-function getSecondMeasure(parentThis, testLocation, results, bothCTRL) {
+var CTRLNegBase = ""
+
+function getSecondMeasure(parentThis, testLocation, results, CTRLswitch) {
     neededResistor = [100,100,220,100,100,100,100,330,330,330,330,330,330];
     neededConnector = [75,42,74,41,76,33,77,34,36,35,78,40,78];
 
@@ -1193,38 +1200,41 @@ function getSecondMeasure(parentThis, testLocation, results, bothCTRL) {
                     apiGET(parentThis.current_adapter, "current_voltage/" + testLocation[0] + "/current_register", false)
                     .done(
                         function(measured) {
-                            testLocation.shift();
                             results.push(measured['current_register']);
-                            if(bothCTRL && testLocation[0]==12) {
-                                apiPUT(parentThis.current_adapter, "resistors/" + resistLookup[10] + "/register",0)
-                                .done(
-                                    function() {
-                                        testLocation.push(10);
-                                        testSupplies.push(document.getElementById('volt-check-10').value);
-                                        expectedTest.push(expectedValue[10]);
-                                        apiGET(parentThis.current_adapter, "current_voltage/10/current_register", false)
-                                        .done(
-                                            function(results) {
-                                                if(testSupplies.length==2) {
-                                                    currentMeasuredBase[0] = [currentMeasuedBase[0]]
-                                                }
-                                                   currentMeasuredBase.push([results]);
-                                                getSecondMeasure(parentThis,testLocation,results, bothCTRL);
-                                            }
-                                        )
-                                        .fail(this.setError.bind(this));
-                                    }
-                                )
-                                .fail(this.setError.bind(this));
+                            if(CTRLswitch) {
+                                CTRLNegBase = ""
+                                if (testLocation[0]==12) {
+                                    apiPUT(parentThis.current_adapter, "resistors/" + resistLookup[10] + "/register",0)
+                                    .done(
+                                        function() {
+                                            testLocation.push(10);
+                                            testSupplies.push(document.getElementById('volt-check-10').value);
+                                            expectedTest.push(expectedValue[10]);
+                                            setTimeout(function() {
+                                                apiGET(parentThis.current_adapter, "current_voltage/10/current_register", false)
+                                                .done(
+                                                    function(baseResult) {
+                                                        CTRLNegBase = baseResult['current_register'];
+                                                        testLocation.shift();
+                                                        getSecondMeasure(parentThis,testLocation,results, false);
+                                                    }
+                                                )
+                                            }, 100);
+                                        }
+                                    )
+                                } else {
+                                    testLocation.shift();
+                                    getSecondMeasure(parentThis,testLocation,results, true);
+                                }
+                            } else {
+                                testLocation.shift();
+                                getSecondMeasure(parentThis,testLocation,results, false);
                             }
-                            getSecondMeasure(parentThis,testLocation,results, bothCTRL);
                         }
                     )
-                    .fail(this.setError.bind(this));
-      	        }, 40);
+                }, 40);
             }
         )
-        .fail(this.setError.bind(this));
     } else {
         var current_test_html = "";
         if(!reporting) {
@@ -1243,14 +1253,33 @@ function getSecondMeasure(parentThis, testLocation, results, bothCTRL) {
             current_test_html += `
                 <tr><th></th><td></td><td></td><td></td></tr>`;
         }
-        if(testSupplies.length==1) {
-            current_test_html += `
+        if(CTRLNegBase=="") {
+            if(testSupplies.length==1) {
+                current_test_html += `
                 <tr><th>${testSupplies[0]}</th><td>10mA</td><td>${expectedTest[0][0]}</td><td>${currentMeasuredBase[0]['current_register'].toString()}</td></tr>
                 <tr><td></td><td>20mA</td><td>${expectedTest[0][1]}</td><td>${results[0]}</td></tr>`;
-        } else {
-            for(var i=0; i<results.length; i++) {
-                current_test_html += `
+            } else {
+                for(var i=0; i<results.length; i++) {
+                    current_test_html += `
                 <tr><th>${testSupplies[i]}</th><td>10mA</td><td>${expectedTest[i][0]}</td><td>${currentMeasuredBase[i][0]['current_register'].toString()}</td></tr>
+                <tr><td></td><td>20mA</td><td>${expectedTest[i][1]}</td><td>${results[i]}</td></tr>`;
+                }
+            }
+        } else {
+            if(testSupplies.length==2) {
+                current_test_html += `
+                <tr><th>${testSupplies[0]}</th><td>10mA</td><td>${expectedTest[0][0]}</td><td>${currentMeasuredBase[0]['current_register'].toString()}</td></tr>
+                <tr><td></td><td>20mA</td><td>${expectedTest[0][1]}</td><td>${results[0]}</td></tr>
+                <tr><th>${testSupplies[1]}</th><td>10mA</td><td>${expectedTest[1][0]}</td><td>${CTRLNegBase.toString()}</td></tr>
+                <tr><td></td><td>20mA</td><td>${expectedTest[1][1]}</td><td>${results[1]}</td></tr>`;
+            } else {
+                for(var i=0; i<results.length-1; i++) {
+                    current_test_html += `
+                <tr><th>${testSupplies[i]}</th><td>10mA</td><td>${expectedTest[i][0]}</td><td>${currentMeasuredBase[i][0]['current_register'].toString()}</td></tr>
+                <tr><td></td><td>20mA</td><td>${expectedTest[i][1]}</td><td>${results[i]}</td></tr>`;
+                }
+                current_test_html += `
+                <tr><th>${testSupplies[i]}</th><td>10mA</td><td>${expectedTest[i][0]}</td><td>${CTRLNegBase.toString()}</td></tr>
                 <tr><td></td><td>20mA</td><td>${expectedTest[i][1]}</td><td>${results[i]}</td></tr>`;
             }
         }
@@ -1450,7 +1479,6 @@ function testingResist(resistor,testCases, parentThis, gen_graph) {
                 testingResist(resistor,testCases, parentThis, gen_graph);
             }
         )
-        .fail(this.setError.bind(this));
     }
     else
     {
@@ -1557,7 +1585,6 @@ function testingResistCalculate(resistor,testCases, parentThis, gen_graph) {
             {
                 var expected = expectResist(resistor,testCases[0]).toFixed(3);
                 expectedResist.push(expected);
-                testCases.shift();
                 if(resistor==5) {
                     if(expected>0) {
                         var ResistVolt = lookupResistVolt[5][0];
@@ -1567,29 +1594,18 @@ function testingResistCalculate(resistor,testCases, parentThis, gen_graph) {
                 } else {
                     var ResistVolt = lookupResistVolt[resistor];
                 }
-                while(true) {
-                    apiGET(parentThis.current_adapter, "resistors/" + resistor + "/register", false)
+                promisesCheck = checkPromise(resistor, testCases[0], parentThis).then(function(value) {
+                    testCases.shift();
+                    apiGET(parentThis.current_adapter, "current_voltage/" + ResistVolt + "/voltage", false)
                     .done(
-                        function(read) {
-                            if(read['register']==testCases[0]) {
-                                break
-                            }
-                        }   
-                        .fail(this.setError.bind(this));
-                    )
-                    .fail(this.setError.bind(this));
-                }
-				apiGET(parentThis.current_adapter, "current_voltage/" + ResistVolt + "/voltage", false)
-                .done(
-                    function(measured) {
+                        function(measured) {
                             measuredResist.push(measured['voltage'].toFixed(3));
                             testingResistCalculate(resistor,testCases, parentThis, gen_graph);
                         }
-                )
-				.fail(this.setError.bind(this));
+                    )
+                });
             }
         )
-        .fail(this.setError.bind(this));
     } else {
         var resist_test_html = "";
         if (!reporting) {
@@ -1698,6 +1714,31 @@ function expectResist(resistor,test) {
     } else {
         return (3.3 * (390 * test) / (390 * test + 32000));
     }
+}
+
+
+function checkPromise(resistor, value, parentThis) {
+    return new Promise((resolve, reject) => {
+        apiPUT(parentThis.current_adapter, "reset", true)
+        .done(
+            function(results) {
+                setTimeout(function() {
+                    apiGET(parentThis.current_adapter, "resistors/" + resistor + "/register", false)
+                    .done(
+                        function(check) {
+                            if(check['register']!=value) {
+                                promiseCheck = checkPromise(resistor, value, parentThis).then(function(result) {
+                                    resolve(result);
+                                });
+                            } else {
+                                resolve("Changed");
+                            }
+                        }   
+                    )
+                }, 40);
+            }
+        )
+    });
 }
 
 
