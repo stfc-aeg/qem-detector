@@ -47,6 +47,8 @@ class Backplane(I2CContainer):
                 self.mcp23008[0].setup(i, MCP23008.IN)
             self.mcp23008[1].output(0, MCP23008.HIGH)
             self.mcp23008[1].setup(0, MCP23008.OUT)
+#            self.mcp23008[1].output(7, MCP23008.LOW)
+#            self.mcp23008[1].setup(7, MCP23008.OUT)
 
             #Resistor readings
             self.resistors_raw = [
@@ -88,6 +90,7 @@ class Backplane(I2CContainer):
         self.currents_raw = [0.0] * 13
         self.power_good = [False] * 8
         self.psu_enabled = True
+        self.capture_enabled = False
         self.clock_freq = 20.0
         self.resistor_non_volatile = False
         self.temperature = 0
@@ -241,6 +244,13 @@ class Backplane(I2CContainer):
         self.mcp23008[1].output(0, MCP23008.HIGH if value else MCP23008.LOW)
         if not self.sensors_enabled: self.updates_needed = 3
 
+    def get_capture_enable(self):
+        return self.capture_enabled
+
+    def set_capture_enable(self, value):
+        self.capture_enabled = value
+        self.mcp23008[1].output(0, MCP23008.HIGH if value else MCP23008.LOW)
+
     def get_sensors_enable(self):
         return self.sensors_enabled
 
@@ -255,6 +265,7 @@ class Backplane(I2CContainer):
 
     def set_reset(self, value):
         self.mcp23008[1].setup(0, MCP23008.OUT)
+#        self.mcp23008[1].setup(7, MCP23008.OUT)
         for i in range(5):
             self.tpl0102[i].set_non_volatile(False)
         self.resistor_non_volatile = False
@@ -278,6 +289,7 @@ class Backplane(I2CContainer):
             3.3 * (390 * self.resistors_raw[6]) / (390 * self.resistors_raw[6] + 32000),
 ]
         self.set_psu_enable(True)
+#        self.set_capture_enable(False)
 
     def get_temp(self):
         return self.temperature

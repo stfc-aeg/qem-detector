@@ -86,6 +86,7 @@ class BackplaneData(object):
             "update_required" : (self.backplane.get_update, self.backplane.set_update,{"name" : "Update Once"}),
             "non_volatile" : (self.backplane.get_resistor_non_volatile, self.backplane.set_resistor_non_volatile, {"name": "Set Defaults", "description":"When setting resistor values setermines if the new value should be set as a temporary value or as the new default"}), 
             "psu_enabled" : (self.backplane.get_psu_enable, self.backplane.set_psu_enable, {"name" : "PSU Enabled"}),
+#            "capture_enabled" : (self.backplane.get_capture_enable, self.backplane.set_capture_enable, {"name" : "Capture Data"}),
             "power_good" : pw_good,
             "current_voltage" : [cv.param_tree for cv in self.current_voltage],
             "resistors" : [r.param_tree for r in self.resistors],
