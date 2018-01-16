@@ -152,38 +152,30 @@ class Backplane(I2CContainer):
 
     def set_resistor_value(self, resistor, value):
         if resistor == 0:
-            value = max(0, min(value, 2.497))
             self.resistors_raw[resistor] = int(0.5+(32000/3.3)*value/(390-390*value/3.3))
             self.tpl0102[0].set_wiper(0, self.resistors_raw[resistor])
         elif resistor == 1:
-            value = max(0, min(value, 2.497))
             self.resistors_raw[resistor] = int(0.5+(32000/3.3)*value/(390-390*value/3.3))
             self.tpl0102[0].set_wiper(1, self.resistors_raw[resistor])
         elif resistor == 2:
-            value = max(0, min(value, 101.1))
             self.resistors_raw[resistor] = int(0.5+(294000/400)*value/(390-390*value/400))
             self.tpl0102[1].set_wiper(0, self.resistors_raw[resistor])
         elif resistor == 3:
-            value = max(1.78, min(value, 3.318))
             self.resistors_raw[resistor] = int(0.5+(18200/0.0001)*(value-1.78)/(390*18200-390*(value-1.78)/0.0001))
             self.tpl0102[2].set_wiper(0, self.resistors_raw[resistor])
         elif resistor == 4:
-            value = max(0, min(value, 3.322))
             self.resistors_raw[resistor] = int(0.5+(49900/0.0001)*value/(390*49900-390*value/0.0001))
             self.tpl0102[2].set_wiper(1, self.resistors_raw[resistor])
         elif resistor == 5:
-            value = max(-2, min(value, 3.41))
             self.resistors_raw[resistor] = int(0.5+((value+3.775)/(1.225/22600+.35*.000001)-32400)/390)
             self.tpl0102[3].set_wiper(1, self.resistors_raw[resistor])
         elif resistor == 6:
-            value = max(0, min(value, 2.497))
             self.resistors_raw[resistor] = int(0.5+(32000/3.3)*value/(390-390*value/3.3))
             self.tpl0102[4].set_wiper(0, self.resistors_raw[resistor])
         self.resistors[resistor] = value
         if not self.sensors_enabled: self.updates_needed = 1
 
     def set_resistor_value_raw(self, resistor, value):
-	value = max(0, min(value, 255))
         if resistor == 0:
             self.tpl0102[0].set_wiper(0, value)
             self.resistors[resistor] = 3.3 * (390 * value) / (390 * value + 32000)
@@ -221,10 +213,10 @@ class Backplane(I2CContainer):
         return ["V", "V", "uA", "V", "V", "V", "V"][resistor]
 
     def get_resistor_min(self, resistor):
-        return [0, 0, 0, 0, 0, -2.02, 0][resistor]
+       return [0, 0, 0, 1.78, 0, -2, 0][resistor]
 
     def get_resistor_max(self, resistor):
-        return [2.474, 2.474, 99.98, 3.3, 3.3, 3.3, 2.474][resistor]
+        return [2.497, 2.497, 101.1, 3.318, 3.322, 3.41, 2.497][resistor]
 
     def get_resistor_non_volatile(self):
         return self.resistor_non_volatile
