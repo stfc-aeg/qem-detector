@@ -12,6 +12,7 @@ source venv2.7/bin/activate
 pip install versioneer
 git clone https://github.com/jamesh1999/odin-control
 cd odin-qem
+sed -i 's/exit(0)/exit(1)/g' qem/backplane.py
 python setup.py install
 cd ../odin-control
 python setup.py install

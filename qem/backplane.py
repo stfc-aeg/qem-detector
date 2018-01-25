@@ -20,7 +20,7 @@ else:
     logger_imported = True
 
 class Backplane(I2CContainer):
-   
+
     CURRENT_RESISTANCE = [2.5, 1, 1, 1, 10, 1, 10, 1, 1, 1, 10, 1, 10]
 
     def __init__(self):
@@ -34,7 +34,7 @@ class Backplane(I2CContainer):
             for i in range(5):
                 self.tpl0102.append(self.tca.attach_device(0, TPL0102, 0x50 + i, busnum=1))
             for i in range(5):
-                self.tpl0102[i].set_non_volatile(True)
+                self.tpl0102[i].set_non_volatile(False)
 
             self.si570 = self.tca.attach_device(1, SI570, 0x5d, 'SI570', busnum=1)
             self.si570.set_frequency(20) #Default to 20MHz
@@ -50,6 +50,8 @@ class Backplane(I2CContainer):
                 self.mcp23008[0].setup(i, MCP23008.IN)
             self.mcp23008[1].output(0, MCP23008.HIGH)
             self.mcp23008[1].setup(0, MCP23008.OUT)
+#            self.mcp23008[1].output(7, MCP23008.LOW)
+#            self.mcp23008[1].setup(7, MCP23008.OUT)
 
             #Resistor readings
             self.resistors_raw = [
@@ -61,7 +63,6 @@ class Backplane(I2CContainer):
                 self.tpl0102[3].get_wiper(0),
                 self.tpl0102[4].get_wiper(0)
 ]
-
             self.resistors = [
                 3.3 * (390 * self.resistors_raw[0]) / (390 * self.resistors_raw[0] + 32000),
                 3.3 * (390 * self.resistors_raw[1]) / (390 * self.resistors_raw[1] + 32000),
@@ -71,9 +72,11 @@ class Backplane(I2CContainer):
                 -3.775 + (1.225/22600 + .35*.000001) * (390 * self.resistors_raw[5] + 32400),
                 3.3 * (390 * self.resistors_raw[6]) / (390 * self.resistors_raw[6] + 32000),
 ]
-
         except Exception, exc:
-            logging.error(exc)
+            if exc == 13:
+                logging.error("I2C Communications not enabled for user. Try 'su -;chmod 666 /dev/i2c-1'")
+            else:
+                logging.error(exc)
             sys.exit(0)
         finally:
             signal.alarm(0)
@@ -90,8 +93,9 @@ class Backplane(I2CContainer):
         self.currents_raw = [0.0] * 13
         self.power_good = [False] * 8
         self.psu_enabled = True
+        self.capture_enabled = False
         self.clock_freq = 20.0
-        self.resistor_volatile = False
+        self.resistor_non_volatile = False
         self.temperature = 0
 
         self.voltChannelLookup = ((0,2,3,4,5,6,7),(0,2,4,5,6,7))
@@ -99,21 +103,21 @@ class Backplane(I2CContainer):
         self.set_sensors_enable(False)
 
     def connect_handler(self, signum, frame):
-        raise Exception("Timeout on I2C connection, Shutting Down") 
+        raise Exception("Timeout on I2C connection, Shutting Down")
 
     def timeout_handler(self, signum, frame):
         raise Exception("Timeout on I2C communication")
 
     def poll_all_sensors(self):
-  
-        if not (self.sensors_enabled or (self.updates_needed > 0)) : return 
+
+        if not (self.sensors_enabled or (self.updates_needed > 0)) : return
 
         signal.signal(signal.SIGALRM, self.timeout_handler)
         signal.alarm(1)
         try:
             #Currents
             for i in range(7):
-                j = self.voltChannelLookup[0][i]        
+                j = self.voltChannelLookup[0][i]
                 self.currents_raw[i] = (self.ad7998[0].read_input_raw(j) & 0xfff)
                 self.currents[i] = self.currents_raw[i] / self.CURRENT_RESISTANCE[i] * 5000 / 4095.0
 
@@ -133,8 +137,11 @@ class Backplane(I2CContainer):
                 self.voltages[i + 7] = self.voltages_raw[i + 7] * 5 / 4095.0
             self.voltages[10] *= -1
 
+            #first calculate the voltage from the register
             temp_volt = (self.ad7998[3].read_input_raw(3) & 0xfff) * 5.0 / 4095.0
+			#then calculate the natural log of the calculated resistance (5V potential divider with 15K resistor) divided by the resistance at 25 degrees celcius(10K)
             ln_x = math.log(1.5*temp_volt/(5.0-temp_volt))
+			#then calulate the temperature using formula from the data sheet of thermistor NTCALUG03A103G and convert from Kelvin
             self.temperature = 1.0/(0.00335402 + ln_x*(0.00025624 + ln_x*(0.00000260597 + ln_x*0.0000000632926)))-273.15
 
             #Power good monitors
@@ -169,7 +176,7 @@ class Backplane(I2CContainer):
             self.resistors_raw[resistor] = int(0.5+(32000/3.3)*value/(390-390*value/3.3))
             self.tpl0102[4].set_wiper(0, self.resistors_raw[resistor])
         self.resistors[resistor] = value
-        if not self.sensors_enabled: self.updates_needed = 1          
+        if not self.sensors_enabled: self.updates_needed = 1
 
     def set_resistor_value_raw(self, resistor, value):
         if resistor == 0:
@@ -194,7 +201,7 @@ class Backplane(I2CContainer):
             self.tpl0102[4].set_wiper(0, value)
             self.resistors[resistor] = 3.3 * (390 * value) / (390 * value + 32000)
         self.resistors_raw[resistor] = value
-        if not self.sensors_enabled: self.updates_needed = 1          
+        if not self.sensors_enabled: self.updates_needed = 1
 
     def get_resistor_value(self, resistor):
         return self.resistors[resistor]
@@ -209,18 +216,18 @@ class Backplane(I2CContainer):
         return ["V", "V", "uA", "V", "V", "V", "V"][resistor]
 
     def get_resistor_min(self, resistor):
-        return [0, 0, 0, 0, 0, -2.02, 0][resistor]
+       return [0, 0, 0, 1.78, 0, -2, 0][resistor]
 
     def get_resistor_max(self, resistor):
-        return [2.474, 2.474, 99.98, 3.3, 3.3, 3.3, 2.474][resistor]
+        return [2.497, 2.497, 101.1, 3.318, 3.322, 3.41, 2.497][resistor]
 
-    def get_resistor_volatile(self):
-        return self.resistor_volatile
-   
-    def set_resistor_volatile(self, value):       
-        for i in range(5): 
-            self.tpl0102[i].set_non_volatile(not value)
-        self.resistor_volatile = value
+    def get_resistor_non_volatile(self):
+        return self.resistor_non_volatile
+
+    def set_resistor_non_volatile(self, value):
+        for i in range(5):
+            self.tpl0102[i].set_non_volatile(value)
+        self.resistor_non_volatile = value
 
     def get_power_good(self, i):
         return self.power_good[i]
@@ -229,6 +236,7 @@ class Backplane(I2CContainer):
         return self.clock_freq
 
     def set_clock_frequency(self, freq):
+        freq = max(10, min(945, freq))
         self.clock_freq = freq + 0.0
         self.si570.set_frequency(freq)
 
@@ -239,6 +247,13 @@ class Backplane(I2CContainer):
         self.psu_enabled = value
         self.mcp23008[1].output(0, MCP23008.HIGH if value else MCP23008.LOW)
         if not self.sensors_enabled: self.updates_needed = 3
+
+    def get_capture_enable(self):
+        return self.capture_enabled
+
+    def set_capture_enable(self, value):
+        self.capture_enabled = value
+        self.mcp23008[1].output(0, MCP23008.HIGH if value else MCP23008.LOW)
 
     def get_sensors_enable(self):
         return self.sensors_enabled
@@ -252,15 +267,12 @@ class Backplane(I2CContainer):
     def set_update(self, value):
         if value and not self.sensors_enabled: self.updates_needed = 1
 
-#    def get_logger_state(self):
-#        return self.logger_state
-
-
     def set_reset(self, value):
         self.mcp23008[1].setup(0, MCP23008.OUT)
+#        self.mcp23008[1].setup(7, MCP23008.OUT)
         for i in range(5):
             self.tpl0102[i].set_non_volatile(False)
-        self.resistor_volatile = True
+        self.resistor_non_volatile = False
         self.set_clock_frequency(20)
         self.resistors_raw = [
             self.tpl0102[0].get_wiper(0,True),
@@ -281,7 +293,8 @@ class Backplane(I2CContainer):
             3.3 * (390 * self.resistors_raw[6]) / (390 * self.resistors_raw[6] + 32000),
 ]
         self.set_psu_enable(True)
-       
+#        self.set_capture_enable(False)
+
     def get_temp(self):
         return self.temperature
 

@@ -10,7 +10,6 @@ try:
 except ImportError:
     logging.warning("requests module not found, logger unavailable");
     sys.exit(0)
-
 try:
     from influxdb import InfluxDBClient
 except ImportError:

@@ -38,7 +38,7 @@ class Resistor(object):
     def __init__(self, backplane, i):
         self.index = i
         self.backplane = backplane
-        
+
         self.param_tree = MetadataTree({
             "name" : self.backplane.get_resistor_name(self.index),
             "resistance" : (self.get, self.set, {"units" : self.backplane.get_resistor_units(self.index), "min" : self.backplane.get_resistor_min(self.index), "max" : self.backplane.get_resistor_max(self.index)}),
@@ -57,11 +57,12 @@ class Resistor(object):
     def raw_set(self, value):
         self.backplane.set_resistor_value_raw(self.index, value)
 
+
 class BackplaneData(object):
 
     def __init__(self):
         self.backplane = Backplane()
-        
+
         self.power_good = []
         for i in range(8):
             self.power_good.append(PowerGood(self.backplane, i))
@@ -83,13 +84,14 @@ class BackplaneData(object):
             "clock" : (self.backplane.get_clock_frequency, self.backplane.set_clock_frequency, {"units" : "MHz", "description" : "Clock frequency for the SI570 oscillator", "min" : 10, "max":945}),
             "sensors_enabled":(self.backplane.get_sensors_enable, self.backplane.set_sensors_enable, {"name" : "sensors updating"}),
             "update_required" : (self.backplane.get_update, self.backplane.set_update,{"name" : "Update Once"}),
-            "volatile" : (self.backplane.get_resistor_volatile, self.backplane.set_resistor_volatile, {"name": "Set Defaults", "description":"When setting resistor values setermines if the new value should be set as a temporary value or as the new default"}), 
+            "non_volatile" : (self.backplane.get_resistor_non_volatile, self.backplane.set_resistor_non_volatile, {"name": "Set Defaults", "description":"When setting resistor values setermines if the new value should be set as a temporary value or as the new default"}), 
             "psu_enabled" : (self.backplane.get_psu_enable, self.backplane.set_psu_enable, {"name" : "PSU Enabled"}),
+#            "capture_enabled" : (self.backplane.get_capture_enable, self.backplane.set_capture_enable, {"name" : "Capture Data"}),
             "power_good" : pw_good,
             "current_voltage" : [cv.param_tree for cv in self.current_voltage],
             "resistors" : [r.param_tree for r in self.resistors],
             "reset" : (False, self.backplane.set_reset,{"name" : "Reset Server"}),
-            "temperature" : (self.backplane.get_temp,{"dp":1}),
+            "temperature" : (self.backplane.get_temp,{"units": "C", "dp":1}),
         })
 
     def get(self, path, metadata):
