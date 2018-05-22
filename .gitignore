@@ -1,0 +1,8 @@
+
+*.egg
+*.pyc
+interface.egg-info/dependency_links.txt
+interface.egg-info/SOURCES.txt
+interface.egg-info/top_level.txt
+interface.egg-info/PKG-INFO
+build/
