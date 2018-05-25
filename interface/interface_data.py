@@ -79,6 +79,7 @@ class InterfaceData(object):
             "sensors_enabled":(self.backplane_interface.get_sensors_enable, self.backplane_interface.set_sensors_enable, {"name" : "sensors updating"}),
             "update_required" : (self.backplane_interface.get_update, self.backplane_interface.set_update,{"name" : "Update Once"}),
             "non_volatile" : (self.backplane_interface.get_resistor_non_volatile, self.backplane_interface.set_resistor_non_volatile, {"name": "Set Defaults", "description":"When setting resistor values determines if the new value should be set as a temporary value or as the new default"}),
+            "reset" : (u'False', self.backplane_interface.set_reset,{"name" : "Reset Backplane"}),
 
             "current_voltage" : [cv.param_tree for cv in self.current_voltage],
             "resistors" : [r.param_tree for r in self.resistors],

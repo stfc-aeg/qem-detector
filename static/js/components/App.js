@@ -1,52 +1,44 @@
 function App()
 {
     this.mount = document.getElementById("app");
-//    this.current_adapter = 0;
-//    this.adapters = {};
     this.error_message = null;
     this.error_timeout = null;
+    this.current_adapter = 0
 
 //Retrieve metadata for each adapter
 var meta = {};
 var promises = adapters.map(
-    function(adapter, i)
-    {
+    function(adapter, i) {
         return apiGET(i, "", true).then(
-            function(data)
-            {
+            function(data) {
                 meta[adapter] = data;
+                this.current_adapter = i
             }
         );
     }
 );
 
 //Then generate the page and start the update loop
-$.when.apply($, promises)
-.then(
-    (function()
-    {
-        this.generate(meta);
-//        setTimeout(this.update.bind(this), this.update_delay * 1000);
+$.when.apply($, promises).then(
+    (function() {
+        this.generate(meta["interface"]);
+        if (meta["interface"]["sensors_enabled"]["value"] == "True") {
+            this.updateLoop_bp();
+        }
+        if (meta["interface"]["non_volatile"]["value"] == "True") {
+            this.setVolatile();
+        }
     }).bind(this)
 );
 }
 
-
-//App.prototype.update_delay = 0.2;
+App.prototype.freq_overlay = null;
+App.prototype.update_delay = 0.5;
 App.prototype.dark_mode = false;
-
-//Submit GET request then update the current adapter with new data
-//App.prototype.update =
-//    function()
-//    {
-//        var updating_adapter = this.current_adapter;
-//    };
-
 
 //Construct page and call components to be constructed
 App.prototype.generate =
-    function(meta)
-    {
+    function(data) {
         //Construct navbar
         var navbar = document.createElement("nav");
         navbar.classList.add("navbar");
@@ -69,12 +61,14 @@ App.prototype.generate =
                 <span class="caret"></span>
             </a>
             <ul class="dropdown-menu">
+                <li><a href="#" id="update-freq">Update Frequency</a></li>
                 <li><a href="#" id="toggle-dark">Toggle Dark</a></li>
             </ul>
         </li>
     </ul>
 </div>`;
         this.mount.appendChild(navbar);
+        document.getElementById("update-freq").addEventListener("click", this.updateFrequency.bind(this));
         document.getElementById("toggle-dark").addEventListener("click", this.toggleDark.bind(this));
         this.documentBody = document.getElementsByTagName("body")[0];
         var nav_list = document.getElementById("adapter-links");
@@ -85,7 +79,6 @@ App.prototype.generate =
         this.mount.appendChild(error_bar);
         this.error_message = document.createTextNode("");
         error_bar.appendChild(this.error_message);
-
 
         //Add Configuration Page
         //Create DOM node for adapter
@@ -109,7 +102,7 @@ App.prototype.generate =
         </div>
         <div>
 <div class="input-group" title="Clock frequency for the SI570 oscillator">
-    <input class="form-control text-right" id="clock-input" aria-label="Value" placeholder="10.0" type="text">
+    <input class="form-control text-right" id="clock-input" aria-label="Value" placeholder=` + Number(data["clock"]["value"]).toFixed(1).toString() + ` type="text">
     <span class="input-group-addon">MHz</span>
     <div class="input-group-btn">
         <button class="btn btn-default" id="clock-button" type="button">Set</button>
@@ -138,10 +131,22 @@ App.prototype.generate =
             <div class="padder"></div>
         </div>
         <div>
-
-<button id="bp-update-button" type="button" class="btn btn-toggle btn-success">Disable</button>
+<button id="bp-update-button" type="button" class="btn btn-toggle btn-danger">Disabled</button>
         </div>
     </div>
+
+    <div>
+        <h5>
+            Reload Backplane:
+        </h5>
+        <div class="variable-padding">
+            <div class="padder"></div>
+        </div>
+        <div>
+<button id="bp-reload-button" type="button" class="btn btn-default">Reload</button>
+        </div>
+    </div>
+
 </div>
 </div>
     <div class ="child-column">
@@ -157,20 +162,14 @@ App.prototype.generate =
             <div id="ASIC-container">
                 <div class="flex-container">
                     <h5>Image Capture Vector File:</h5>
-                    <div class="input-group" title="File location for the image capture vector file">
-                        <input id="capture-vector-input" class="form-control text-right" aria-label="Test Cases" placeholder=" " type="text">
-                    </div>
-                    <div class="input-group-btn">
-                        <button id="capture-vector-browse-btn" class="btn btn-default" type="button">Browse</button>
+                    <div>
+                        <input id="capture-vector-input" class="form-control text-right" placeholder=" " type="file">
                     </div>
                 </div>
                 <div class="flex-container">
                     <h5>ASIC Configuration Vector File:</h5>
-                    <div class="input-group" title="File location for the image capture vector file">
-                        <input id="configure-vector-input" class="form-control text-right" aria-label="Test Cases" placeholder=" " type="text">
-                    </div>
-                    <div class="input-group-btn">
-                        <button id="configure-vector-browse-btn" class="btn btn-default" type="button">Browse</button>
+                    <div>
+                        <input id="configure-vector-input" class="form-control text-right" placeholder=" " type="file">
                     </div>
                 </div>
             </div>
@@ -361,168 +360,18 @@ App.prototype.generate =
                 <h4>Backplane Variable Supplies</h4>
             </div>
             <div id="variable-supply-container" class="flex-container">
-                <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <td></td>
-                            <th>Register</th>
-                            <th>Resistance</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-
-
-
-                        <tr>
-                            <th class="text-right">AUXRESET</th>
-
-            <td>
-            <div class="input-group">
-                <input class="form-control text-right" id="component-19-input" aria-label="Value" placeholder="111" type="text">
-                <div class="input-group-btn">
-                    <button class="btn btn-default" id="component-19-button" type="button">Set</button>
+                <div class="table-container">` + this.generateResistors(data["resistors"]) + `
                 </div>
-            </div>
-                    </td>
-            <td>
-            <div class="input-group">
-                <input class="form-control text-right" id="component-20-input" aria-label="Value" placeholder="1.90" type="text">
-                <span class="input-group-addon">V</span>
-                <div class="input-group-btn">
-                    <button class="btn btn-default" id="component-20-button" type="button">Set</button>
-                </div>
-            </div>
-                    </td>
-                        </tr>
-                        <tr>
-                            <th class="text-right">VCM</th>
-
-            <td>
-            <div class="input-group">
-                <input class="form-control text-right" id="component-22-input" aria-label="Value" placeholder="50" type="text">
-                <div class="input-group-btn">
-                    <button class="btn btn-default" id="component-22-button" type="button">Set</button>
-                </div>
-            </div>
-                    </td>
-            <td>
-            <div class="input-group">
-                <input class="form-control text-right" id="component-23-input" aria-label="Value" placeholder="1.25" type="text">
-                <span class="input-group-addon">V</span>
-                <div class="input-group-btn">
-                    <button class="btn btn-default" id="component-23-button" type="button">Set</button>
-                </div>
-            </div>
-                    </td>
-                        </tr>
-                        <tr>
-                            <th class="text-right">DACEXTREF</th>
-
-            <td>
-            <div class="input-group">
-                <input class="form-control text-right" id="component-25-input" aria-label="Value" placeholder="21" type="text">
-                <div class="input-group-btn">
-                    <button class="btn btn-default" id="component-25-button" type="button">Set</button>
-                </div>
-            </div>
-                    </td>
-            <td>
-            <div class="input-group">
-                <input class="form-control text-right" id="component-26-input" aria-label="Value" placeholder="10.00" type="text">
-                <span class="input-group-addon">uA</span>
-                <div class="input-group-btn">
-                    <button class="btn btn-default" id="component-26-button" type="button">Set</button>
-                </div>
-            </div>
-                    </td>
-                        </tr>
-                        <tr>
-                            <th class="text-right">VDD RST</th>
-
-            <td>
-            <div class="input-group">
-                <input class="form-control text-right" id="component-28-input" aria-label="Value" placeholder="236" type="text">
-                <div class="input-group-btn">
-                    <button class="btn btn-default" id="component-28-button" type="button">Set</button>
-                </div>
-            </div>
-                    </td>
-            <td>
-            <div class="input-group">
-                <input class="form-control text-right" id="component-29-input" aria-label="Value" placeholder="3.30" type="text">
-                <span class="input-group-addon">V</span>
-                <div class="input-group-btn">
-                    <button class="btn btn-default" id="component-29-button" type="button">Set</button>
-                </div>
-            </div>
-                    </td>
-                        </tr>
-                        <tr>
-                            <th class="text-right">VRESET</th>
-
-            <td>
-            <div class="input-group">
-                <input class="form-control text-right" id="component-31-input" aria-label="Value" placeholder="45" type="text">
-                <div class="input-group-btn">
-                    <button class="btn btn-default" id="component-31-button" type="button">Set</button>
-                </div>
-            </div>
-                    </td>
-            <td>
-            <div class="input-group">
-                <input class="form-control text-right" id="component-32-input" aria-label="Value" placeholder="1.30" type="text">
-                <span class="input-group-addon">V</span>
-                <div class="input-group-btn">
-                    <button class="btn btn-default" id="component-32-button" type="button">Set</button>
-                </div>
-            </div>
-                    </td>
-                        </tr>
-                        <tr>
-                            <th class="text-right">VCTRL</th>
-
-            <td>
-            <div class="input-group">
-                <input class="form-control text-right" id="component-34-input" aria-label="Value" placeholder="100" type="text">
-                <div class="input-group-btn">
-                    <button class="btn btn-default" id="component-34-button" type="button">Set</button>
-                </div>
-            </div>
-                    </td>
-            <td>
-            <div class="input-group">
-                <input class="form-control text-right" id="component-35-input" aria-label="Value" placeholder="0.12" type="text">
-                <span class="input-group-addon">V</span>
-                <div class="input-group-btn">
-                    <button class="btn btn-default" id="component-35-button" type="button">Set</button>
-                </div>
-            </div>
-                    </td>
-                        </tr>
-                        <tr>
-                            <th class="text-right">AUXSAMPLE</th>
-
-            <td>
-            <div class="input-group">
-                <input class="form-control text-right" id="component-37-input" aria-label="Value" placeholder="36" type="text">
-                <div class="input-group-btn">
-                    <button class="btn btn-default" id="component-37-button" type="button">Set</button>
-                </div>
-            </div>
-                    </td>
-            <td>
-            <div class="input-group">
-                <input class="form-control text-right" id="component-38-input" aria-label="Value" placeholder="1.01" type="text">
-                <span class="input-group-addon">V</span>
-                <div class="input-group-btn">
-                    <button class="btn btn-default" id="component-38-button" type="button">Set</button>
-                </div>
-            </div>
-                    </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div>
+                    <h5>
+                        Change Default Values?:
+                    </h5>
+                    <div class="variable-padding">
+                        <div class="padder"></div>
+                    </div>
+                    <div>
+                        <button id="resistor-volatile-button" type="button" class="btn btn-toggle btn-danger">No</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -536,111 +385,8 @@ App.prototype.generate =
                 <h4>Backplane Static Supplies</h4>
             </div>
             <div id="static-supply-container" class="flex-container">
-                <div class="table-container">
-                <table>
-    <thead>
-        <tr>
-            <td></td>
-            <th>Current (mA)</th>
-            <th>Voltage (V)</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <th class="text-right">VDDO</th>
-
-<td>
-<span id="component-44">21.49</span>
-</td>
-<td>
-<span id="component-46">1.799</span>
-</td>
-        </tr>
-        <tr>
-            <th class="text-right">VDD D18</th>
-
-<td>
-<span id="component-49">79.37</span>
-</td>
-<td>
-<span id="component-51">1.801</span>
-</td>
-        </tr>
-        <tr>
-            <th class="text-right">VDD D25</th>
-
-<td>
-<span id="component-54">56.17</span>
-</td>
-
-<td>
-<span id="component-56">2.473</span>
-</td>
-        </tr>
-        <tr>
-            <th class="text-right">VDD P18</th>
-
-<td>
-<span id="component-59">23.20</span>
-</td>
-<td>
-<span id="component-61">1.800</span>
-</td>
-        </tr>
-        <tr>
-            <th class="text-right">VDD A18_PLL</th>
-
-<td>
-<span id="component-64">12.21</span>
-</td>
-<td>
-<span id="component-66">1.807</span>
-</td>
-
-        </tr>
-        <tr>
-            <th class="text-right">VDD D18ADC</th>
-
-<td>
-<span id="component-69">29.30</span>
-</td>
-<td>
-<span id="component-71">1.801</span>
-</td>
-        </tr>
-        <tr>
-            <th class="text-right">VDD D18_PLL</th>
-
-<td>
-<span id="component-74">8.55</span>
-</td>
-<td>
-<span id="component-76">1.802</span>
-</td>
-        </tr>
-        <tr>
-            <th class="text-right">VDD A33</th>
-
-<td>
-<span id="component-84">34.19</span>
-</td>
-<td>
-<span id="component-86">3.308</span>
-</td>
-        </tr>
-        <tr>
-            <th class="text-right">VDD D33</th>
-
-<td>
-<span id="component-89">13.43</span>
-</td>
-<td>
-<span id="component-91">3.303</span>
-</td>
-        </tr>
-    </tbody>
-</table>
-</div>
+                <div class="table-container">` + this.generateSupplies(data["current_voltage"]) + `
+                </div>
             </div>
         </div>
     </div>
@@ -651,8 +397,18 @@ App.prototype.generate =
 
        document.getElementById("ASIC-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "ASIC"));
        document.getElementById("DAC-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "DAC"));
-       document.getElementById("variable-supply-collapse").addEventListener("click", this.toggleCollapsedSupply.bind(this));
-       document.getElementById("static-supply-collapse").addEventListener("click", this.toggleCollapsedStaticSupply.bind(this));
+       document.getElementById("variable-supply-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "variable-supply"));
+       document.getElementById("static-supply-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "static-supply"));
+
+       document.getElementById('clock-button').addEventListener("click", this.setClock.bind(this));
+       document.getElementById('bp-refresh-button').addEventListener("click", this.update_bp.bind(this));
+       document.getElementById('bp-update-button').addEventListener("click", this.updateLoop_bp.bind(this));
+       document.getElementById('bp-reload-button').addEventListener("click", this.reload_bp.bind(this));
+
+       for (i=0; i<data["resistors"].length; i++) {
+           document.getElementById("resistor-" + i.toString() + "-button").addEventListener("click", this.setResistor.bind(this, i.toString()));
+       };
+       document.getElementById('resistor-volatile-button').addEventListener("click", this.setVolatile.bind(this));
 
        //Update navbar
        var list_elem = document.createElement("li");
@@ -782,6 +538,29 @@ App.prototype.generate =
        link.appendChild(link_text);
        link.addEventListener("click", this.changePage.bind(this, "Capture"));
 
+       //Add frequency overlay
+       this.freq_overlay = document.createElement("div");
+       this.freq_overlay.classList.add("overlay-background");
+       this.freq_overlay.classList.add("hidden");
+       this.freq_overlay.innerHTML = `
+<div class="overlay-freq">
+   <h5>Set the frequency to update the webpage:</h5>
+   <div>
+       <div class="input-group">
+           <input class="form-control text-right" id="frequency-value" placeholder="5" type="text">
+           <span class="input-group-addon">Hz</span>
+       </div>
+       <div class="overlay-control-buttons">
+           <button class="btn btn-success" id="frequency-set" type="button">Set</button>
+           <button class="btn btn-danger" id="frequency-cancel" type="button">Cancel</button>
+       </div>
+   <div>
+</div>
+`;
+       this.mount.appendChild(this.freq_overlay);
+       document.getElementById("frequency-cancel").addEventListener("click", this.frequencyCancel.bind(this));
+       document.getElementById("frequency-set").addEventListener("click", this.frequencySet.bind(this));
+
         //Add footer
         var footer = document.createElement("div");
         footer.classList.add("footer");
@@ -801,9 +580,180 @@ App.prototype.generate =
 
 //Handles onClick events from the navbar
 
+App.prototype.generateResistors =
+    function (resistors) {
+        resistor_table = `
+        <table>
+            <thead>
+              <tr>
+                <td></td>
+                <th>Resistance</th>
+              </tr>
+            </thead>
+            <tbody>`
+        var i;
+        for (i=0; i<resistors.length; i++) {
+            resistor_table += `
+              <tr>
+                <th class="text-right">` + resistors[i]["name"] + `</th>
+                <td>
+                  <div class="input-group">
+                    <input class="form-control text-right" id="resistor-`+ i.toString() +`-input" aria-label="Value" placeholder="` + Number(resistors[i]["resistance"]["value"]).toFixed(2).toString() + `" type="text">
+                    <div class="input-group-btn">
+                      <button class="btn btn-default" id="resistor-`+ i.toString() + `-button" type="button">Set</button>
+                    </div>
+                  </div>
+                </td>
+              </tr>`
+        }
+        resistor_table += `
+            </tbody>
+        </table>`
+        return resistor_table
+    };
+
+App.prototype.generateSupplies =
+    function (supplies) {
+        supply_table = `
+        <table>
+            <thead>
+              <tr>
+                <td></td>
+                <th>Voltage (V)</th>
+                <th>Current (mA)</th>
+              </tr>
+            </thead>
+            <tbody>`
+        var i;
+        for (i=0; i<supplies.length; i++) {
+            supply_table += `
+              <tr>
+                <th class="text-right">` + supplies[i]["name"] + `</th>
+                <td>
+                  <span id="supply-voltage-`+ i.toString() + `">` + Number(supplies[i]["voltage"]["value"]).toFixed(3).toString() + `</span>
+                </td>
+                <td>
+                  <span id="supply-current-`+ i.toString() + `">` + Number(supplies[i]["current"]["value"]).toFixed(2).toString() + `</span>
+                </td>
+              </tr>`
+        }
+        supply_table += `
+            </tbody>
+        </table>`
+        return supply_table
+    };
+
+App.prototype.updateLoop_bp =
+    function() {
+        var button = document.getElementById('bp-update-button')
+        if (button.innerHTML=="Disabled") {
+            apiPUT(this.current_adapter, "sensors_enabled", "true");
+            this.update_bp();
+            button.innerHTML="Updating";
+            button.classList.remove("btn-danger");
+            button.classList.add("btn-success");
+            document.getElementById('bp-refresh-button').disabled = true;
+        } else {
+            apiPUT(this.current_adapter, "sensors_enabled", "false");
+            button.innerHTML="Disabled";
+            button.classList.remove("btn-success");
+            button.classList.add("btn-danger");
+            document.getElementById('bp-refresh-button').disabled = false;
+        }
+    }
+
+App.prototype.update_bp =
+    function() {
+        apiPUT(this.current_adapter, "update_required", "true")
+        .done(
+            (function() {
+                apiGET(this.current_adapter, "", false)
+                .done(
+                    (function(data) {
+                        for (i=0; i<data["current_voltage"].length; i++) {
+                            document.getElementById('supply-voltage-' + i.toString()).innerHTML = Number(data["current_voltage"][i]["voltage"]).toFixed(3).toString();
+                            document.getElementById('supply-current-' + i.toString()).innerHTML = Number(data["current_voltage"][i]["current"]).toFixed(2).toString();
+                        }
+                        if (data["sensors_enabled"]=="True") {
+                            setTimeout(this.update_bp.bind(this), this.update_delay * 1000);
+                        }
+                    }).bind(this)
+                )
+                .fail(this.setError.bind(this));
+            }).bind(this)
+        )
+    }
+
+    App.prototype.reload_bp =
+        function() {
+            apiPUT(this.current_adapter, "reset", "true")
+            .done(
+                (function() {
+                    apiGET(this.current_adapter, "", false)
+                    .done(
+                        (function(data) {
+                            apiPUT(this.current_adapter, "clock", document.getElementById('clock-input').placeholder);
+                            for (i=0; i<data["resistors"].length; i++) {
+                                document.getElementById('resistor-' + number +  '-input').placeholder=Number(data["resistors"][i]["resistance"]).toFixed(2).toString()
+                            };
+                            this.update_bp();
+                        }).bind(this)
+                    )
+                    .fail(this.setError.bind(this));
+                }).bind(this)
+            )
+        }
+
+
+App.prototype.setClock =
+    function() {
+        var element = document.getElementById('clock-input');
+        var value = Number(element.value);
+        apiPUT(this.current_adapter, "clock", value)
+        .done(
+            function() {
+                element.placeholder = value.toFixed(1)
+                element.value = ""
+            }
+        )
+        .fail(this.setError.bind(this))
+    }
+
+App.prototype.setResistor =
+    function(number) {
+        var element = document.getElementById('resistor-' + number +  '-input');
+        var location = "resistors/" + number + "/resistance"
+        var value = Number(element.value);
+        apiPUT(this.current_adapter, location, value)
+        .done(
+            function() {
+                element.placeholder = value.toFixed(2)
+                element.value = ""
+            }
+        )
+        .fail(this.setError.bind(this))
+    }
+
+App.prototype.setVolatile =
+    function() {
+        var button = document.getElementById('resistor-volatile-button')
+        if (button.innerHTML=="No") {
+            apiPUT(this.current_adapter, "non_volatile", "true");
+            this.update_bp();
+            button.innerHTML="Yes";
+            button.classList.remove("btn-danger");
+            button.classList.add("btn-success");
+        } else {
+            apiPUT(this.current_adapter, "non_volatile", "false");
+            button.innerHTML="No";
+            button.classList.remove("btn-success");
+            button.classList.add("btn-danger");
+        }
+    }
+
+
 App.prototype.changePage =
-    function(page)
-    {
+    function(page) {
         if(page=="Configuration") {
             document.getElementById("configuration-page").classList.add("active");
             document.getElementById("capture-page").classList.remove("active");
@@ -813,63 +763,68 @@ App.prototype.changePage =
         }
     };
 
-App.prototype.toggleCollapsed(section) =
-    function()
-    {
+App.prototype.toggleCollapsed =
+    function(section) {
         document.getElementById(section + "-container").classList.toggle("collapsed");
         document.getElementById(section + "-button-symbol").classList.toggle("glyphicon-triangle-right");
         document.getElementById(section + "-button-symbol").classList.toggle("glyphicon-triangle-bottom");
     };
 
-App.prototype.toggleCollapsedSupply =
-    function()
-    {
-        document.getElementById("variable-supply-container").classList.toggle("collapsed");
-        document.getElementById("variable-supply-button-symbol").classList.toggle("glyphicon-triangle-right");
-        document.getElementById("variable-supply-button-symbol").classList.toggle("glyphicon-triangle-bottom");
-    };
-
-    App.prototype.toggleCollapsedStaticSupply =
-        function()
-        {
-            document.getElementById("static-supply-container").classList.toggle("collapsed");
-            document.getElementById("static-supply-button-symbol").classList.toggle("glyphicon-triangle-right");
-            document.getElementById("static-supply-button-symbol").classList.toggle("glyphicon-triangle-bottom");
-        };
 
 App.prototype.setError =
-    function(data)
-    {
-        if(data.hasOwnProperty("json"))
-        {
+    function(data) {
+        if(data.hasOwnProperty("json")) {
             var json = data.responseJSON;
             if(json.hasOwnProperty("error"))
                 this.showError(json.error);
-        }
-        else
-        {
+        } else {
             this.showError(data.responseText);
         }
     }
 
 App.prototype.showError =
-    function(msg)
-    {
+    function(msg) {
         if(this.error_timeout !== null) clearTimeout(this.error_timeout);
         this.error_message.nodeValue = `Error: ${msg}`;
         this.error_timeout = setTimeout(this.clearError.bind(this), 5000);
     }
 
 App.prototype.clearError =
-    function()
-    {
+    function() {
         this.error_message.nodeValue = "";
     };
 
 
+    App.prototype.updateFrequency =
+        function()
+        {
+            document.getElementById("frequency-value").placeholder = (Math.round(100 / this.update_delay) / 100).toString();
+            this.freq_overlay.classList.remove("hidden");
+        };
+
+    App.prototype.frequencyCancel =
+        function()
+        {
+            this.freq_overlay.classList.add("hidden");
+        };
+
+    App.prototype.frequencySet =
+        function()
+        {
+            var val = document.getElementById("frequency-value").value;
+            var new_delay = 1 / parseFloat(val);
+
+            if(isNaN(new_delay) || !isFinite(new_delay))
+                this.showError("Update frequency must be a valid number");
+            else
+                this.update_delay = new_delay;
+
+            document.getElementById("frequency-value").value = "";
+            this.freq_overlay.classList.add("hidden");
+        };
+
 App.prototype.toggleDark =
-    function()
-    {
+    function() {
         this.dark_mode = !this.dark_mode;
         this.setCookie("dark", this.dark_mode.toString());
 
@@ -878,19 +833,16 @@ App.prototype.toggleDark =
     };
 
 App.prototype.getCookie =
-    function(key)
-    {
+    function(key)  {
         var raw = document.cookie.split(';');
-        for(var value of raw)
-        {
+        for(var value of raw) {
             if(value.indexOf(key) == 0)
                 return decodeURIComponent(value.substring(key.length + 1));
         }
     };
 
 App.prototype.setCookie =
-    function(key, value)
-    {
+    function(key, value) {
         var date = new Date();
         date.setTime(date.getTime() + 30 * (24 * 60 * 60 * 1000));
         var expires = `expires=${date.toUTCString()}`;
@@ -902,8 +854,7 @@ App.prototype.setCookie =
         var cookieString = `${key}=${encodeURIComponent(value)}`;
         var found = false;
         for(var i = 0; i < raw.length; i++)
-            if(raw[i].indexOf(key) === 0)
-            {
+            if(raw[i].indexOf(key) === 0) {
                 raw[i] = cookieString;
                 found = true;
             }
@@ -914,7 +865,6 @@ App.prototype.setCookie =
     };
 
 //Create the App() instance
-function initApp()
-{
+function initApp() {
     var app = new App();
 }

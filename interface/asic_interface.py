@@ -21,17 +21,19 @@ class ASIC_Interface():
         # set shift register delay in 1 of 16 divide by 8 clock steps - d1, d0, c1, c0
         self.qemcamera.set_ivsr(0,0,27,27)
         self.qemcamera.turn_rdma_debug_0ff()
-        self.qemcamera.display_image_stream(1000)
-#        self.qemcamera.log_image_stream('../log/',10)
-#        time.sleep(1)
-#        self.qemcamera.disconnect()
 
+#    def __del__(self):
+#        del qemcamera
 
     def get_image(self):
         return unicode(self.image)
 
     def set_image_capture(self, value):
         self.image = value
+        self.qemcamera.display_image_stream(100)
+        #        self.qemcamera.log_image_stream('../log/',10)
+        time.sleep(1)
+        self.qemcamera.disconnect()
 
     def get_dac_value(self, dac):
         return dac
