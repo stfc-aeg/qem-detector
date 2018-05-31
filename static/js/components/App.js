@@ -336,15 +336,15 @@ App.prototype.generate =
                 <div class="flex container">
                     <h5>Image Capture Pattern</h5>
                     <div class="input-group-btn">
-                        <button id="load-capture-button" class="btn btn-default" type="button">Load</button>
-                        <button id="save-capture-button" class="btn btn-default" type="button">Save</button>
+                        <button id="load-cap-pattern-button" class="btn btn-default" type="button">Load</button>
+                        <button id="save-cap-pattern-button" class="btn btn-default" type="button">Save</button>
                     </div>
                 </div>
                 <div class="flex container">
                     <h5>ASIC Configuration Pattern</h5>
                     <div class="input-group-btn">
-                        <button id="load-configuration-button" class="btn btn-default" type="button">Load</button>
-                        <button id="save-configuration-button" class="btn btn-default" type="button">Save</button>
+                        <button id="load-conf-pattern-button" class="btn btn-default" type="button">Load</button>
+                        <button id="save-conf-pattern-button" class="btn btn-default" type="button">Save</button>
                     </div>
                 </div>
             </div>
@@ -424,10 +424,10 @@ App.prototype.generate =
 
         //Add Capture Page
         var container = document.createElement("div");
-        container.id = "capture-page";
+        container.id = "image-capture-page";
         container.classList.add("adapter-page");
         container.innerHTML = `
-<div id="capture-container" class="flex-container">
+<div id="image-capture-container" class="flex-container">
 <div class ="parent-column">
     <h4>Image Display</h4>
     <div class="vertical">
@@ -456,22 +456,13 @@ App.prototype.generate =
         <div class="flex-container">
             <h5>Logging File:</h5>
             <div class="input-group" title="File location for storing the image logs">
-                <input id="capture-logging-input" class="form-control text-right"  placeholder=" " type="text">
-            </div>
-            <div class="input-group-btn">
-                <button id="capture-logging-browse-btn" class="btn btn-default" type="button">Browse</button>
+                <input id="capture-logging-input" class="form-control text-right"  placeholder=" " type="file">
             </div>
         </div>
         <div class="flex-container">
-            <h5>Frame Number:</h5>
+            <h5>Number of frames:</h5>
             <div class="input-group" title=" ">
-                <input id="capture-frame-number-input" class="form-control text-right"  placeholder=" " type="text">
-            </div>
-        </div>
-        <div class="flex-container">
-            <h5>Frame Delay:</h5>
-            <div class="input-group" title=" ">
-                <input id="capture-frame-delay-input" class="form-control text-right"  placeholder=" " type="text">
+                <input id="capture-fnumber-input" class="form-control text-right"  placeholder=" " type="text">
             </div>
         </div>
         <div class="input-group-btn">
@@ -493,10 +484,7 @@ App.prototype.generate =
         <div class="flex-container">
             <h5>Logging File:</h5>
             <div class="input-group" title="File location for storing the caibration image logs">
-                <input id="calibration-logging-input" class="form-control text-right"  placeholder=" " type="text">
-            </div>
-            <div class="input-group-btn">
-                <button id="calibration-logging-browse-btn" class="btn btn-default" type="button">Browse</button>
+                <input id="calibration-logging-input" class="form-control text-right"  placeholder=" " type="file">
             </div>
         </div>
         <div class="flex-container">
@@ -527,6 +515,11 @@ App.prototype.generate =
 `;
 
        this.mount.appendChild(container);
+
+       document.getElementById("capture-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "capture"));
+       document.getElementById("calibration-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "calibration"));
+
+       document.getElementById("log-run-button").addEventListener("click", this.logImageCapture.bind(this);
 
        //Update navbar
        var list_elem = document.createElement("li");
@@ -752,14 +745,21 @@ App.prototype.setVolatile =
     }
 
 
+App.prototype.logImageCapture =
+    function() {
+        var fnumber = document.getElementById('capture-fnumber-input').value
+        apiPUT(this.current_adapter, "capture_run", fnumber)
+    }
+
+
 App.prototype.changePage =
     function(page) {
         if(page=="Configuration") {
             document.getElementById("configuration-page").classList.add("active");
-            document.getElementById("capture-page").classList.remove("active");
+            document.getElementById("image-capture-page").classList.remove("active");
         } else {
             document.getElementById("configuration-page").classList.remove("active");
-            document.getElementById("capture-page").classList.add("active");
+            document.getElementById("image-capture-page").classList.add("active");
         }
     };
 
