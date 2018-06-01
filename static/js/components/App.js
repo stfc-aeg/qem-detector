@@ -433,7 +433,7 @@ App.prototype.generate =
     <div class="vertical">
         <div id="image-container">
             <div>
-                <canvas id="image-canvus" width="300" height="300" style = "border:1px solid #000000;"></canvas>
+                <img id="image_display" src="img/temp_image.png">
             </div>
             <div class="input-group-btn">
                 <button id="display-single-button" class="btn btn-default" type="button">Single Frame</button>
@@ -454,9 +454,9 @@ App.prototype.generate =
         </div>
         <div id="capture-container">
         <div class="flex-container">
-            <h5>Logging File:</h5>
+            <h5>Logging File Name:</h5>
             <div class="input-group" title="File location for storing the image logs">
-                <input id="capture-logging-input" class="form-control text-right"  placeholder=" " type="file">
+                <input id="capture-logging-input" class="form-control text-right"  placeholder=" " type="text">
             </div>
         </div>
         <div class="flex-container">
@@ -482,9 +482,9 @@ App.prototype.generate =
         </div>
         <div id="calibration-container">
         <div class="flex-container">
-            <h5>Logging File:</h5>
+            <h5>Logging File Name:</h5>
             <div class="input-group" title="File location for storing the caibration image logs">
-                <input id="calibration-logging-input" class="form-control text-right"  placeholder=" " type="file">
+                <input id="calibration-logging-input" class="form-control text-right"  placeholder=" " type="text">
             </div>
         </div>
         <div class="flex-container">
@@ -519,7 +519,9 @@ App.prototype.generate =
        document.getElementById("capture-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "capture"));
        document.getElementById("calibration-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "calibration"));
 
-       document.getElementById("log-run-button").addEventListener("click", this.logImageCapture.bind(this);
+       document.getElementById("display-single-button").addEventListener("click", this.imageGenerate.bind(this));
+       document.getElementById("log-run-button").addEventListener("click", this.logImageCapture.bind(this));
+       document.getElementById("calibration-run-button").addEventListener("click", this.calibrationImageCapture.bind(this));
 
        //Update navbar
        var list_elem = document.createElement("li");
@@ -744,13 +746,64 @@ App.prototype.setVolatile =
         }
     }
 
+App.prototype.imageGenerate =
+    function() {
+        apiPUT(this.current_adapter, "image", 2)
+        .done(this.updateImage())
+        .fail(this.setError.bind(this));
+    }
+
+App.prototype.updateImage =
+    function() {
+        apiGET(this.current_adapter, "image")
+        .done(
+            function(imageCount) {
+                if (imageCount > 0) {
+                    this.updateImage()
+                }
+            }
+        )
+        .fail(this.setError.bind(this));
+    }
 
 App.prototype.logImageCapture =
     function() {
-        var fnumber = document.getElementById('capture-fnumber-input').value
-        apiPUT(this.current_adapter, "capture_run", fnumber)
+        var fnumber = Number(document.getElementById('capture-fnumber-input').value)
+        var location = String(document.getElementById('capture-logging-input').value)
+        apiPUT(this.current_adapter, "capture_run", fnumber.toString() + ";" + location)
     }
 
+App.prototype.calibrationImageCapture =
+    function() {
+        var location = String(document.getElementById('calibration-logging-input').value)
+        var Vstart = Number(document.getElementById('configure-input-start').value).toFixed(2)
+        var Vstep = Number(document.getElementById('configure-input-step').value).toFixed(2)
+        var Vfinish = Number(document.getElementById('configure-input-finish').value).toFixed(2)
+        this.calibrationImageCaptureStep("1000;" + location, Vstart, Vstep, Vfinish)
+    }
+
+App.prototype.calibrationImageCaptureStep =
+    function(configuration, VStart, VStep, VFinish) {
+        parentthis = this;
+        apiPUT(parentthis.current_adapter, "resistors/6/resistance", VStart)
+        .done(
+            (function() {
+                setTimeout(function() {
+                    apiPUT(parentthis.current_adapter, "capture_run", configuration + "_" + VStart.toString())
+                    .done(
+                        function() {
+                            VStart = (VStart + VStep).toFixed(2);
+                            if (VStart <= VFinish) {
+                                parentthis.calibrationImageCaptureStep(configuration, VStart, VStep, VFinish);
+                            }
+                        }
+                    )
+                    .fail(parentthis.setError.bind(this))
+                }, 50);
+            })
+        )
+        .fail(parentthis.setError.bind(this))
+    }
 
 App.prototype.changePage =
     function(page) {

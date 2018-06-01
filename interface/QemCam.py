@@ -366,6 +366,17 @@ class QemCam(object):
             image_count = image_count+1
         return
 
+    def display_image_stream_web(self, num_images):
+        image_count = 1
+        self.frame_gate_settings(0, 0)
+        sensor_images = []
+        while image_count <= num_images :
+            self.frame_gate_trigger()
+            sensor_image = self.x10g_stream.get_image()
+            sensor_images.append(sensor_image << 5)
+            image_count = image_count+1
+        return sensor_images
+
     def log_image_stream(self, file_name, num_images):
         self.frame_gate_settings(num_images-1, 0)
         self.frame_gate_trigger()

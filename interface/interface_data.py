@@ -5,11 +5,10 @@ from odin.adapters.metadata_tree import MetadataTree
 class CurrentVoltage(object):
     """This class handles the API commands for an individual power supply on the backplane"""
     def __init__(self, backplane_interface, i):
-    """Initialises the CurrentVoltage instance
-    This creates a parameter tree for the supply which contains the current and voltage, with name and units stored as metadata, linking in the methods to access the data
-    :param backplane_interface: the instance of the backplane_interface that handles communication with the odin_qem server
-    :param i: The unique number to associate with this supply
-    """
+        """Initialises the CurrentVoltage instance
+        This creates a parameter tree for the supply which contains the current and voltage, with name and units stored as metadata, linking in the methods to access the data
+        :param backplane_interface: the instance of the backplane_interface that handles communication with the odin_qem server
+        :param i: The unique number to associate with this supply"""
         self.index = i
         self.backplane_interface = backplane_interface
 
@@ -21,15 +20,15 @@ class CurrentVoltage(object):
         })
 
     def get_current(self):
-    """Handles HTTP GET command for the current of supply i
-    :return: the current of the supply from the backplane_interface as a float
-    """
+        """Handles HTTP GET command for the current of supply i
+        :return: the current of the supply from the backplane_interface as a float
+        """
         return self.backplane_interface.get_current(self.index)
 
     def get_voltage(self):
-    """Handles HTTP GET command for the voltage of supply i
-    :return: the voltage of the supply from the backplane_interface as a float
-    """
+        """Handles HTTP GET command for the voltage of supply i
+        :return: the voltage of the supply from the backplane_interface as a float
+        """
 
         return self.backplane_interface.get_voltage(self.index)
 
@@ -76,7 +75,6 @@ class DAC(object):
         self.asic_interface = asic_interface
 
         self.param_tree = MetadataTree({
-            "name" : self.asic_interface.get_dac_name(self.index),
             "value" : (self.get, self.set),
        })
 
@@ -135,11 +133,11 @@ class InterfaceData(object):
         })
 
     def get(self, path, metadata):
-    """ Construct a dict by running the get command for the given path on the tree
-    :param path: URI path of request
-    :param metadata: Boole representing whether to include the metadata
-    :return: a dict containing the data in a tree structure
-    """
+        """ Construct a dict by running the get command for the given path on the tree
+        :param path: URI path of request
+        :param metadata: Boole representing whether to include the metadata
+        :return: a dict containing the data in a tree structure
+        """
         return self.param_tree.get(path, metadata=metadata)
 
     def set(self, path, value):
