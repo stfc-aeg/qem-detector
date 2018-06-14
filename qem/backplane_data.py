@@ -41,8 +41,8 @@ class Resistor(object):
 
         self.param_tree = MetadataTree({
             "name" : self.backplane.get_resistor_name(self.index),
-            "resistance" : (self.get, self.set, {"units" : self.backplane.get_resistor_units(self.index), "min" : self.backplane.get_resistor_min(self.index), "max" : self.backplane.get_resistor_max(self.index)}),
-            "register" : (self.raw_get,self.raw_set,{"dp" : 0, "min" : 0, "max" : 255}),
+            "voltage_current" : (self.get, self.set, {"units" : self.backplane.get_resistor_units(self.index), "min" : self.backplane.get_resistor_min(self.index), "max" : self.backplane.get_resistor_max(self.index)}),
+            "register_value" : (self.raw_get,self.raw_set,{"dp" : 0, "min" : 0, "max" : self.backplane.get_register_max(self.index)}),
        })
 
     def get(self):
@@ -72,7 +72,7 @@ class BackplaneData(object):
             self.current_voltage.append(CurrentVoltage(self.backplane, i))
 
         self.resistors = []
-        for i in range(7):
+        for i in range(8):
             self.resistors.append(Resistor(self.backplane, i))
 
         pw_good = {str(i+1) : pg.get for i,pg in enumerate(self.power_good)}

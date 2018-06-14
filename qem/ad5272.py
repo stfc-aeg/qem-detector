@@ -24,8 +24,8 @@ class AD5272(I2CDevice):
 	self.write8(0x1C, 0x02) # enable the update of wiper position by default
 
         #Read back current wiper settings
-	write8(0x08, 0x00) # Have to write code 0x0800 to initiate a read of the wiper 
-	tmp=readU16(0) # read the result into tmp variable
+	self.write8(0x08, 0x00) # Have to write code 0x0800 to initiate a read of the wiper 
+	tmp=self.readU16(0) # read the result into tmp variable
         self.__wiper_pos = ((tmp&0x03) << 8) + ((tmp&0xFF00) >> 8) #mask off lower 8 bits and shift down 8, mask off upper 8 bits and bits 7-2 & shift up 8
 	
 	#read the contents of the control register
@@ -38,7 +38,7 @@ class AD5272(I2CDevice):
 	self.write8(0x20, 0x00) #send the command to read the contents of the control register
 	
 	# when read, byte swap to get register contents
-	self.__control_reg = self.(readu16(0)&0xF00 >> 8) 
+	self.__control_reg = (self.readU16(0)&0xF00 >> 8) 
 
 
 	#Internal variable settings depending on device / voltage connections
@@ -74,7 +74,7 @@ class AD5272(I2CDevice):
             raise I2CException("Select a resistance between 0 and {:.2f}".format(self.__tot_resistance))
 
         self.__wiper_pos = int(resistance / self.__tot_resistance * self.__num_wiper_pos)
-        self.write8((self.__wiper_pos & 0xFF00) + 0x400, (self.__wiper_pos & 0xFF))
+        self.write8(((self.__wiper_pos & 0xFF00) + 0x400)>>8, (self.__wiper_pos & 0xFF))
 
 
     def set_terminal_PDs(self, wiper, low, high):
@@ -94,16 +94,16 @@ class AD5272(I2CDevice):
         #
 
         self.__wiper_pos[wiper] = int((pd - self.__low_pd) / (self.__high_pd - self.__low_pd) * self.__wiper_pos)
-	self.write8((self.__wiper_pos & 0xFF00) + 0x400, (self.__wiper_pos & 0xFF))
+	self.write8(((self.__wiper_pos & 0xFF00) + 0x400)>>8, (self.__wiper_pos & 0xFF))
 
-    def set_wiper(self, wiper, position):
+    def set_wiper(self, position):
         #Manually sets a wiper position
         #:param wiper: Wiper to set 0=A, 1=B
         #:param position: Target position [0-255]
         #
 
         self.__wiper_pos = int(position)
-	self.write8((self.__wiper_pos & 0xFF00) + 0x400, (self.__wiper_pos & 0xFF))
+	self.write8(((self.__wiper_pos & 0xFF00) + 0x400)>>8, (self.__wiper_pos & 0xFF))
 
     def get_wiper(self, force=False):
         #Gets a wiper position
@@ -112,8 +112,8 @@ class AD5272(I2CDevice):
         #
 
         if force:
-	    write8(0x08, 0x00) # Have to write code 0x8000 to initiate a read of the wiper 
-	    tmp=readU16(0) # read the result into tmp variable
+	    self.write8(0x08, 0x00) # Have to write code 0x8000 to initiate a read of the wiper 
+	    tmp=self.readU16(0) # read the result into tmp variable
             self.__wiper_pos = ((tmp&0x03) << 8) + ((tmp&0xFF00) >> 8)
 
         return self.__wiper_pos
@@ -131,7 +131,7 @@ class AD5272(I2CDevice):
         #
 	if enable :
 		self.write8(0x0C, 0x00) # move the contents of the RDAC register to the memory
-		tmp=readU16(0) # read the result into tmp variable
+		tmp=self.readU16(0) # read the result into tmp variable
 		return (((tmp&0x03) << 8) + ((tmp&0xFF00) >> 8))
 
 
@@ -142,5 +142,3 @@ class AD5272(I2CDevice):
 
         if enable: self.write8(0x24, 0x1)
         else: self.write8(0x24, 0x0)
-
-"""
