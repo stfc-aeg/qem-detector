@@ -47,13 +47,13 @@ class Backplane(I2CContainer):
 
 	    #set the resistance and number of positions for each ad5272
 	    #the fine (0x2E) is 256 and 20K
-	    self.ad5272[0].set_num_wiper_pos(256)
+	    self.ad5272[0].set_num_wiper_pos(1024)
 	    self.ad5272[0].set_total_resistance(20) #20K Ohms
 
 
 	    #the course is 1024 and 100K
 	    self.ad5272[1].set_num_wiper_pos(1024)
-	    self.ad5272[1].set_total_resistance(100) #100K Ohms
+	    self.ad5272[1].set_total_resistance(20) #100K Ohms
 
 	    # attach the clock and set default frequency
             self.si570 = self.tca.attach_device(1, SI570, 0x5d, 'SI570', busnum=1)
@@ -100,8 +100,8 @@ class Backplane(I2CContainer):
                 0.0001 * (49900 * (390 * self.resistors_raw[4])) / (49900 + (390 * self.resistors_raw[4])),
                 -3.775 + (1.225/22600 + .35*.000001) * (390 * self.resistors_raw[5] + 32400),
                 # removed for new cal board 3.3 * (390 * self.resistors_raw[6]) / (390 * self.resistors_raw[6] + 32000),
-		70.58 * self.resistors_raw[6], # this is 70.58 micro-volts / step
-		1.42 * self.resistors_raw[7] # this is 1.42 mili-volts / step
+		79.10 * self.resistors_raw[6], # this is 79.1 micro-volts / step
+		1.51 * self.resistors_raw[7] # this is 1.42 mili-volts / step
 
 ]
 
@@ -120,14 +120,14 @@ class Backplane(I2CContainer):
                 self.logger_state = u"N/A"
 
         #Placeholders for sensor readings
-        self.voltages = [0.0] * 13
-        self.voltages_raw = [0.0] * 13
-        self.currents = [0.0] * 13
-        self.currents_raw = [0.0] * 13
+        self.voltages = [0.0] * 15
+        self.voltages_raw = [0.0] * 15
+        self.currents = [0.0] * 15
+        self.currents_raw = [0.0] * 15
         self.power_good = [False] * 8
         self.psu_enabled = True
         self.capture_enabled = False
-        self.clock_freq = 20.0
+        self.clock_freq = 10.0
         self.resistor_non_volatile = False
         self.temperature = 0
 
@@ -159,6 +159,7 @@ class Backplane(I2CContainer):
                 self.currents_raw[i + 7] = (self.ad7998[2].read_input_raw(j) & 0xfff)
                 self.currents[i + 7] = self.currents_raw[i + 7] / self.CURRENT_RESISTANCE[i + 7] * 5000 / 4095.0
 
+
             #Voltages
             for i in range(7):
                 j = self.voltChannelLookup[0][i]
@@ -168,7 +169,15 @@ class Backplane(I2CContainer):
                 j = self.voltChannelLookup[1][i]
                 self.voltages_raw[i + 7] = self.ad7998[3].read_input_raw(j) & 0xfff
                 self.voltages[i + 7] = self.voltages_raw[i + 7] * 5 / 4095.0
+
+                
+            self.voltages_raw[14] = self.ad7998[1].read_input_raw(1) & 0xfff
+            self.voltages[14] = self.voltages_raw[14] * 3 /4095.0
+
             self.voltages[10] *= -1
+            self.voltages[13]= 0.3428 + (self.resistors[6]*0.000001) + (self.resistors[7]*0.001)
+            
+
 
             #first calculate the voltage from the register
             temp_volt = (self.ad7998[3].read_input_raw(3) & 0xfff) * 5.0 / 4095.0
@@ -209,10 +218,10 @@ class Backplane(I2CContainer):
         #    self.resistors_raw[resistor] = int(0.5+(32000/3.3)*value/(390-390*value/3.3))
         #    self.tpl0102[4].set_wiper(0, self.resistors_raw[resistor])
         elif resistor == 6:
-            self.resistors_raw[resistor] = int(value/70.58) # this is the fine value 70.058 mico-volts / step 0 - 17997.9 micro-volts (uV)
+            self.resistors_raw[resistor] = int(value/79.10) # this is the fine value 70.058 mico-volts / step 0 - 17997.9 micro-volts (uV) updated to 79.10 11/07/18
             self.ad5272[0].set_wiper(self.resistors_raw[resistor])
         elif resistor == 7:
-            self.resistors_raw[resistor] = int(value/1.42) # this is the coarse value for the 1.42mV / step range 0 - 1454.08 mV
+            self.resistors_raw[resistor] = int(value/1.51) # this is the coarse value for the 1.42mV / step range 0 - 1454.08 mV updated to 1.51 11/07/18
             self.ad5272[1].set_wiper(self.resistors_raw[resistor])
         self.resistors[resistor] = value
         if not self.sensors_enabled: self.updates_needed = 1
@@ -241,10 +250,10 @@ class Backplane(I2CContainer):
 #            self.resistors[resistor] = 3.3 * (390 * value) / (390 * value + 32000)
         elif resistor == 6:
             self.ad5272[0].set_wiper(value)
-            self.resistors[resistor] = (value * 70.58)
+            self.resistors[resistor] = (value * 79.10) # updated to 79.10 from 70.58 11/07/18
         elif resistor == 7:
             self.ad5272[1].set_wiper(value)
-            self.resistors[resistor] = (value * 1.42)
+            self.resistors[resistor] = (value * 1.51) # updated to 1.51 from 1.42 11/07/18
         self.resistors_raw[resistor] = value
         if not self.sensors_enabled: self.updates_needed = 1
 
@@ -272,11 +281,11 @@ class Backplane(I2CContainer):
 
     # returns the maximum voltage that can be set for a given resistor
     def get_resistor_max(self, resistor):
-        return [2.497, 2.497, 101.1, 3.318, 3.322, 3.41, 17997.9, 1454.08][resistor]
+        return [2.497, 2.497, 101.1, 3.318, 3.322, 3.41, 80919.3, 1544.73][resistor]
 
     # returns the maximum register value that can be set for a given resistor
     def get_register_max(self, resistor):
-        return [255, 255, 255, 255, 255, 255, 255, 1024][resistor]
+        return [255, 255, 255, 255, 255, 255, 1023, 1023][resistor]
 
     # returns the status of the non-volatile local variable
     def get_resistor_non_volatile(self):
@@ -340,7 +349,7 @@ class Backplane(I2CContainer):
         for i in range(4): # was 5, now 4 with the addition of adc cal module
             self.tpl0102[i].set_non_volatile(False)
         self.resistor_non_volatile = False
-        self.set_clock_frequency(20)
+        self.set_clock_frequency(10)
         self.resistors_raw = [
             self.tpl0102[0].get_wiper(0,True),
             self.tpl0102[0].get_wiper(1,True),
@@ -349,8 +358,8 @@ class Backplane(I2CContainer):
             self.tpl0102[2].get_wiper(1,True),
             self.tpl0102[3].get_wiper(0,True),
             #self.tpl0102[4].get_wiper(0,True)
-	    self.ad5272[0].get_wiper(),
-	    self.ad5272[1].get_wiper()
+	    self.ad5272[0].get_wiper(True),
+	    self.ad5272[1].get_wiper(True)
 ]
 
 	# not sure where this is used as yet, labelled resistors, yet calculating voltage
@@ -365,8 +374,8 @@ class Backplane(I2CContainer):
             0.0001 * (49900 * (390 * self.resistors_raw[4])) / (49900 + (390 * self.resistors_raw[4])),
             -3.775 + (1.225/22600 + .35*.000001) * (390 * self.resistors_raw[5] + 32400),
             #3.3 * (390 * self.resistors_raw[6]) / (390 * self.resistors_raw[6] + 32000),
-	    70.58 * self.resistors_raw[6], # this is 70.58 micro-volts / step
-	    1.42 * self.resistors_raw[7] # this is 1.42 mili-volts / step
+	    79.1 * self.resistors_raw[6], # this is 70.58 micro-volts / step changed to 79.1 11/07/18
+	    1.51 * self.resistors_raw[7] # this is 1.42 mili-volts / step changed to 1.51 11/07/18
 
 ]
         self.set_psu_enable(True)
@@ -390,4 +399,4 @@ class Backplane(I2CContainer):
     def get_adc_name(self, i):
         return ["VDDO", "VDD_D18", "VDD_D25", "VDD_P18",  "VDD_A18_PLL",  "VDD_D18ADC",
                "VDD_D18_PLL", "VDD_RST", "VDD_A33", "VDD_D33", "VCTRL_NEG", "VRESET",
-               "VCTRL_POS"][i]
+               "VCTRL_POS", "AUXSAMPLE_SUM", "AUXSAMPLE_MEASURED"][i]

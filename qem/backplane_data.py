@@ -68,7 +68,7 @@ class BackplaneData(object):
             self.power_good.append(PowerGood(self.backplane, i))
 
         self.current_voltage = []
-        for i in range(13):
+        for i in range(15):
             self.current_voltage.append(CurrentVoltage(self.backplane, i))
 
         self.resistors = []
