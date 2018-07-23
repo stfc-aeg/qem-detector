@@ -12,7 +12,7 @@ class QemSetter:
 
     def findResistor(self, resistor):
     #returns the base Url for the named 'resistor'
-        resistorLookup = {'AUXRESET':'0', 'VCM':'1', 'DACEXTREF':'2', 'VDD_RST':'3', 'VRESET':'4', 'VCTRL':'5', 'AUXSAMPLE':'6'}
+        resistorLookup = {'AUXRESET':'0', 'VCM':'1', 'DACEXTREF':'2', 'VDD_RST':'3', 'VRESET':'4', 'VCTRL':'5', 'AUXSAMPLE_FINE':'6', 'AUXSAMPLE_COARSE':'7'}
         resistorLocation = resistorLookup[resistor.strip().upper().replace(' ', '_')]
         resistorUrl = self.url + 'resistors/{}/'.format(resistorLocation)
         return resistorUrl
@@ -48,7 +48,7 @@ if __name__ == '__main__':
     setter = QemSetter()
     setter.setClock(25)
     setter.enablePSU()
-    setter.setResistorRegister('auxsample', 50)
+    setter.setResistorRegister('auxsample_coarse', 50)
     setter.setResistorValue(' VDD RST ', 1)
     setter.setResistorRegister('VCM', 300)
     setter.setResistorValue('test', 2)
