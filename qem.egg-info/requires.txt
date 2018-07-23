@@ -1,6 +1,0 @@
-odin==0.2
-
-[test]
-nose
-coverage
-mock

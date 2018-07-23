@@ -1,1 +1,0 @@
-https://github.com/odin-detector/odin-control/zipball/0.2#egg=odin-0.2
