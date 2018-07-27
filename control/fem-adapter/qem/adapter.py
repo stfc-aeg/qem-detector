@@ -49,7 +49,6 @@ class QEMAdapter(ApiAdapter):
         :param request: HTTP request object
         :return: an ApiAdapterResponse object containing the appropriate response from the backplane
         """
-
         try:
             #Check for metadata argument
             metadata = False
