@@ -19,8 +19,8 @@ class Backplane_Interface():
         :param resistor: the index of the wanted resistors
         :return : voltage of resistor as a float
         """
-        response = requests.get(self.url + "resistors/" + str(resistor) + "/resistance")
-        parsed_response = float(json.loads(response.text)[u'resistance'])
+        response = requests.get(self.url + "resistors/" + str(resistor) + "/voltage_current")
+        parsed_response = float(json.loads(response.text)[u'voltage_current'])
         return parsed_response
 
     def set_resistor_value(self, resistor, value):
@@ -28,12 +28,12 @@ class Backplane_Interface():
         :param resistor: the index of the wanted resistor
         :param value: the new value for the resistor as a float
         """
-        resistor_url = self.url + "resistors/" + str(resistor)+ "/resistance"
+        resistor_url = self.url + "resistors/" + str(resistor)+ "/voltage_current"
         requests.put(resistor_url, str(value), headers=self.put_headers)
 
     def get_resistor_name(self, resistor):
         """
-        :param resistor: the index of the wanted resistor
+        :param resistor: the index of the wanted resistors
         :return : name of resistor i as a string
         """
         response = requests.get(self.url + "resistors/" + str(resistor) + "/name", headers=self.meta_headers)
@@ -43,9 +43,9 @@ class Backplane_Interface():
     def get_resistor_units(self, resistor):
         """
         :param resistor: the index of the wanted resistor
-        :return: units of resistor i as a string
+        :return: units of resistor i as a strings
         """
-        response = requests.get(self.url + "resistors/" + str(resistor) + "/resistance", headers=self.meta_headers)
+        response = requests.get(self.url + "resistors/" + str(resistor) + "/voltage_current", headers=self.meta_headers)
         parsed_response = str(json.loads(response.text)[u'voltage_current'][u'units'])
         return parsed_response
 
@@ -54,8 +54,8 @@ class Backplane_Interface():
         :param resistor: the index of the wanted resistor
         :return: minimum value of resistor i as a float
         """
-        response = requests.get(self.url + "resistors/" + str(resistor) + "/resistance", headers=self.meta_headers)
-        parsed_response = float(json.loads(response.text)[u'resistance'][u'min'])
+        response = requests.get(self.url + "resistors/" + str(resistor) + "/voltage_current", headers=self.meta_headers)
+        parsed_response = float(json.loads(response.text)[u'voltage_current'][u'min'])
         return parsed_response
 
     def get_resistor_max(self, resistor):
@@ -63,8 +63,8 @@ class Backplane_Interface():
         :param resistor: the index of the wanted resistor
         :return: maximum value of resistor i as a float
         """
-        response = requests.get(self.url + "resistors/" + str(resistor) + "/resistance", headers=self.meta_headers)
-        parsed_response = float(json.loads(response.text)[u'resistance'][u'max'])
+        response = requests.get(self.url + "resistors/" + str(resistor) + "/voltage_current", headers=self.meta_headers)
+        parsed_response = float(json.loads(response.text)[u'voltage_current'][u'max'])
         return parsed_response
 
     def get_resistor_non_volatile(self):
