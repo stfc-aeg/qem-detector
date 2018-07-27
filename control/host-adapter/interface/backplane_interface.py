@@ -3,7 +3,7 @@ import json
 
 class Backplane_Interface():
     """ This class handles communication with the odin_qem backplane server by passing get and set commands to the appropriate requests"""
-    def __init__(self, address="192.168.0.123", port="8888"):
+    def __init__(self, address="192.168.0.122", port="8888"):
         """
         :param address: The IP address of the odin_qem server on the FEM
         :param address: The port number of the odin_qem server
@@ -16,7 +16,7 @@ class Backplane_Interface():
 
     def get_resistor_value(self, resistor):
         """
-        :param resistor: the index of the wanted resistor
+        :param resistor: the index of the wanted resistors
         :return : voltage of resistor as a float
         """
         response = requests.get(self.url + "resistors/" + str(resistor) + "/resistance")
@@ -46,7 +46,7 @@ class Backplane_Interface():
         :return: units of resistor i as a string
         """
         response = requests.get(self.url + "resistors/" + str(resistor) + "/resistance", headers=self.meta_headers)
-        parsed_response = str(json.loads(response.text)[u'resistance'][u'units'])
+        parsed_response = str(json.loads(response.text)[u'voltage_current'][u'units'])
         return parsed_response
 
     def get_resistor_min(self, resistor):
