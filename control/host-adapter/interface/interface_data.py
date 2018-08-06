@@ -1,5 +1,6 @@
 from backplane_interface import Backplane_Interface
 from asic_interface import ASIC_Interface
+from operating_interface import Operating_Interface
 from odin.adapters.metadata_tree import MetadataTree
 
 class CurrentVoltage(object):
@@ -96,6 +97,7 @@ class InterfaceData(object):
         """
         self.backplane_interface = Backplane_Interface()
         self.asic_interface = ASIC_Interface()
+        self.operating_interface = Operating_Interface()
 
         #Initialise all backplane power supplies
         self.current_voltage = []
@@ -129,6 +131,10 @@ class InterfaceData(object):
             "image" : (self.asic_interface.get_image, self.asic_interface.set_image_capture),
             "capture_run": (self.asic_interface.get_capture_run, self.asic_interface.set_capture_run, {"name": "Capture Run"}),
             "dacs" : [d.param_tree for d in self.dacs],
+
+            #operating subtree to parse configuration files
+            "image_vector_files" : (self.operating_interface.get_image_vector_files),
+            "adc_vector_files" : (self.operating_interface.get_adc_vector_files),
 
         })
 

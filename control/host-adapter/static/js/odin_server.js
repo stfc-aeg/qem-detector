@@ -4,7 +4,6 @@ var adapters = []
 function initAPI()
 {
     //Get the current api version and adapters
-
     return $.ajax("/api", {
         method: "GET",
     })
