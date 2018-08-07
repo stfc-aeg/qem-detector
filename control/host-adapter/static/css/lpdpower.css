@@ -31,12 +31,18 @@
     border-left-width: 0;
     border-right-width: 2px;
     border-bottom-width: 2px;
-    border-radius: 0px;
+   
     height: 30px;
     padding: 5px 12px;
 }
 .btn-toggle {
     width: 5.1em;
+}
+
+.btn-default {
+
+    background-color: #fafafa;
+    border-radius: 4px;
 }
 
 /* ----------------------------
@@ -62,11 +68,18 @@
     z-index: 0;
 }
 
-.flex-item {
+
+.flex-item:not(#top-flex) {
     flex-grow: 1;
     position:  relative;
     margin-bottom: 10px;
+    margin-top: 10px;
 
+}
+
+#top-flex{
+    flex-grow: 1;
+    position:  relative;
 }
 
 #toggle-container {
@@ -172,11 +185,6 @@
 .child-value {
     width: 100%;
     overflow: auto;
-}
-
-.flex-container {
-    display: flex;
-    z-index: 0;
 }
 
 .child {
@@ -392,6 +400,10 @@ body {
     background-color: #1f2127;
 }
 
+#upload-vector-file-button{
+    white-space: pre;
+}
+
 /* -------------------------
           Footer
 ------------------------- */
@@ -427,7 +439,9 @@ body {
     display: none;
 }
 
-.overlay-freq {
+
+
+.overlay-freq_file {
     background-color: #fff;
     width: 400px;
     height: 250px;
@@ -438,11 +452,12 @@ body {
     position: absolute;
     border-radius: 3px;
 }
-.dark .overlay-freq {
+.dark .overlay-freq_file {
     background-color: #35414e;
 }
 
-.overlay-freq h5 {
+.overlay-freq_file h5 {
+    text-align: center;
     padding: 20px;
     font-size: 1.2em;
     color: white;
@@ -453,7 +468,7 @@ body {
     border-top-right-radius: 3px;
 }
 
-.overlay-freq > div{
+.overlay-freq_file > div{
     padding: 40px;
 }
 
