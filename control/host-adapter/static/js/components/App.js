@@ -631,7 +631,7 @@ App.prototype.generate =
                     <span class="input-group-addon">Filename</span>
                 </div>
             <div class="overlay-control-buttons">
-                    <button class="btn btn-success" id="file-set" type="button">Set</button>
+                    <button class="btn btn-success" id="file-save" type="button">Save</button>
                     <button class="btn btn-danger" id="file-cancel" type="button">Cancel</button>
                 </div>
             <div>
@@ -640,7 +640,7 @@ App.prototype.generate =
 
        this.mount.appendChild(this.file_overlay);
        document.getElementById("file-cancel").addEventListener("click", this.fileCancel.bind(this));
-       document.getElementById("file-set").addEventListener("click", this.createVectorFile.bind(this));
+       document.getElementById("file-save").addEventListener("click", this.createVectorFile.bind(this));
 
        //Add frequency overlay
        this.freq_overlay = document.createElement("div");
