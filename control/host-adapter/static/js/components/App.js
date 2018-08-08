@@ -177,7 +177,7 @@ App.prototype.generate =
     <div class ="child-column">
         <div class="child">
             <div id="ASIC-container" class="flex-container">
-                <div class="flex-item">
+                <div id="top-flex" class="flex-item">
 
                     <div class="child-header">
                         <h4 class="non-drop-header">Mode</h4>
@@ -205,7 +205,7 @@ App.prototype.generate =
                     </div>
 
                 </div>
-                <div class="flex-item">
+                <div id="top-flex" class="flex-item">
                     <div class="child-header">
                         <h4 class="non-drop-header">Configuration</h4>
                     </div>
@@ -223,14 +223,15 @@ App.prototype.generate =
 
         <div class="child">
             <div class="child-header">
-                <div id="DAC-collapse" class="collapse-button">
+                <div id="BIAS-collapse" class="collapse-button">
                     <div class="collapse-table">
-                        <span id="DAC-button-symbol" class="collapse-cell    glyphicon glyphicon-triangle-bottom"></span>
+                        <span id="BIAS-button-symbol" class="collapse-cell    glyphicon glyphicon-triangle-bottom"></span>
                     </div>
                 </div>
-                <h4>DAC</h4>
+                <h4>BIAS Settings</h4>
             </div>
-            <div id="DAC-container" class="flex container">
+            <div id="BIAS-container" class="flex-container">
+            <div class="flex-item">
                 <div class="table-container">
                     <table>
                         <thead>
@@ -379,20 +380,20 @@ App.prototype.generate =
                         </tbody>
                     </table>
                 </div>
-                <div class="flex container">
-                    <h5>Image Capture Pattern</h5>
-                    <div class="input-group-btn">
-                        <button id="load-cap-pattern-button" class="btn btn-default" type="button">Load</button>
-                        <button id="save-cap-pattern-button" class="btn btn-default" type="button">Save</button>
-                    </div>
                 </div>
+                <div class="flex-item">
                 <div class="flex container">
-                    <h5>ASIC Configuration Pattern</h5>
-                    <div class="input-group-btn">
-                        <button id="load-conf-pattern-button" class="btn btn-default" type="button">Load</button>
-                        <button id="save-conf-pattern-button" class="btn btn-default" type="button">Save</button>
+
+                    <div class="flex-item">
+                        <button id="save-as-vector-file-button" class="btn btn-default" type="button">Save as Vector File</button>
                     </div>
+                    <div class="flex-item">
+                        <button id="upload-vector-file-button" class="btn btn-default" type="button">Upload Vector File </button>
+                    </div>
+
                 </div>
+                </div>
+                
             </div>
         </div>
 
@@ -442,7 +443,7 @@ App.prototype.generate =
        this.mount.appendChild(container);
         
        //document.getElementById("ASIC-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "ASIC"));
-       document.getElementById("DAC-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "DAC"));
+       document.getElementById("BIAS-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "BIAS"));
        document.getElementById("variable-supply-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "variable-supply"));
        document.getElementById("static-supply-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "static-supply"));
 
@@ -455,6 +456,9 @@ App.prototype.generate =
            document.getElementById("resistor-" + i.toString() + "-button").addEventListener("click", this.setResistor.bind(this, i.toString()));
        };
        document.getElementById('resistor-volatile-button').addEventListener("click", this.setVolatile.bind(this));
+
+       document.getElementById('save-as-vector-file-button').addEventListener("click", this.saveAsVector.bind(this));
+       document.getElementById('upload-vector-file-button').addEventListener("click", this.uploadVector.bind(this));
 
        var toggle = document.getElementById('toggle-container');
        var image_vector_files = document.getElementsByClassName("image_vectors")
@@ -614,12 +618,36 @@ App.prototype.generate =
        link.appendChild(link_text);
        link.addEventListener("click", this.changePage.bind(this, "Capture"));
 
+       //add file overlay
+       this.file_overlay = document.createElement("div");
+       this.file_overlay.classList.add("overlay-background");
+       this.file_overlay.classList.add("hidden");
+       this.file_overlay.innerHTML = `
+            <div class="overlay-freq_file">
+            <h5>Save the current bias settings to a new vector file</h5>
+            <div>
+                <div class="input-group">
+                    <input class="form-control text-right" id="file-value" placeholder="" type="text">
+                    <span class="input-group-addon">Filename</span>
+                </div>
+            <div class="overlay-control-buttons">
+                    <button class="btn btn-success" id="file-save" type="button">Save</button>
+                    <button class="btn btn-danger" id="file-cancel" type="button">Cancel</button>
+                </div>
+            <div>
+            </div>
+            `;
+
+       this.mount.appendChild(this.file_overlay);
+       document.getElementById("file-cancel").addEventListener("click", this.fileCancel.bind(this));
+       document.getElementById("file-save").addEventListener("click", this.createVectorFile.bind(this));
+
        //Add frequency overlay
        this.freq_overlay = document.createElement("div");
        this.freq_overlay.classList.add("overlay-background");
        this.freq_overlay.classList.add("hidden");
        this.freq_overlay.innerHTML = `
-            <div class="overlay-freq">
+            <div class="overlay-freq_file">
             <h5>Set the frequency to update the webpage:</h5>
             <div>
                 <div class="input-group">
@@ -760,6 +788,34 @@ App.prototype.update_bp =
             }).bind(this)
         )
     }
+
+    App.prototype.saveAsVector = 
+        function(){
+            document.getElementById("file-value").placeholder = "QEM_D4_198_ADC_10_icbias1_ifbias1";
+            this.file_overlay.classList.remove("hidden");
+
+        }
+
+    App.prototype.fileCancel = 
+        function(){
+            document.getElementById("file-value").value = "";
+            this.file_overlay.classList.add("hidden");
+        }
+
+    // this function actually creates the vector file from the bias values 
+    App.prototype.createVectorFile = 
+        function(){
+            var filename = document.getElementById("file-value").value;
+            console.log(filename)
+            document.getElementById("file-value").value = "";
+            this.file_overlay.classList.add("hidden");
+        }
+
+    App.prototype.uploadVector = 
+        function(){
+
+        }
+
 
     App.prototype.generateImageVectorFiles =
         function(image_files){
