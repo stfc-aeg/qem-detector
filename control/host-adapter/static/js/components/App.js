@@ -433,14 +433,8 @@ App.prototype.generate =
                    
                         </div>
 
-                        
-
-                        
                         <button id="load-default-button" type="button" class="btn btn-primary">Load Default Values</button>
-                        
-               
-                    
-
+                      
                     </div>
 
                 </div>
