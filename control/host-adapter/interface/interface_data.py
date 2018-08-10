@@ -105,7 +105,7 @@ class InterfaceData(object):
             self.current_voltage.append(CurrentVoltage(self.backplane_interface, i))
 
         self.resistors = []
-        for i in range(7):
+        for i in range(8):#add another row for coarse..
             self.resistors.append(Resistor(self.backplane_interface, i))
 
         self.dacs = []

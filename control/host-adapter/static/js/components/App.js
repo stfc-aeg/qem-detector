@@ -28,6 +28,7 @@ $.when.apply($, promises).then(
         }
         if (meta["interface"]["non_volatile"]["value"] == "True") {
             this.setVolatile();
+            //this.setVolatileTrue();
         }
     }).bind(this)
 );
@@ -178,43 +179,48 @@ App.prototype.generate =
         <div class="child">
             <div id="ASIC-container" class="flex-container">
                 <div id="top-flex" class="flex-item">
-
                     <div class="child-header">
                         <h4 class="non-drop-header">Mode</h4>
                     </div>
-                    
-                    <div id="toggle-container">
-                        <div class="inner-toggle-container">
-                            <div class="toggle">
-                                <p>Image Capture Mode</p>
+                    <div class='table-container'>
+            
+                        <div id="toggle-container">
+                            <div class="inner-toggle-container">
+                                <div class="toggle">
+                                    <p>Image Capture Mode</p>
+                                </div>
+                                <div class="toggle">
+                                    <p>Calibration Mode</p>
+                                </div>
                             </div>
-                            <div class="toggle">
-                                <p>Calibration Mode</p>
+
+                            <div class="inner-toggle-container" id="inner-toggle-container">
+                                <div class="toggle">
+                                    <p>Image Capture Mode</p>
+                                </div>
+                                <div class="toggle">
+                                    <p>Calibration Mode</p>
+                                </div>
                             </div>
                         </div>
 
-                    
-                        <div class="inner-toggle-container" id="inner-toggle-container">
-                            <div class="toggle">
-                                <p>Image Capture Mode</p>
-                            </div>
-                            <div class="toggle">
-                                <p>Calibration Mode</p>
-                            </div>
-                        </div>
                     </div>
 
                 </div>
+
                 <div id="top-flex" class="flex-item">
                     <div class="child-header">
-                        <h4 class="non-drop-header">Configuration</h4>
+                        <h4>Configuration</h4>
                     </div>
-                    <div class="dropdown-file">
-                        <button id="toggle-btn" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">Configuration Vector File
-                        <span class="caret"></span></button>
-                        <ul class="dropdown-menu" id="file_list">` 
-                        + this.generateImageVectorFiles(data["image_vector_files"]["value"]) + this.generateADCVectorFiles(data["adc_vector_files"]["value"]) + 
-                        `</ul>
+                    <div class="table-container">
+                       
+                        <div class="dropdown-file">
+                            <button id="toggle-btn" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">Configuration Vector File
+                            <span class="caret"></span></button>
+                            <ul class="dropdown-menu" id="file_list">` 
+                            + this.generateImageVectorFiles(data["image_vector_files"]["value"]) + this.generateADCVectorFiles(data["adc_vector_files"]["value"]) + 
+                            `</ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -236,9 +242,9 @@ App.prototype.generate =
                     <table>
                         <thead>
                             <tr>
-                                <td></td>
+                                <th></th>
                                 <th>Value</th>
-                                <td></td>
+                                <th></th>
                                 <th>Value</th>
                             </tr>
                         </thead>
@@ -376,13 +382,15 @@ App.prototype.generate =
                                         <input class="form-control text-right" id="DAC-9-input" aria-label="Value" placeholder="001010" type="text">
                                     </div>
                                 </td>
+                                <th></th>
+                                <th></th>
                             </tr>
                         </tbody>
                     </table>
                 </div>
                 </div>
                 <div class="flex-item">
-                <div class="flex container">
+                <div class="table-container">
 
                     <div class="flex-item">
                         <button id="save-as-vector-file-button" class="btn btn-default" type="button">Save as Vector File</button>
@@ -398,42 +406,53 @@ App.prototype.generate =
         </div>
 
         <div class="child">
+
             <div class="child-header">
-                <div id="variable-supply-collapse" class="collapse-button">
+                <div id="camera-collapse" class="collapse-button">
                     <div class="collapse-table">
                         <span id="variable-supply-button-symbol" class="collapse-cell    glyphicon glyphicon-triangle-bottom"></span>
                     </div>
                 </div>
-                <h4>Backplane Variable Supplies</h4>
+                <h4>Camera</h4>
             </div>
-            <div id="variable-supply-container" class="flex-container">
-                <div class="table-container">` + this.generateResistors(data["resistors"]) + `
-                </div>
-                <div>
-                    <h5>
-                        Change Default Values?:
-                    </h5>
-                    <div class="variable-padding">
-                        <div class="padder"></div>
+
+            <div id="camera-container" class="flex-container">
+           
+            
+                <div id="variable-supply-container" class="flex-item">
+                    <div class="child-header-2">
+                        <h4 class="non-drop-header">Settings</h4>
                     </div>
-                    <div>
-                        <button id="resistor-volatile-button" type="button" class="btn btn-toggle btn-danger">No</button>
+                    <div class="table-container">` + this.generateResistors(data["resistors"]) + `
+
+                        <div class='well'>Save value as new default on set
+
+                            <div class="btn-group">
+                                <button id="save-default-button" type="button" class="btn btn-danger btn-block">OFF</button>
+                            </div>
+                   
+                        </div>
+
+                        
+
+                        
+                        <button id="load-default-button" type="button" class="btn btn-primary">Load Default Values</button>
+                        
+               
+                    
+
+                    </div>
+
+                </div>
+            
+                <div id="static-supply-container" class="flex-item">
+                    <div class="child-header-2">
+                        <h4>Monitoring</h4>
+                    </div>
+                    <div class="table-container">` + this.generateSupplies(data["current_voltage"]) + `
                     </div>
                 </div>
-            </div>
-        </div>
-        <div class="child">
-            <div class="child-header">
-                <div id="static-supply-collapse" class="collapse-button">
-                    <div class="collapse-table">
-                        <span id="static-supply-button-symbol" class="collapse-cell    glyphicon glyphicon-triangle-bottom"></span>
-                    </div>
-                </div>
-                <h4>Backplane Static Supplies</h4>
-            </div>
-            <div id="static-supply-container" class="flex-container">
-                <div class="table-container">` + this.generateSupplies(data["current_voltage"]) + `
-                </div>
+
             </div>
         </div>
     </div>
@@ -444,8 +463,8 @@ App.prototype.generate =
         
        //document.getElementById("ASIC-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "ASIC"));
        document.getElementById("BIAS-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "BIAS"));
-       document.getElementById("variable-supply-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "variable-supply"));
-       document.getElementById("static-supply-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "static-supply"));
+       document.getElementById("camera-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "camera"));
+       //Sdocument.getElementById("static-supply-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "static-supply"));
 
        document.getElementById('clock-button').addEventListener("click", this.setClock.bind(this));
        document.getElementById('bp-refresh-button').addEventListener("click", this.update_bp.bind(this));
@@ -455,20 +474,21 @@ App.prototype.generate =
        for (i=0; i<data["resistors"].length; i++) {
            document.getElementById("resistor-" + i.toString() + "-button").addEventListener("click", this.setResistor.bind(this, i.toString()));
        };
-       document.getElementById('resistor-volatile-button').addEventListener("click", this.setVolatile.bind(this));
+
+       document.getElementById('save-default-button').addEventListener("click", this.setVolatile.bind(this));
 
        document.getElementById('save-as-vector-file-button').addEventListener("click", this.saveAsVector.bind(this));
        document.getElementById('upload-vector-file-button').addEventListener("click", this.uploadVector.bind(this));
 
-       var toggle = document.getElementById('toggle-container');
+       var mode_toggle = document.getElementById('toggle-container');
        var image_vector_files = document.getElementsByClassName("image_vectors")
        var adc_vector_files = document.getElementsByClassName("adc_vectors")
-       var toggleContainer = document.getElementById('inner-toggle-container');
-       var toggleNumber;
+       var mode_toggleContainer = document.getElementById('inner-toggle-container');
+       var mode_toggleNumber;
        
-       toggle.addEventListener('click', function() {
-           toggleNumber = !toggleNumber;
-           if (toggleNumber) {
+       mode_toggle.addEventListener('click', function() {
+        mode_toggleNumber = !mode_toggleNumber;
+           if (mode_toggleNumber) {
                 this.in_calibration_mode = false;
                 for(var i=0; i<image_vector_files.length;i++){
                     image_vector_files[i].style.display = 'block';
@@ -477,8 +497,8 @@ App.prototype.generate =
                     adc_vector_files[i].style.display = 'none';
                 }
                 console.log("in image capture mode")
-                toggleContainer.style.clipPath = 'inset(0 0 0 50%)';
-                toggleContainer.style.backgroundColor = '#337ab7';
+                mode_toggleContainer.style.clipPath = 'inset(0 0 0 50%)';
+                mode_toggleContainer.style.backgroundColor = '#337ab7';
            } else {
                 this.in_calibration_mode = true;   
                 
@@ -489,10 +509,11 @@ App.prototype.generate =
                     adc_vector_files[i].style.display = 'block';
                 }
                 console.log("in calibration mode")
-                toggleContainer.style.clipPath = 'inset(0 50% 0 0)';
-                toggleContainer.style.backgroundColor = '#337ab7';
+                mode_toggleContainer.style.clipPath = 'inset(0 50% 0 0)';
+                mode_toggleContainer.style.backgroundColor = '#337ab7';
            }
        });
+
 
        
        //Update navbar
@@ -682,7 +703,7 @@ App.prototype.generate =
             this.toggleDark();
     };
 
-
+ 
 //Handles onClick events from the navbar
 
 App.prototype.generateResistors =
@@ -691,7 +712,7 @@ App.prototype.generateResistors =
         <table>
             <thead>
               <tr>
-                <td></td>
+                <th></th>
                 <th>Resistance</th>
               </tr>
             </thead>
@@ -704,6 +725,13 @@ App.prototype.generateResistors =
                 <td>
                   <div class="input-group">
                     <input class="form-control text-right" id="resistor-`+ i.toString() +`-input" aria-label="Value" placeholder="` + Number(resistors[i]["resistance"]["value"]).toFixed(2).toString() + `" type="text">
+                    <span class="input-group-addon">` 
+                    
+                    var str = resistors[i]["resistance"]["units"]
+                    if (str.length == 1) {
+                        str += "  "
+                    }
+                    resistor_table += str +`</span>
                     <div class="input-group-btn">
                       <button class="btn btn-default" id="resistor-`+ i.toString() + `-button" type="button">Set</button>
                     </div>
@@ -723,7 +751,7 @@ App.prototype.generateSupplies =
         <table>
             <thead>
               <tr>
-                <td></td>
+                <th></th>
                 <th>Voltage (V)</th>
                 <th>Current (mA)</th>
               </tr>
@@ -837,6 +865,7 @@ App.prototype.update_bp =
             return image_list
         }; 
 
+    // replaced number with i
     App.prototype.reload_bp =
         function() {
             apiPUT(this.current_adapter, "reset", "true")
@@ -845,9 +874,9 @@ App.prototype.update_bp =
                     apiGET(this.current_adapter, "", false)
                     .done(
                         (function(data) {
-                            apiPUT(this.current_adapter, "clock", document.getElementById('clock-input').placeholder);
+                            apiPUT(this.current_adapter, "clock", parseFloat(document.getElementById('clock-input').placeholder));
                             for (i=0; i<data["resistors"].length; i++) {
-                                document.getElementById('resistor-' + number +  '-input').placeholder=Number(data["resistors"][i]["resistance"]).toFixed(2).toString()
+                                document.getElementById('resistor-' + i +  '-input').placeholder=Number(data["resistors"][i]["resistance"]).toFixed(2).toString()
                             };
                             this.update_bp();
                         }).bind(this)
@@ -889,19 +918,20 @@ App.prototype.setResistor =
 
 App.prototype.setVolatile =
     function() {
-        var button = document.getElementById('resistor-volatile-button')
-        if (button.innerHTML=="No") {
+        var button = document.getElementById('save-default-button')
+        if (button.innerHTML=="OFF") {
             apiPUT(this.current_adapter, "non_volatile", "true");
             this.update_bp();
-            button.innerHTML="Yes";
+            button.innerHTML="ON";
             button.classList.remove("btn-danger");
             button.classList.add("btn-success");
         } else {
             apiPUT(this.current_adapter, "non_volatile", "false");
-            button.innerHTML="No";
+            button.innerHTML="OFF";
             button.classList.remove("btn-success");
             button.classList.add("btn-danger");
         }
+        
     }
 
 App.prototype.imageGenerate =
