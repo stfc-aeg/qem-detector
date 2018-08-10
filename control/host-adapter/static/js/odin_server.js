@@ -34,6 +34,7 @@ function initAPI()
 
 function apiGET(adapter, path, metadata)
 {
+
     return $.ajax(`api/${api_version}/${adapters[adapter]}/${path}`, {
         method: "GET",
         dataType: "json",
@@ -45,6 +46,7 @@ function apiGET(adapter, path, metadata)
 
 function apiPUT(adapter, path, data)
 {
+
     return $.ajax(`api/${api_version}/${adapters[adapter]}/${path}`, {
         method: "PUT",
         contentType: "application/json",

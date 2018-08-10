@@ -508,6 +508,13 @@ App.prototype.generate =
            }
        });
 
+       var vector_list = document.getElementById("file_list");
+
+       for(var i=0; i< vector_list.children.length; i++){
+            vector_list.children[i].addEventListener("click", this.setVectorFile.bind(this));
+       }
+       
+
 
        
        //Update navbar
@@ -844,7 +851,7 @@ App.prototype.update_bp =
             var image_list = '';
             var i;
             for (i=0; i<image_files.length; i++) {
-                image_list += '<li class="image_vectors"><a href="#">' + image_files[i] + '</a></li>';
+                image_list += '<li id="image_files" class="image_vectors"><a href="#">' + image_files[i] + '</a></li>';
             }
             return image_list
         };
@@ -858,6 +865,7 @@ App.prototype.update_bp =
             }
             return image_list
         }; 
+
 
     // replaced number with i
     App.prototype.reload_bp =
@@ -893,6 +901,17 @@ App.prototype.setClock =
             }
         )
         .fail(this.setError.bind(this))
+    }
+
+
+App.prototype.setVectorFile = 
+    function(event){
+
+        var element = event.target
+        var value = element.innerHTML
+        location = "vector_file"
+        apiPUT(this.current_adapter, "vector_file", value)
+       
     }
 
 App.prototype.setResistor =

@@ -131,6 +131,7 @@ class InterfaceData(object):
             "image" : (self.asic_interface.get_image, self.asic_interface.set_image_capture),
             "capture_run": (self.asic_interface.get_capture_run, self.asic_interface.set_capture_run, {"name": "Capture Run"}),
             "dacs" : [d.param_tree for d in self.dacs],
+            "vector_file": (self.asic_interface.get_vector_file, self.asic_interface.set_vector_file),
 
             #operating subtree to parse configuration files
             "image_vector_files" : (self.operating_interface.get_image_vector_files),
@@ -144,6 +145,8 @@ class InterfaceData(object):
         :param metadata: Boole representing whether to include the metadata
         :return: a dict containing the data in a tree structure
         """
+        print(path)
+        
         return self.param_tree.get(path, metadata=metadata)
 
     def set(self, path, value):

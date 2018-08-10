@@ -25,6 +25,7 @@ class ASIC_Interface():
         # set shift register delay in 1 of 16 divide by 8 clock steps - d1, d0, c1, c0
         self.qemcamera.set_ivsr(0,0,27,27)
         self.qemcamera.turn_rdma_debug_0ff()
+        self.vector_file = u'undefined'
 
     def get_image(self):
         if len(self.imageStore) >0:
@@ -42,6 +43,12 @@ class ASIC_Interface():
         fnumber, file_name = config.split(";")
         location = "/aeg_sw/work/projects/qem/images/" + str(file_name)
         self.qemcamera.log_image_stream(location, int(fnumber))
+
+    def get_vector_file(self):
+        return self.vector_file
+    
+    def set_vector_file(self, file_name):
+        self.vector_file = file_name
 
     def get_dac_value(self, dac):
         return u'000000'
