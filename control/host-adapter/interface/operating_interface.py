@@ -6,7 +6,7 @@ class Operating_Interface():
 
     def __init__(self, abs_directory="/aeg_sw/work/projects/qem/python/03052018"):
         """
-        :param rel_address: The absolute path for the QEM configuration files
+        :param abs_address: The absolute path for the QEM configuration files
         """
         self.abs_directory = abs_directory
         self.txt_files = [] 

@@ -110,7 +110,7 @@ class InterfaceData(object):
 
         self.dacs = []
         for i in range(19):
-            self.dacs.append(DAC(self.asic_interface, i))
+            self.dacs.append(DAC(self.asic_interface, i+1))
 
         #create the tree structure
         self.param_tree = MetadataTree({
@@ -145,9 +145,11 @@ class InterfaceData(object):
         :param metadata: Boole representing whether to include the metadata
         :return: a dict containing the data in a tree structure
         """
-        print(path)
-        
+        #print("interface data path %s", path)
+        #print(self.param_tree.get(path, metadata=metadata))
         return self.param_tree.get(path, metadata=metadata)
 
     def set(self, path, value):
+        print(path)
+        print(value)
         self.param_tree.set(path, value)
