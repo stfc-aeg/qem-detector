@@ -805,6 +805,24 @@ App.prototype.update_bp =
         function(){
             var filename = document.getElementById("file-value").value;
             console.log(filename)
+            apiPUT(this.current_adapter, "update_bias", "false")
+            .done(
+                (function(){
+                    apiPUT(this.current_adapter, "vector_file", filename)
+                    .done(
+                        (function(){
+                            for(i=0; i < 19; i++){
+                                var value = document.getElementById("DAC-"+ i.toString() + "-input").value;
+                                apiPUT(this.current_adapter, "dacs/" + i.toString() + "/value", value.toString())
+                                
+                            }
+                        }).bind(this)
+                    )
+                }).bind(this)
+                
+
+
+            )
             document.getElementById("file-value").value = "";
             this.file_overlay.classList.add("hidden");
         }
@@ -879,32 +897,24 @@ App.prototype.setVectorFile =
 
         var element = event.target
         var value = element.innerHTML
-        apiPUT(this.current_adapter, "vector_file", value)
+        apiPUT(this.current_adapter, "update_bias", "true")
         .done(
-            apiGET(this.current_adapter, "", false)
+            apiPUT(this.current_adapter, "vector_file", value)
             .done(
-                function(data){
-                    for(i=0; i< data["dacs"].length; i++){
-                        //console.log(i.toString())
-                        document.getElementById('DAC-' + i.toString() + '-input').placeholder = data["dacs"][i]["value"];
+                
+                apiGET(this.current_adapter, "", false)
+                .done(
+                    function(data){
+                        for(i=0; i< data["dacs"].length; i++){
+                            //console.log(i.toString())
+                            document.getElementById('DAC-' + i.toString() + '-input').value = data["dacs"][i]["value"];
+                        }
+
                     }
-
-                }
+                )
             )
-          
-
-            /*
-
-            function(data){
-                for (i=0; i<data["current_voltage"].length; i++) {
-                    document.getElementById('supply-voltage-' + i.toString()).innerHTML = Number(data["current_voltage"][i]["voltage"]).toFixed(3).toString();
-                    document.getElementById('supply-current-' + i.toString()).innerHTML = Number(data["current_voltage"][i]["current"]).toFixed(2).toString();
-                }
-            }
-            */
-        )
-        .fail(this.setError.bind(this))
-       
+            .fail(this.setError.bind(this))
+        ).fail(this.setError.bind(this))
     };
 
 App.prototype.setResistor =

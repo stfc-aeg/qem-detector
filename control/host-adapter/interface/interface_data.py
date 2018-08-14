@@ -83,7 +83,7 @@ class DAC(object):
         """ :returns: DAC value as a 6 digit string (since may include leading zeros)
         """
         return self.asic_interface.get_dac_value(self.index)
-
+    
     def set(self, value):
         """ :param value: the new 6 digit value as a string """
         self.asic_interface.set_dac_value(self.index, value)
@@ -132,6 +132,7 @@ class InterfaceData(object):
             "capture_run": (self.asic_interface.get_capture_run, self.asic_interface.set_capture_run, {"name": "Capture Run"}),
             "dacs" : [d.param_tree for d in self.dacs],
             "vector_file": (self.asic_interface.get_vector_file, self.asic_interface.set_vector_file),
+            "update_bias" :(u'false', self.asic_interface.set_update_bias),
 
             #operating subtree to parse configuration files
             "image_vector_files" : (self.operating_interface.get_image_vector_files),
@@ -145,11 +146,12 @@ class InterfaceData(object):
         :param metadata: Boole representing whether to include the metadata
         :return: a dict containing the data in a tree structure
         """
-        #print("interface data path %s", path)
-        #print(self.param_tree.get(path, metadata=metadata))
+        
         return self.param_tree.get(path, metadata=metadata)
 
     def set(self, path, value):
-        print(path)
-        print(value)
+
+        if "dacs" in path: 
+            value = value.encode('ascii','ignore')
+  
         self.param_tree.set(path, value)
