@@ -54,7 +54,6 @@ class ASIC_Interface():
         self.update_bias = False
         self.updated_registers = [False] * 20
 
-
     def get_image(self):
         if len(self.imageStore) >0:
             img = self.imageStore.pop(0)
@@ -73,13 +72,33 @@ class ASIC_Interface():
         self.qemcamera.log_image_stream(location, int(fnumber))
 
     def set_update_bias(self, update_bias):
-       
+        """ Sets the update_bias flag. Flag is used to control when to
+            extract bias data from the vector file. When setting the vector
+            file in order to create a new vector file, the flag is set to false
+            stopping the empty file data from trying to be extracted
+
+        @param update_bias: boolean value to indicate whether to 
+                            extract the vector data from the file
+        """
         self.update_bias = update_bias
 
     def get_vector_file(self):
+        """ gets the current vector filename being used.
+
+        @returns : self.vector file, the filename of the current vector file
+        """
         return self.vector_file
     
     def set_vector_file(self, vector_file):
+        """ sets the vector file name
+            If the file name has not got a .txt extension
+            one is added. If self.update_bias is true, 
+            extract_vector_data is called.
+
+        @param vector_file: string name of the vector file
+        """
+        #if vector_file[-4:] is not ".txt":
+            #vector_file += ".txt"
 
         self.vector_file = vector_file
 
@@ -87,13 +106,24 @@ class ASIC_Interface():
             self.extract_vector_data()
 
     def get_dac_value(self, dac):
+        """ gets the dac value for the index provided.
+
+        @param dac: index number to identify the dac
+        """
 
         for key, value in self.bias_dict.iteritems():
             if value[0] == dac:
                 return value[1]
 
     def set_dac_value(self, dac, value):
+        """ sets the dac value for the index provided.
+            Checks whether all dac values have been set,
+            when all have been set the dac settings are 
+            written to a new vector file.
 
+        @param dac : index number to identify the dac
+        @ param value: the string value to set
+        """
         this_value = value
         for key, value in self.bias_dict.iteritems():
             if value[0] == dac:
@@ -108,9 +138,12 @@ class ASIC_Interface():
             self.change_dac_settings()
 
     def extract_vector_data(self):
-
+        """ extracts the 19 dac register values from the vector file
+        """
+        
         abs_path = "/aeg_sw/work/projects/qem/python/03052018/" + self.vector_file
-
+        
+        ### Adam Davis Code ###
         print(abs_path)
         #extract lines into array
         with open(abs_path, 'r') as f:
@@ -160,7 +193,7 @@ class ASIC_Interface():
 
         #print the output to the screen
         for i in range(19):
-            print "%-20s%-10i %-5s%s%s%s%s%s%-4s %s%s%s%s%s%s" % (self.bias_names[18-i] ,i+1, clk_ref[i], data_a[i*6 + 0] ,data_a[i*6 + 1],data_a[i*6 + 2] ,data_a[i*6 + 3] ,data_a[i*6 + 4] ,data_a[i*6 + 5] ,data_a[i*6 + 114] ,data_a[i*6 +115],data_a[i*6 + 116] ,data_a[i*6 + 117] ,data_a[i*6 + 118] ,data_a[i*6 + 119])
+            #print "%-20s%-10i %-5s%s%s%s%s%s%-4s %s%s%s%s%s%s" % (self.bias_names[18-i] ,i+1, clk_ref[i], data_a[i*6 + 0] ,data_a[i*6 + 1],data_a[i*6 + 2] ,data_a[i*6 + 3] ,data_a[i*6 + 4] ,data_a[i*6 + 5] ,data_a[i*6 + 114] ,data_a[i*6 +115],data_a[i*6 + 116] ,data_a[i*6 + 117] ,data_a[i*6 + 118] ,data_a[i*6 + 119])
             binary_string = data_a[i*6 + 0] + data_a[i*6 + 1] + data_a[i*6 + 2] + data_a[i*6 + 3] + data_a[i*6 + 4] + data_a[i*6 + 5] 
             self.bias_dict[self.bias_names[18-i]] = [i+1, binary_string]
         
@@ -176,106 +209,168 @@ class ASIC_Interface():
         t = open ("tmp2.pkl", 'wb')
         pickle.dump(l, t)
         t.close()
+        ### End of Adam Davis Code ###
 
     def init_bias_dict(self):
+        """ initialises the bias_dict holding the bias settings 
+            for each 19 dac's along with their index and name.
+        """
 
         for i in range(19):
             self.bias_dict[self.bias_names[18-i]] = [i+1, '000000']
     
     def change_dac_settings(self):
+        """ generates a new vector file from the updated bias settings
+            Creates a new file with the name of self.vector_file.
+        """
 
-        # set filename
-        file_name   = "tmp2.pkl"
-
-        #print the file used
-        print "%s %s\n" % ("pkl file used: ",file_name)
-
-        # extract the data
-        pkl_file = open(file_name, 'rb')
-        new_data = pickle.load(pkl_file)
-
-        #close file
-        pkl_file.close()
+        if self.vector_file is "undefined":
+            print("no vector file has been loaded, cannot update vector file")
         
-        #define l as an array
-        l=[]
-        # set i = 0 and append l with the values in new_data
-        i = 0
-        while i < len(new_data):
-            l.append([new_data[i][0], new_data[i][1]])
-            i+=1
+        else:
+        ### Adam Davis Code ###
 
-        print("The old settings\n")
-        for i in range(19):
-            print "%-20s%-10i %s%s%s%s%s%-4s %s%s%s%s%s%s" % (self.bias_names[18-i] ,i+1 ,new_data[i*6 + 0][1] ,new_data[i*6 + 1][1],new_data[i*6 + 2][1] ,new_data[i*6 + 3][1] ,new_data[i*6 + 4][1] ,new_data[i*6 + 5][1] ,new_data[i*6 + 114][1] ,new_data[i*6 +115][1],new_data[i*6 + 116][1] ,new_data[i*6 + 117][1] ,new_data[i*6 + 118][1] ,new_data[i*6 + 119][1])
+            # set filename
+            file_name   = "tmp2.pkl"
 
-        
-        for i in range(19):
-            #set the values passed to the function to internal variables
-            reg = int(i+1)
+            # extract the data
+            pkl_file = open(file_name, 'rb')
+            new_data = pickle.load(pkl_file)
 
-            for key, data in self.bias_dict.iteritems():
-                if data[0] == reg:
-                    value = list(data[1])
-                    #print(value)
+            #close file
+            pkl_file.close()
+            
+            #define l as an array
+            l=[]
+            # set i = 0 and append l with the values in new_data
+            i = 0
+            while i < len(new_data):
+                l.append([new_data[i][0], new_data[i][1]])
+                i+=1
 
-            #value = list(value)
- 
-            # update variable l with the new values
-            for i in range(6):
-                l[((reg-1)*6)+i][1]=value[i]
-                l[(((reg-1)+19)*6)+i][1]=value[i]
+            """
+            print("The old settings\n")
+            for i in range(19):
+                print "%-20s%-10i %s%s%s%s%s%-4s %s%s%s%s%s%s" % (self.bias_names[18-i] ,i+1 ,new_data[i*6 + 0][1] ,new_data[i*6 + 1][1],new_data[i*6 + 2][1] ,new_data[i*6 + 3][1] ,new_data[i*6 + 4][1] ,new_data[i*6 + 5][1] ,new_data[i*6 + 114][1] ,new_data[i*6 +115][1],new_data[i*6 + 116][1] ,new_data[i*6 + 117][1] ,new_data[i*6 + 118][1] ,new_data[i*6 + 119][1])
+            """
+            
+            for i in range(19):
+                #set the values passed to the function to internal variables
+                reg = int(i+1)
 
-        print("\nThe new settings\n")
-        for i in range(19):
-	        print "%-20s%-10i %s%s%s%s%s%-4s %s%s%s%s%s%s" % (self.bias_names[18-i] ,i+1 ,l[i*6 + 0][1] ,l[i*6 + 1][1],l[i*6 + 2][1] ,l[i*6 + 3][1] ,l[i*6 + 4][1] ,l[i*6 + 5][1] ,l[i*6 + 114][1] ,l[i*6 +115][1],l[i*6 + 116][1] ,l[i*6 + 117][1] ,l[i*6 + 118][1] ,l[i*6 + 119][1])
+                for key, data in self.bias_dict.iteritems():
+                    if data[0] == reg:
+                        value = list(data[1])
+                        #print(value)
 
-        #save the new data
-        t = open ("tmp3.pkl", 'wb')
-        pickle.dump(l, t)
-        t.close()
-        
-        #extract lines into array
-        with open('/aeg_sw/work/projects/qem/python/03052018/QEM_D4_198_ADC_10_icbias28_ifbias14.txt', 'r') as f:
-            data = f.readlines()
-        f.close()
+                #value = list(value)
+    
+                # update variable l with the new values
+                for i in range(6):
+                    l[((reg-1)*6)+i][1]=value[i]
+                    l[(((reg-1)+19)*6)+i][1]=value[i]
+            """
+            print("\nThe new settings\n")
+            for i in range(19):
+                print "%-20s%-10i %s%s%s%s%s%-4s %s%s%s%s%s%s" % (self.bias_names[18-i] ,i+1 ,l[i*6 + 0][1] ,l[i*6 + 1][1],l[i*6 + 2][1] ,l[i*6 + 3][1] ,l[i*6 + 4][1] ,l[i*6 + 5][1] ,l[i*6 + 114][1] ,l[i*6 +115][1],l[i*6 + 116][1] ,l[i*6 + 117][1] ,l[i*6 + 118][1] ,l[i*6 + 119][1])
+            """
+            #save the new data
+            t = open ("tmp3.pkl", 'wb')
+            pickle.dump(l, t)
+            t.close()
+            
+            #extract lines into array
+            with open('/aeg_sw/work/projects/qem/python/03052018/QEM_D4_198_ADC_10_icbias28_ifbias14.txt', 'r') as f:
+                data = f.readlines()
+            f.close()
 
-        length=len(data)
+            length=len(data)
 
-        #extract the data from tmp3.pkl (new settings)
-        pkl_file = open('tmp3.pkl', 'rb')
-        new_data = pickle.load(pkl_file)
+            #extract the data from tmp3.pkl (new settings)
+            pkl_file = open('tmp3.pkl', 'rb')
+            new_data = pickle.load(pkl_file)
 
-        #close file
-        pkl_file.close()
+            #close file
+            pkl_file.close()
 
-        #open a newfle with the orifional name appended with _mod.txt
-        f=open("/aeg_sw/work/projects/qem/python/03052018/" + self.vector_file, 'w')
+            #open a newfle with the orifional name appended with _mod.txt
+            f=open("/aeg_sw/work/projects/qem/python/03052018/" + self.vector_file, 'w')
 
-        #write the first three lines, don't change!!
-        f.write(data[0]) #
-        f.write(data[1])
-        f.write(data[2])
-        k=len(new_data) # assign k to the length of the new data array
-        j=0   		# number used to increment through the new_data array
-        m=0   		# number that increments by o after changing the lines
-        n=5  		# change number of lines before -ve clock edge
-        p=3  		# number of lines to change from to new value after the -ve clock edge
-        o=n+1+p  	# total number of lines to change from 'n' to new value, default is 1 extra + p
+            #write the first three lines, don't change!!
+            f.write(data[0]) #
+            f.write(data[1])
+            f.write(data[2])
+            k=len(new_data) # assign k to the length of the new data array
+            j=0   		# number used to increment through the new_data array
+            m=0   		# number that increments by o after changing the lines
+            n=5  		# change number of lines before -ve clock edge
+            p=3  		# number of lines to change from to new value after the -ve clock edge
+            o=n+1+p  	# total number of lines to change from 'n' to new value, default is 1 extra + p
 
-        for i in range((length-3)-(k*(o-1))):
-            if (j < k) : 			# if array increment value of new data is less than k (length of new data) do this, else just write the line to file
-                if((i+m+n) == new_data[j][0]):  # looking forward by n, if the line number is equal to the first elemnt of array do this, else just write data to the file
-                    for l in range(o):	        # do this for the next 'o' number of lines
-                        line = data[(i+m+l+3)]  # extract line from origional file
-                        f.write(line[0:43]) 	# write up to the reference point
-                        f.write(new_data[j][1]) # add new data from the file
-                        f.write(line[44:]) 	# add the rest of the origional line
-                    j=j+1
-                    m=m+(o-1)
+            for i in range((length-3)-(k*(o-1))):
+                if (j < k) : 			# if array increment value of new data is less than k (length of new data) do this, else just write the line to file
+                    if((i+m+n) == new_data[j][0]):  # looking forward by n, if the line number is equal to the first elemnt of array do this, else just write data to the file
+                        for l in range(o):	        # do this for the next 'o' number of lines
+                            line = data[(i+m+l+3)]  # extract line from origional file
+                            f.write(line[0:43]) 	# write up to the reference point
+                            f.write(new_data[j][1]) # add new data from the file
+                            f.write(line[44:]) 	# add the rest of the origional line
+                        j=j+1
+                        m=m+(o-1)
+                    else:	
+                        f.write(data[i+m+3])
                 else:	
                     f.write(data[i+m+3])
-            else:	
-                f.write(data[i+m+3])
-        f.close()
-        print("\nNew file has been created, check folder")
+            f.close()
+            print("\nNew file has been created, check folder")
+        ### End of Adam Davis Code ###
+
+    def upload_vector_file(self, upload):
+        """ uploads the current vector file to the qem camera
+
+        @param uplaod: boolean value when true- the file is uploaded
+        """
+        abs_path = "/aeg_sw/work/projects/qem/python/03052018/" + self.vector_file
+        if upload:
+            if self.vector_file is not "undefined":
+
+                self.qemcamera.set_ifg()
+
+                self.qemcamera.x10g_stream.check_trailer = True
+
+                self.qemcamera.set_clock()
+
+                self.qemcamera.turn_rdma_debug_0ff()
+
+                self.qemcamera.set_10g_mtu('data', 8000)
+                self.qemcamera.x10g_rdma.read(0x0000000C, '10G_0 MTU')
+
+                # N.B. for scrambled data 10, 11, 12, 13 bit raw=> column size 360, 396
+                self.qemcamera.set_10g_mtu('data', 7344)
+                self.qemcamera.set_image_size_2(102,288,11,16)
+
+                print self.qemcamera.x10g_stream.num_pkt
+
+                #set idelay in 1 of 32 80fs steps  - d1, d0, c1, c0
+                self.qemcamera.set_idelay(0,0,0,0)
+
+                time.sleep(1)
+
+                locked = self.qemcamera.get_idelay_lock_status()
+
+                # set sub cycle shift register delay in 1 of 8 data clock steps - d1, d0, c1, c0
+                # set shift register delay in 1 of 16 divide by 8 clock steps - d1, d0, c1, c0
+                #
+                # Shift 72 + 144 bits
+                self.qemcamera.set_scsr(7,7,7,7)		# sub-cycle (1 bit)
+                self.qemcamera.set_ivsr(0,0,27,27)		# cycle (8 bits)
+
+                self.qemcamera.load_vectors_from_file(abs_path)
+                time.sleep(0.1)
+                self.qemcamera.get_aligner_status()
+                locked = self.qemcamera.get_idelay_lock_status()
+                print "%-32s %-8X" % ('-> idelay locked:', locked)
+                time.sleep(1)
+            else:
+                print("No vector file has been loaded, cannot upload vector file")
+          

@@ -440,7 +440,7 @@ App.prototype.generate =
        document.getElementById('save-default-button').addEventListener("click", this.setVolatile.bind(this));
 
        document.getElementById('save-as-vector-file-button').addEventListener("click", this.saveAsVector.bind(this));
-       document.getElementById('upload-vector-file-button').addEventListener("click", this.uploadVector.bind(this));
+       document.getElementById('upload-vector-file-button').addEventListener("click", this.uploadVectorPress.bind(this));
 
        var mode_toggle = document.getElementById('toggle-container');
        var image_vector_files = document.getElementsByClassName("image_vectors")
@@ -656,6 +656,30 @@ App.prototype.generate =
        document.getElementById("frequency-cancel").addEventListener("click", this.frequencyCancel.bind(this));
        document.getElementById("frequency-set").addEventListener("click", this.frequencySet.bind(this));
 
+        //Add frequency overlay
+        this.fpga_warn = document.createElement("div");
+        this.fpga_warn.classList.add("overlay-background");
+        this.fpga_warn.classList.add("hidden");
+        this.fpga_warn.innerHTML = `
+            <div class="overlay-fpga_warn">
+            <h5>Warning:</h5>
+            <div>
+                <div>
+                    <span id = "fpga-warning">You must re-program the FPGA before loading the new vector file</span>
+                </div>
+                <div class="overlay-control-buttons" id="fpga-warn-buttons">
+                    <button class="btn btn-success" id="upload-vector-final" type="button">I've re-programmed the FPGA, upload</button>
+                    <button class="btn btn-danger" id="upload-cancel" type="button">Cancel</button>
+                </div>
+            </div>
+            </div>
+            `;
+
+        this.mount.appendChild(this.fpga_warn);
+        document.getElementById("upload-cancel").addEventListener("click", this.uploadCancel.bind(this));
+        document.getElementById("upload-vector-final").addEventListener("click", this.uploadVector.bind(this));
+
+
         //Add footer
         var footer = document.createElement("div");
         footer.classList.add("footer");
@@ -771,7 +795,7 @@ App.prototype.update_bp =
             (function() {
                 apiGET(this.current_adapter, "", false)
                 .done(
-                    console.log(data)
+                    //console.log(data)
                     (function(data) {
                         for (i=0; i<data["current_voltage"].length; i++) {
                             document.getElementById('supply-voltage-' + i.toString()).innerHTML = Number(data["current_voltage"][i]["voltage"]).toFixed(3).toString();
@@ -786,6 +810,18 @@ App.prototype.update_bp =
             }).bind(this)
         )
     }
+
+
+    App.prototype.uploadVectorPress = 
+        function(){
+            this.fpga_warn.classList.remove("hidden");
+    }
+
+    App.prototype.uploadCancel = 
+        function(){
+            this.fpga_warn.classList.add("hidden");
+        
+        }
 
     App.prototype.saveAsVector = 
         function(){
@@ -830,6 +866,12 @@ App.prototype.update_bp =
     App.prototype.uploadVector = 
         function(){
 
+            apiPUT(this.current_adapter, "upload_vector_file", "true")
+            .done(
+                (function(){
+                    this.fpga_warn.classList.add("hidden");
+                }).bind(this)
+            )
         }
 
 
