@@ -83,7 +83,7 @@ class DAC(object):
         """ :returns: DAC value as a 6 digit string (since may include leading zeros)
         """
         return self.asic_interface.get_dac_value(self.index)
-
+    
     def set(self, value):
         """ :param value: the new 6 digit value as a string """
         self.asic_interface.set_dac_value(self.index, value)
@@ -110,7 +110,7 @@ class InterfaceData(object):
 
         self.dacs = []
         for i in range(19):
-            self.dacs.append(DAC(self.asic_interface, i))
+            self.dacs.append(DAC(self.asic_interface, i+1))
 
         #create the tree structure
         self.param_tree = MetadataTree({
@@ -131,6 +131,9 @@ class InterfaceData(object):
             "image" : (self.asic_interface.get_image, self.asic_interface.set_image_capture),
             "capture_run": (self.asic_interface.get_capture_run, self.asic_interface.set_capture_run, {"name": "Capture Run"}),
             "dacs" : [d.param_tree for d in self.dacs],
+            "vector_file": (self.asic_interface.get_vector_file, self.asic_interface.set_vector_file),
+            "update_bias" :(u'true', self.asic_interface.set_update_bias),
+            "upload_vector_file" : (u'False', self.asic_interface.upload_vector_file),
 
             #operating subtree to parse configuration files
             "image_vector_files" : (self.operating_interface.get_image_vector_files),
@@ -144,7 +147,17 @@ class InterfaceData(object):
         :param metadata: Boole representing whether to include the metadata
         :return: a dict containing the data in a tree structure
         """
+        
         return self.param_tree.get(path, metadata=metadata)
 
     def set(self, path, value):
+        """ Runs the set command on the given path on the tree, settings
+            the value to the value provided.
+            
+        @param path: uri path of request
+        @param value: the value to set 
+        """
+        if "dacs" in path: 
+            value = value.encode('ascii','ignore')
+  
         self.param_tree.set(path, value)

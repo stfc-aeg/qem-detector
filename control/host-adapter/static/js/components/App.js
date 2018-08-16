@@ -34,38 +34,6 @@ $.when.apply($, promises).then(
 );
 }
 
-
-/*
-var file = new File(['file'], text_file)  
-
-var reader = new FileReader();
-reader.readAsText(file)
-
-console.log('size=' + file.size);
-console.log('type=' + file.type);
-console.log('name=' + file.name);
-*/
-/*
-file.open("r"); // open file with read access
-var str = "";
-while (!file.eof) {
-	// read each line of text
-	str += file.readln() + "\n";
-}
-file.close();
-alert(str);
-
-/*
-const fs = require('fs');
-var txtFile = "../../../../../03052018/QEM_D4_198_ADC_10_icbias5_ifbias14.txt"
-let str = fs.readFileSync(txtFile, 'utf8');
-alert(str);
-*/
-
-
-
-
-
 App.prototype.freq_overlay = null;
 App.prototype.update_delay = 0.5;
 App.prototype.dark_mode = false;
@@ -221,6 +189,7 @@ App.prototype.generate =
                             + this.generateImageVectorFiles(data["image_vector_files"]["value"]) + this.generateADCVectorFiles(data["adc_vector_files"]["value"]) + 
                             `</ul>
                         </div>
+                        <span id="current-txt-file"></span>
                     </div>
                 </div>
             </div>
@@ -250,114 +219,72 @@ App.prototype.generate =
                         </thead>
                         <tbody>
                             <tr>
-                                <th class="text-right">iBiasPLL</th>
+                                <th class="text-right">iBiasCol</th>
                                 <td>
                                     <div class="input-group">
                                         <input class="form-control text-right" id="DAC-0-input" aria-label="Value" placeholder="010100" type="text">
                                     </div>
                                 </td>
-                                <th class="text-right">iBiasCalC</th>
+                                <th class="text-right">iBiasSF0</th>
                                 <td>
                                     <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-10-input" aria-label="Value" placeholder="001100" type="text">
+                                        <input class="form-control text-right" id="DAC-1-input" aria-label="Value" placeholder="001100" type="text">
                                     </div>
                                 </td>
                             </tr>
                             <tr>
-                                <th class="text-right">iBiasLVDS</th>
+                                <th class="text-right">vBiasPGA</th>
                                 <td>
                                     <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-1-input" aria-label="Value" placeholder="101101" type="text">
-                                    </div>
-                                </td>
-                                <th class="text-right">iBiasADCbuffer</th>
-                                <td>
-                                    <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-11-input" aria-label="Value" placeholder="001100" type="text">
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th class="text-right">iBiasAmpLVDS</th>
-                                <td>
-                                    <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-2-input"  aria-label="Value" placeholder="010000" type="text">
-                                    </div>
-                                </td>
-                                <th class="text-right">iBiasLoad</th>
-                                <td>
-                                    <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-12-input" aria-label="Value" placeholder="001010" type="text">
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th class="text-right">iBiasADC2</th>
-                                <td>
-                                    <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-3-input" aria-label="Value" placeholder="010100" type="text">
-                                    </div>
-                                </td>
-                                <th class="text-right">iBiasOutSF</th>
-                                <td>
-                                    <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-13-input" aria-label="Value" placeholder="011001" type="text">
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th class="text-right">iBiasADC1</th>
-                                <td>
-                                    <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-4-input" aria-label="Value" placeholder="010100" type="text">
-                                    </div>
-                                </td>
-                                <th class="text-right">iBiasSF1</th>
-                                <td>
-                                    <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-14-input" aria-label="Value" placeholder="001010" type="text">
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th class="text-right">iBiasCalF</th>
-                                <td>
-                                    <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-5-input" aria-label="Value" placeholder="010010" type="text">
+                                        <input class="form-control text-right" id="DAC-2-input" aria-label="Value" placeholder="101101" type="text">
                                     </div>
                                 </td>
                                 <th class="text-right">iBiasPGA</th>
                                 <td>
                                     <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-15-input" aria-label="Value" placeholder="001100" type="text">
+                                        <input class="form-control text-right" id="DAC-3-input" aria-label="Value" placeholder="001100" type="text">
                                     </div>
                                 </td>
                             </tr>
                             <tr>
-                                <th class="text-right">iFbiasN</th>
+                                <th class="text-right">iBiasSF1</th>
                                 <td>
                                     <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-6-inputt" aria-label="Value" placeholder="011000" type="text">
+                                        <input class="form-control text-right" id="DAC-4-input"  aria-label="Value" placeholder="010000" type="text">
                                     </div>
                                 </td>
-                                <th class="text-right">vBiasPGA</th>
+                                <th class="text-right">iBiasOutSF</th>
                                 <td>
                                     <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-16-input" aria-label="Value" placeholder="000000" type="text">
+                                        <input class="form-control text-right" id="DAC-5-input" aria-label="Value" placeholder="001010" type="text">
                                     </div>
                                 </td>
                             </tr>
                             <tr>
-                                <th class="text-right">vBiasCasc</th>
+                                <th class="text-right">iBiasLoad</th>
                                 <td>
                                     <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-7-input" aria-label="Value" placeholder="100000" type="text">
+                                        <input class="form-control text-right" id="DAC-6-input" aria-label="Value" placeholder="010100" type="text">
                                     </div>
                                 </td>
-                                <th class="text-right">iBiasSF0</th>
+                                <th class="text-right">iBiasADCbuffer</th>
                                 <td>
                                     <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-17-input" aria-label="Value" placeholder="000101" type="text">
+                                        <input class="form-control text-right" id="DAC-7-input" aria-label="Value" placeholder="011001" type="text">
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="text-right">iBiasCalC</th>
+                                <td>
+                                    <div class="input-group">
+                                        <input class="form-control text-right" id="DAC-8-input" aria-label="Value" placeholder="010100" type="text">
+                                    </div>
+                                </td>
+                                <th class="text-right">iBiasRef</th>
+                                <td>
+                                    <div class="input-group">
+                                        <input class="form-control text-right" id="DAC-9-input" aria-label="Value" placeholder="001010" type="text">
                                     </div>
                                 </td>
                             </tr>
@@ -365,21 +292,63 @@ App.prototype.generate =
                                 <th class="text-right">iCbiasP</th>
                                 <td>
                                     <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-8-input" aria-label="Value" placeholder="011010" type="text">
+                                        <input class="form-control text-right" id="DAC-10-input" aria-label="Value" placeholder="010010" type="text">
                                     </div>
                                 </td>
-                                <th class="text-right">iBiasCol</th>
+                                <th class="text-right">vBiasCasc</th>
                                 <td>
                                     <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-18-input" aria-label="Value" placeholder="001100" type="text">
+                                        <input class="form-control text-right" id="DAC-11-input" aria-label="Value" placeholder="001100" type="text">
                                     </div>
                                 </td>
                             </tr>
                             <tr>
-                                <th class="text-right">iBiasRef</th>
+                                <th class="text-right">iFbiasN</th>
                                 <td>
                                     <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-9-input" aria-label="Value" placeholder="001010" type="text">
+                                        <input class="form-control text-right" id="DAC-12-input" aria-label="Value" placeholder="011000" type="text">
+                                    </div>
+                                </td>
+                                <th class="text-right">iBiasCalF</th>
+                                <td>
+                                    <div class="input-group">
+                                        <input class="form-control text-right" id="DAC-13-input" aria-label="Value" placeholder="000000" type="text">
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="text-right">iBiasADC1</th>
+                                <td>
+                                    <div class="input-group">
+                                        <input class="form-control text-right" id="DAC-14-input" aria-label="Value" placeholder="100000" type="text">
+                                    </div>
+                                </td>
+                                <th class="text-right">iBiasADC2</th>
+                                <td>
+                                    <div class="input-group">
+                                        <input class="form-control text-right" id="DAC-15-input" aria-label="Value" placeholder="000101" type="text">
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="text-right">iBiasAmpLVDS</th>
+                                <td>
+                                    <div class="input-group">
+                                        <input class="form-control text-right" id="DAC-16-input" aria-label="Value" placeholder="011010" type="text">
+                                    </div>
+                                </td>
+                                <th class="text-right">iBiasLVDS</th>
+                                <td>
+                                    <div class="input-group">
+                                        <input class="form-control text-right" id="DAC-17-input" aria-label="Value" placeholder="001100" type="text">
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="text-right">iBiasPLL</th>
+                                <td>
+                                    <div class="input-group">
+                                        <input class="form-control text-right" id="DAC-18-input" aria-label="Value" placeholder="001010" type="text">
                                     </div>
                                 </td>
                                 <th></th>
@@ -433,14 +402,8 @@ App.prototype.generate =
                    
                         </div>
 
-                        
-
-                        
                         <button id="load-default-button" type="button" class="btn btn-primary">Load Default Values</button>
-                        
-               
-                    
-
+                      
                     </div>
 
                 </div>
@@ -478,7 +441,7 @@ App.prototype.generate =
        document.getElementById('save-default-button').addEventListener("click", this.setVolatile.bind(this));
 
        document.getElementById('save-as-vector-file-button').addEventListener("click", this.saveAsVector.bind(this));
-       document.getElementById('upload-vector-file-button').addEventListener("click", this.uploadVector.bind(this));
+       document.getElementById('upload-vector-file-button').addEventListener("click", this.uploadVectorPress.bind(this));
 
        var mode_toggle = document.getElementById('toggle-container');
        var image_vector_files = document.getElementsByClassName("image_vectors")
@@ -513,6 +476,13 @@ App.prototype.generate =
                 mode_toggleContainer.style.backgroundColor = '#337ab7';
            }
        });
+
+       var vector_list = document.getElementById("file_list");
+
+       for(var i=0; i< vector_list.children.length; i++){
+            vector_list.children[i].addEventListener("click", this.setVectorFile.bind(this));
+       }
+       
 
 
        
@@ -687,6 +657,30 @@ App.prototype.generate =
        document.getElementById("frequency-cancel").addEventListener("click", this.frequencyCancel.bind(this));
        document.getElementById("frequency-set").addEventListener("click", this.frequencySet.bind(this));
 
+        //Add frequency overlay
+        this.fpga_warn = document.createElement("div");
+        this.fpga_warn.classList.add("overlay-background");
+        this.fpga_warn.classList.add("hidden");
+        this.fpga_warn.innerHTML = `
+            <div class="overlay-fpga_warn">
+            <h5>Warning:</h5>
+            <div>
+                <div>
+                    <span id = "fpga-warning">You must re-program the FPGA before loading the new vector file</span>
+                </div>
+                <div class="overlay-control-buttons" id="fpga-warn-buttons">
+                    <button class="btn btn-success" id="upload-vector-final" type="button">I've re-programmed the FPGA, upload</button>
+                    <button class="btn btn-danger" id="upload-cancel" type="button">Cancel</button>
+                </div>
+            </div>
+            </div>
+            `;
+
+        this.mount.appendChild(this.fpga_warn);
+        document.getElementById("upload-cancel").addEventListener("click", this.uploadCancel.bind(this));
+        document.getElementById("upload-vector-final").addEventListener("click", this.uploadVector.bind(this));
+
+
         //Add footer
         var footer = document.createElement("div");
         footer.classList.add("footer");
@@ -802,6 +796,7 @@ App.prototype.update_bp =
             (function() {
                 apiGET(this.current_adapter, "", false)
                 .done(
+                    //console.log(data)
                     (function(data) {
                         for (i=0; i<data["current_voltage"].length; i++) {
                             document.getElementById('supply-voltage-' + i.toString()).innerHTML = Number(data["current_voltage"][i]["voltage"]).toFixed(3).toString();
@@ -816,6 +811,18 @@ App.prototype.update_bp =
             }).bind(this)
         )
     }
+
+
+    App.prototype.uploadVectorPress = 
+        function(){
+            this.fpga_warn.classList.remove("hidden");
+    }
+
+    App.prototype.uploadCancel = 
+        function(){
+            this.fpga_warn.classList.add("hidden");
+        
+        }
 
     App.prototype.saveAsVector = 
         function(){
@@ -835,6 +842,24 @@ App.prototype.update_bp =
         function(){
             var filename = document.getElementById("file-value").value;
             console.log(filename)
+            apiPUT(this.current_adapter, "update_bias", "false")
+            .done(
+                (function(){
+                    apiPUT(this.current_adapter, "vector_file", filename)
+                    .done(
+                        (function(){
+                            for(i=0; i < 19; i++){
+                                var value = document.getElementById("DAC-"+ i.toString() + "-input").value;
+                                apiPUT(this.current_adapter, "dacs/" + i.toString() + "/value", value.toString())
+                                
+                            }
+                        }).bind(this)
+                    )
+                }).bind(this)
+                
+
+
+            )
             document.getElementById("file-value").value = "";
             this.file_overlay.classList.add("hidden");
         }
@@ -842,6 +867,12 @@ App.prototype.update_bp =
     App.prototype.uploadVector = 
         function(){
 
+            apiPUT(this.current_adapter, "upload_vector_file", "true")
+            .done(
+                (function(){
+                    this.fpga_warn.classList.add("hidden");
+                }).bind(this)
+            )
         }
 
 
@@ -850,7 +881,7 @@ App.prototype.update_bp =
             var image_list = '';
             var i;
             for (i=0; i<image_files.length; i++) {
-                image_list += '<li class="image_vectors"><a href="#">' + image_files[i] + '</a></li>';
+                image_list += '<li id="image_files" class="image_vectors"><a href="#">' + image_files[i] + '</a></li>';
             }
             return image_list
         };
@@ -865,6 +896,7 @@ App.prototype.update_bp =
             return image_list
         }; 
 
+
     // replaced number with i
     App.prototype.reload_bp =
         function() {
@@ -873,6 +905,7 @@ App.prototype.update_bp =
                 (function() {
                     apiGET(this.current_adapter, "", false)
                     .done(
+                        //console.log(data)
                         (function(data) {
                             apiPUT(this.current_adapter, "clock", parseFloat(document.getElementById('clock-input').placeholder));
                             for (i=0; i<data["resistors"].length; i++) {
@@ -900,6 +933,35 @@ App.prototype.setClock =
         )
         .fail(this.setError.bind(this))
     }
+
+
+App.prototype.setVectorFile = 
+    function(event){
+
+        var element = event.target
+        var value = element.innerHTML
+
+        document.getElementById("current-txt-file").innerHTML = value
+
+        apiPUT(this.current_adapter, "update_bias", "true")
+        .done(
+            apiPUT(this.current_adapter, "vector_file", value)
+            .done(
+                
+                apiGET(this.current_adapter, "", false)
+                .done(
+                    function(data){
+                        for(i=0; i< data["dacs"].length; i++){
+                            //console.log(i.toString())
+                            document.getElementById('DAC-' + i.toString() + '-input').value = data["dacs"][i]["value"];
+                        }
+
+                    }
+                )
+            )
+            .fail(this.setError.bind(this))
+        ).fail(this.setError.bind(this))
+    };
 
 App.prototype.setResistor =
     function(number) {
