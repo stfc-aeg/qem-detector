@@ -189,6 +189,7 @@ App.prototype.generate =
                             + this.generateImageVectorFiles(data["image_vector_files"]["value"]) + this.generateADCVectorFiles(data["adc_vector_files"]["value"]) + 
                             `</ul>
                         </div>
+                        <span id="current-txt-file"></span>
                     </div>
                 </div>
             </div>
@@ -939,6 +940,9 @@ App.prototype.setVectorFile =
 
         var element = event.target
         var value = element.innerHTML
+
+        document.getElementById("current-txt-file").innerHTML = value
+
         apiPUT(this.current_adapter, "update_bias", "true")
         .done(
             apiPUT(this.current_adapter, "vector_file", value)
