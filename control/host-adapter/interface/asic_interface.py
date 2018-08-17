@@ -372,5 +372,6 @@ class ASIC_Interface():
                 print "%-32s %-8X" % ('-> idelay locked:', locked)
                 time.sleep(1)
             else:
+                #manage exceptions and errors
                 print("No vector file has been loaded, cannot upload vector file")
           
