@@ -3,12 +3,20 @@ import cv2
 import sys
 import pprint
 import pickle
+import h5py
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
+import glob, os
 from QemCam import *
 
 class ASIC_Interface():
     """ This class handles communication with the QEM ASIC through use of the QemCam module"""
-    def __init__(self):
+    def __init__(self, backplane):
         self.imageStore = []
+        self.backplane = backplane
+        self.adc_delay = 0
+        self.adc_frames = 1
         """ Set up the ASIC as per QemCamTest """
         #Set up QEM sensor/camera
         self.qemcamera = QemCam()
@@ -53,6 +61,32 @@ class ASIC_Interface():
         self.init_bias_dict()
         self.update_bias = False
         self.updated_registers = [False] * 20
+        self.fine_calibration_complete = False
+        self.coarse_calibration_complete = False
+
+
+    def setup_camera(self):
+
+        self.qemcamera.set_ifg()
+        self.qemcamera.x10g_stream.check_trailer = True
+        self.qemcamera.set_clock()
+        self.qemcamera.turn_rdma_debug_0ff()
+        self.qemcamera.set_10g_mtu('data', 8000)
+        self.qemcamera.x10g_rdma.read(0x0000000C, '10G_0 MTU')
+        # N.B. for scrambled data 10, 11, 12, 13 bit raw=> column size 360, 396
+        self.qemcamera.set_10g_mtu('data', 7344)
+        self.qemcamera.set_image_size_2(102,288,11,16)
+        print self.qemcamera.x10g_stream.num_pkt
+        #set idelay in 1 of 32 80fs steps  - d1, d0, c1, c0
+        self.qemcamera.set_idelay(0,0,0,0)
+        time.sleep(1)
+        locked = self.qemcamera.get_idelay_lock_status()
+        # set sub cycle shift register delay in 1 of 8 data clock steps - d1, d0, c1, c0
+        # set shift register delay in 1 of 16 divide by 8 clock steps - d1, d0, c1, c0
+        #
+        # Shift 72 + 144 bits
+        self.qemcamera.set_scsr(7,7,7,7)		# sub-cycle (1 bit)
+        self.qemcamera.set_ivsr(0,0,27,27)		# cycle (8 bits)
 
     def get_image(self):
         if len(self.imageStore) >0:
@@ -333,38 +367,8 @@ class ASIC_Interface():
         abs_path = "/aeg_sw/work/projects/qem/python/03052018/" + self.vector_file
         if upload:
             if self.vector_file is not "undefined":
-
-                self.qemcamera.set_ifg()
-
-                self.qemcamera.x10g_stream.check_trailer = True
-
-                self.qemcamera.set_clock()
-
-                self.qemcamera.turn_rdma_debug_0ff()
-
-                self.qemcamera.set_10g_mtu('data', 8000)
-                self.qemcamera.x10g_rdma.read(0x0000000C, '10G_0 MTU')
-
-                # N.B. for scrambled data 10, 11, 12, 13 bit raw=> column size 360, 396
-                self.qemcamera.set_10g_mtu('data', 7344)
-                self.qemcamera.set_image_size_2(102,288,11,16)
-
-                print self.qemcamera.x10g_stream.num_pkt
-
-                #set idelay in 1 of 32 80fs steps  - d1, d0, c1, c0
-                self.qemcamera.set_idelay(0,0,0,0)
-
-                time.sleep(1)
-
-                locked = self.qemcamera.get_idelay_lock_status()
-
-                # set sub cycle shift register delay in 1 of 8 data clock steps - d1, d0, c1, c0
-                # set shift register delay in 1 of 16 divide by 8 clock steps - d1, d0, c1, c0
-                #
-                # Shift 72 + 144 bits
-                self.qemcamera.set_scsr(7,7,7,7)		# sub-cycle (1 bit)
-                self.qemcamera.set_ivsr(0,0,27,27)		# cycle (8 bits)
-
+                
+                self.setup_camera()
                 self.qemcamera.load_vectors_from_file(abs_path)
                 time.sleep(0.1)
                 self.qemcamera.get_aligner_status()
@@ -374,4 +378,232 @@ class ASIC_Interface():
             else:
                 #manage exceptions and errors
                 print("No vector file has been loaded, cannot upload vector file")
-          
+
+    def get_coarse_cal_complete(self):
+        return self.coarse_calibration_complete
+
+    def set_coarse_cal_complete(self, complete):
+        self.coarse_calibration_complete = complete
+
+    def get_fine_cal_complete(self):
+        return self.coarse_calibration_complete
+
+    def set_fine_cal_complete(self, complete):
+        self.fine_calibration_complete = complete
+
+    #function to extract the fine data bits from the H5 file (chosen column 33 in this case)
+    def getfinebitscolumn(self, input):
+        fine_data = []
+        for i in input:
+            for j in i:
+                fine_data.append((j[33]&63)) # extract the fine bits
+        return fine_data
+
+
+    #function to generate the voltages given a specific length
+    def generatevoltages(self, length):
+        voltages=[]
+        for i in range(length):
+            voltages.append(float(1 + (i * 0.00008)))
+        return voltages
+
+        #function to extract the coarse bits for a column for a single adc (33)
+    def getcoarsebitscolumn(self, input):
+        new_list = []
+        for i in input:
+            for j in i:
+                new_list.append((j[33]&1984)>>1) # extract the coarse bits
+        return new_list
+
+    # generate a list of h5 files
+    def Listh5Files(self, adc_type):
+        filenames=[]
+        #os.chdir("/mydir")
+        for file in glob.glob("/scratch/qem/" + adc_type + "/*.h5"):
+            filenames.append(file)
+            #print(file)
+        filenames.sort()
+        return filenames
+
+    #Generate the coarse voltages
+    def generatecoarsevoltages(self, length):
+        voltages=[]
+        for i in range(length):
+            voltages.append(float(0.3428 + (i * 0.00153)))
+        return voltages
+
+    def set_adc_frames(self, frames):
+        self.adc_frames = frames
+
+    def set_adc_delay(self, delay):
+        self.adc_delay = delay
+
+    def get_adc_delay(self):
+        return self.adc_delay
+
+    def get_adc_frames(self):
+        return self.adc_frames
+
+    def adc_calibrate_coarse(self, calibrate): 
+
+        delay = self.get_adc_delay()
+        frames = self.get_adc_frames()
+        if calibrate == "true":
+            self.set_coarse_cal_complete(False)
+            self.setup_camera()
+            
+            time.sleep(0.1)
+            self.qemcamera.get_aligner_status()
+            locked = self.qemcamera.get_idelay_lock_status()
+            print "%-32s %-8X" % ('-> idelay locked:', locked)
+            print "%-32s" % ('-> Calibration started ...')
+
+            #define number of sweep
+            n=1024
+            #define i and the starting point of the capture
+            i=0
+            self.backplane.set_resistor_register(6, 0) #setting AUXSAMPLE FINE to 0
+            #print(self.backplane.get_resistor_value(6))
+            print(delay)
+            print(frames)
+            
+            # MAIN loop to capture data
+            while i < n:
+                #set AUXSAMPLE_COARSE to i
+                self.backplane.set_resistor_register(7, i)
+                #print(self.backplane.get_resistor_value(7))
+                #delay 0 seconds (default) or by number passed to the function
+                time.sleep(delay)
+                #print("finished sleeping")
+                #Save the captured data to here using RAH function
+                self.qemcamera.log_image_stream('/scratch/qem/coarse/adc_cal_AUXSAMPLE_COARSE_%04d' %i, frames)
+                #increment i
+                i=i+1
+                print("%d/1024" %i)
+        
+            time.sleep(1)
+            self.plot_coarse()
+            self.set_coarse_cal_complete(True)
+   
+
+    def adc_calibrate_fine(self, calibrate):
+        
+        delay = self.get_adc_delay()
+        frames = self.get_adc_frames()
+        if calibrate == "true":
+            self.set_fine_cal_complete(False)
+            self.setup_camera() 
+
+            time.sleep(0.1)
+            self.qemcamera.get_aligner_status()
+            locked = self.qemcamera.get_idelay_lock_status()
+            print "%-32s %-8X" % ('-> idelay locked:', locked)
+            print "%-32s" % ('-> Calibration started ...')
+
+
+            #define the number of loops for the adc calibration
+            n=1024
+            #define i and the staring point
+            i=0
+
+            #set the default starting point for the COARSE value
+            self.backplane.set_resistor_register(7, 435)
+
+            #main loop to capture the data
+            while i < n:
+                #set the the AUXSAMPLE_FINE resistor to i
+                self.backplane.set_resistor_register(6, i)
+
+                #delay by 0 (default) or by the number passed to the function
+                time.sleep(delay)
+                #capture the data from the stream using rah function
+                self.qemcamera.log_image_stream('/scratch/qem/fine/adc_cal_AUXSAMPLE_FINE_%04d' %i, frames)
+                i=i+1
+                #aux = aux + 1
+                print("%d/1024" %i)
+            # end of main loop 
+
+            # wait for 1 second
+            time.sleep(1)
+            self.plot_fine()
+            self.set_fine_cal_complete(True)
+
+    def plot_fine(self, plot):
+
+        filelist=[]
+
+        filelist = self.Listh5Files("fine")
+        # voltages for the plot
+        voltages = []
+        voltages = self.generatevoltages(len(filelist))
+        # averaged data for the plot 
+        averages = []
+
+        # extract the data from each file in the folder
+        for i in filelist:
+            #open the file in the filelist array
+            f=h5py.File(i, 'r')
+            print(i)
+            #extract the data key from the file
+            a_group_key = list(f.keys())[0]
+            #get the data
+            data = list(f[a_group_key])
+            #get data for column
+            column = self.getfinebitscolumn(data)
+            #average the column data
+            average = sum(column) / len(column)
+            #add the averaged data to the averages[] array
+            averages.append(average)
+            #close the file
+            f.close()
+
+        #generate the x / y plot of the data collected
+        plt.plot(voltages, averages, '-')
+        plt.grid(True)
+        plt.xlabel('Voltage')
+        plt.ylabel('fine value')
+        plt.savefig("/aeg_sw/work/projects/qem/python/03052018/coarse.png", dpi = 100)
+        #plt.show()
+
+    def plot_coarse(self):
+
+        filelist=[]
+        #array of voltages for the plot
+        voltages = []
+        #array of column averages for the plot
+        averages = []
+
+        #generate a list of files to process
+        filelist = self.Listh5Files("coarse")
+        #populate the voltage array
+        voltages = self.generatecoarsevoltages(len(filelist))
+     
+
+        #process the files in filelist
+        for i in filelist:
+            f=h5py.File(i, 'r')
+            print(i)
+            a_group_key = list(f.keys())[0]
+            data = list(f[a_group_key])
+            column = self.getcoarsebitscolumn(data)
+            #average the data
+            average = sum(column) / len(column)
+            averages.append(average)
+            f.close()
+
+        #generate and plot the graph
+        plt.plot(voltages, averages, '-')
+        plt.grid(True)
+        plt.xlabel('Voltage')
+        plt.ylabel('coarse value')
+        plt.savefig("/aeg_sw/work/projects/qem/python/03052018/coarse.png", dpi = 100)
+
+    def get_coarse_graph(self):
+
+        img = plt.imread("/aeg_sw/work/projects/qem/python/03052018/coarse.png")
+        plt.imsave('static/img/coarse_graph.png', img)
+
+    def get_fine_graph(self):
+
+        img = plt.imread("/aeg_sw/work/projects/qem/python/03052018/fine.png")
+        plt.imsave('static/img/fine_graph.png', img)

@@ -50,6 +50,3 @@ class Operating_Interface():
         self.image_vector_files = []
         self.txt_files = []
         self.adc_vector_files = []
-
-    def extract_vector_data(self):
-        pass
