@@ -449,9 +449,9 @@ App.prototype.generate =
                             </div>
                         </div>
                     </div>
-                    <div id="image-container" class='flex-item'>
+                    <div id="save-image-container" class='flex-item'>
                         <div class="child-header-2">
-                            <h4 class="non-drop-header">ADC Calibration</h4>
+                            <h4 class="non-drop-header">Save Images</h4>
                         </div>
                     </div>  
 
@@ -844,8 +844,20 @@ App.prototype.calibrateFine =
             
             (function(){
                 this.sleep(1000)
+
                 document.getElementById("fine-calibrate-button").classList.remove("btn-success")
                 document.getElementById("fine-calibrate-button").classList.add("btn-default")
+
+                var status = apiGET(this.current_adapter, "fine_complete")
+                while ( status == false){
+                    status = apiGET(this.current_adapter, "fine_complete")
+                }
+
+                document.getElementById('fine_div').innerHTML = ""
+                document.getElementById('fine_div').innerHTML = this.generateFineGraph()
+                document.getElementById('fine_graph').src = "img/fine_graph.png?" + new Date().getTime()
+
+                
 
             }).bind(this)
         )

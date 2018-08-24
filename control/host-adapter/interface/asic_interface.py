@@ -491,6 +491,9 @@ class ASIC_Interface():
         delay = self.get_adc_delay()
         frames = self.get_adc_frames()
         if calibrate == "true":
+
+            print(delay)
+            print(frames)
             self.set_fine_cal_complete(False)
             self.setup_camera() 
 
@@ -528,7 +531,7 @@ class ASIC_Interface():
             self.plot_fine()
             self.set_fine_cal_complete(True)
 
-    def plot_fine(self, plot):
+    def plot_fine(self):
 
         filelist=[]
 
@@ -562,7 +565,7 @@ class ASIC_Interface():
         plt.grid(True)
         plt.xlabel('Voltage')
         plt.ylabel('fine value')
-        plt.savefig("/aeg_sw/work/projects/qem/python/03052018/coarse.png", dpi = 100)
+        plt.savefig("/aeg_sw/work/projects/qem/python/03052018/fine.png", dpi = 100)
         #plt.show()
 
     def plot_coarse(self):
