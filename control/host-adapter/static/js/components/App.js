@@ -150,7 +150,7 @@ App.prototype.generate =
                     <div class="child-header">
                         <h4 class="non-drop-header">Mode</h4>
                     </div>
-                    <div class='table-container'>
+                    <div class='table-container-left'>
             
                         <div id="toggle-container">
                             <div class="inner-toggle-container">
@@ -207,7 +207,7 @@ App.prototype.generate =
             </div>
             <div id="BIAS-container" class="flex-container">
             <div class="flex-item">
-                <div class="table-container">
+                <div class="table-container-left">
                     <table>
                         <thead>
                             <tr>
@@ -379,7 +379,7 @@ App.prototype.generate =
             <div class="child-header">
                 <div id="camera-collapse" class="collapse-button">
                     <div class="collapse-table">
-                        <span id="variable-supply-button-symbol" class="collapse-cell    glyphicon glyphicon-triangle-bottom"></span>
+                        <span id="camera-button-symbol" class="collapse-cell    glyphicon glyphicon-triangle-bottom"></span>
                     </div>
                 </div>
                 <h4>Camera</h4>
@@ -392,7 +392,7 @@ App.prototype.generate =
                     <div class="child-header-2">
                         <h4 class="non-drop-header">Settings</h4>
                     </div>
-                    <div class="table-container">` + this.generateResistors(data["resistors"]) + `
+                    <div class="table-container-left">` + this.generateResistors(data["resistors"]) + `
 
                         <div class='well'>Save value as new default on set
 
@@ -418,6 +418,53 @@ App.prototype.generate =
 
             </div>
         </div>
+        <div class="child">
+            <div class="child-header">
+                <div id="operating-collapse" class="collapse-button">
+                    <div class="collapse-table">
+                        <span id="operating-button-symbol" class="collapse-cell    glyphicon glyphicon-triangle-bottom"></span>
+                    </div>
+                </div>
+                <h4>Operating</h4>
+            </div>
+                <div id="operating-container" class="flex-container">
+                    <div id="adc-calibration-container" class="flex-item">
+                        <div class="child-header-2">
+                            <h4 class="non-drop-header">ADC Calibration</h4>
+                        </div>
+                        <div class='table-container-left'>
+                            <div class="btn-group">
+                                <button id="fine-calibrate-button" type="button" class="btn btn-default">Calibrate Fine</button>
+                                <button id="coarse-calibrate-button" type="button" class="btn btn-default">Calibrate Coarse</button>
+                            </div>
+                            <div class="input-group" id='adc-input'>
+                                <input class="form-control text-right" id="frames-value" placeholder="1" type="text">
+                                <span id='frames-addon' class="input-group-addon">Frames</span>
+                                <input class="form-control text-right" id="delay-value" placeholder="0" type="text">
+                                <span class="input-group-addon">Delay</span>
+                            </div>
+                            <div class='row'>
+                                <div id='coarse_div' class='column'> ` + this.generateCoarseGraph() + ` </div>
+                                <div id='fine_div' class='column'> ` + this.generateFineGraph() + `</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="save-image-container" class='flex-item'>
+                        <div class="child-header-2">
+                            <h4 class="non-drop-header">Save Images</h4>
+                        </div>
+                    </div>  
+
+                </div>
+                      
+
+
+
+
+        </div>
+
+
+
     </div>
 </div>
 `;
@@ -427,7 +474,7 @@ App.prototype.generate =
        //document.getElementById("ASIC-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "ASIC"));
        document.getElementById("BIAS-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "BIAS"));
        document.getElementById("camera-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "camera"));
-       //Sdocument.getElementById("static-supply-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "static-supply"));
+       document.getElementById("operating-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "operating"));
 
        document.getElementById('clock-button').addEventListener("click", this.setClock.bind(this));
        document.getElementById('bp-refresh-button').addEventListener("click", this.update_bp.bind(this));
@@ -442,6 +489,9 @@ App.prototype.generate =
 
        document.getElementById('save-as-vector-file-button').addEventListener("click", this.saveAsVector.bind(this));
        document.getElementById('upload-vector-file-button').addEventListener("click", this.uploadVectorPress.bind(this));
+       document.getElementById('fine-calibrate-button').addEventListener("click", this.calibrateFine.bind(this));
+       document.getElementById('coarse-calibrate-button').addEventListener("click", this.calibrateCoarse.bind(this));
+
 
        var mode_toggle = document.getElementById('toggle-container');
        var image_vector_files = document.getElementsByClassName("image_vectors")
@@ -462,6 +512,8 @@ App.prototype.generate =
                 console.log("in image capture mode")
                 mode_toggleContainer.style.clipPath = 'inset(0 0 0 50%)';
                 mode_toggleContainer.style.backgroundColor = '#337ab7';
+                document.getElementById('adc-calibration-container').classList.add("hidden")
+
            } else {
                 this.in_calibration_mode = true;   
                 
@@ -474,6 +526,8 @@ App.prototype.generate =
                 console.log("in calibration mode")
                 mode_toggleContainer.style.clipPath = 'inset(0 50% 0 0)';
                 mode_toggleContainer.style.backgroundColor = '#337ab7';
+                document.getElementById('adc-calibration-container').classList.remove("hidden")
+
            }
        });
 
@@ -697,8 +751,120 @@ App.prototype.generate =
             this.toggleDark();
     };
 
- 
+
+App.prototype.sleep = 
+    function(millisec){
+        var start = new Date().getTime();
+        for (var i = 0; i < 1e7; i++) {
+          if ((new Date().getTime() - start) > millisec){
+            break;
+          }
+        }
+    }
+
+App.prototype.generateCoarseGraph = 
+    function(){
+        apiGET(this.current_adapter, "coarse_graph")
+        return "<img id='coarse_graph' class='graph' src='img/coarse_graph.png'>"
+        
+    }
+
+App.prototype.generateFineGraph =
+    function(){
+        apiGET(this.current_adapter,"fine_graph")
+        return "<img id='fine_graph' class='graph' src='img/fine_graph.png'>"
+
+    }
 //Handles onClick events from the navbar
+App.prototype.calibrateCoarse = 
+    function(){
+
+        document.getElementById("fine-calibrate-button").classList.add("btn-default");
+        document.getElementById("fine-calibrate-button").classList.remove("btn-success");
+        document.getElementById("coarse-calibrate-button").classList.add("btn-success");
+        document.getElementById("coarse-calibrate-button").classList.remove("btn-default");
+
+        var frames = document.getElementById('frames-value').value
+        if(frames == ""){
+            frames = document.getElementById('frames-value').placeholder
+        }
+        var delay = document.getElementById('delay-value').value
+        if(delay == ""){
+            delay = document.getElementById('delay-value').placeholder
+        }
+
+        apiPUT(this.current_adapter, 'adc_delay', Number(delay))
+        .done(
+            apiPUT(this.current_adapter, 'adc_frames', Number(frames))
+        )
+        .done(
+            apiPUT(this.current_adapter, 'adc_calibrate_coarse', "true")
+        ).done(
+            (function(){
+                this.sleep(1000)
+                document.getElementById("coarse-calibrate-button").classList.remove("btn-success")
+                document.getElementById("coarse-calibrate-button").classList.add("btn-default")
+
+                var status = apiGET(this.current_adapter, "coarse_complete")
+                while ( status == false){
+                    status = apiGET(this.current_adapter, "coarse_complete")
+                }
+
+                //document.getElementById('coarse_div').innerHTML = ""
+                document.getElementById('coarse_div').innerHTML = this.generateCoarseGraph()
+                document.getElementById('coarse_graph').src = "img/coarse_graph.png?" + new Date().getTime()
+
+            }).bind(this)
+        )
+    }
+
+App.prototype.calibrateFine = 
+    function () {
+
+        document.getElementById("fine-calibrate-button").classList.add("btn-success");
+        document.getElementById("fine-calibrate-button").classList.remove("btn-default");
+        document.getElementById("coarse-calibrate-button").classList.add("btn-default");
+        document.getElementById("coarse-calibrate-button").classList.remove("btn-success");
+
+        var frames = document.getElementById('frames-value').value
+        if(frames == ""){
+            frames = document.getElementById('frames-value').placeholder
+        }
+        var delay = document.getElementById('delay-value').value
+        if(delay == ""){
+            delay = document.getElementById('delay-value').placeholder
+        }
+        apiPUT(this.current_adapter, 'adc_delay', Number(delay))
+        .done(
+            apiPUT(this.current_adapter, 'adc_frames', Number(frames))
+        )
+        .done(
+            apiPUT(this.current_adapter, 'adc_calibrate_fine', "true")
+        ).done(
+            
+            (function(){
+                this.sleep(1000)
+
+                document.getElementById("fine-calibrate-button").classList.remove("btn-success")
+                document.getElementById("fine-calibrate-button").classList.add("btn-default")
+
+                var status = apiGET(this.current_adapter, "fine_complete")
+                while ( status == false){
+                    status = apiGET(this.current_adapter, "fine_complete")
+                }
+
+                //document.getElementById('fine_div').innerHTML = ""
+                document.getElementById('fine_div').innerHTML = this.generateFineGraph()
+                document.getElementById('fine_graph').src = "img/fine_graph.png?" + new Date().getTime()
+
+                
+
+            }).bind(this)
+        )
+
+
+    }
+
 
 App.prototype.generateResistors =
     function (resistors) {

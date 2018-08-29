@@ -14,6 +14,14 @@ class Backplane_Interface():
         #headers to receive the metadata from the odin-qem server
         self.meta_headers = {'Accept': 'application/json;metadata=true'}
 
+    def set_resistor_register(self, resistor, value):
+        #sets the resistor given name or location 'resistor' to 'value'
+        try:
+            resistorUrl = self.url + 'resistors/' + str(resistor) + '/register_value'
+            requests.put(resistorUrl, str(value), headers=self.put_headers)
+        except KeyError:
+           logging.error('{} is not a valid resistor name'.format(resistor))
+
     def get_resistor_value(self, resistor):
         """
         :param resistor: the index of the wanted resistors

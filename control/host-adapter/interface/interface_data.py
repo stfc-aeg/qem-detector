@@ -96,7 +96,7 @@ class InterfaceData(object):
         then creates a tree structure containing all data needed by the interace, and passes the API commands to the relevant interface so they can be sent on to the asic or the backplane server
         """
         self.backplane_interface = Backplane_Interface()
-        self.asic_interface = ASIC_Interface()
+        self.asic_interface = ASIC_Interface(self.backplane_interface)
         self.operating_interface = Operating_Interface()
 
         #Initialise all backplane power supplies
@@ -134,10 +134,17 @@ class InterfaceData(object):
             "vector_file": (self.asic_interface.get_vector_file, self.asic_interface.set_vector_file),
             "update_bias" :(u'true', self.asic_interface.set_update_bias),
             "upload_vector_file" : (u'False', self.asic_interface.upload_vector_file),
-
+            "adc_frames" : (self.asic_interface.get_adc_frames, self.asic_interface.set_adc_frames),
+            "adc_delay" : (self.asic_interface.get_adc_delay, self.asic_interface.set_adc_delay),
+            "adc_calibrate_fine" : (u'False', self.asic_interface.adc_calibrate_fine),
+            "adc_calibrate_coarse" : (u'False', self.asic_interface.adc_calibrate_coarse),
             #operating subtree to parse configuration files
             "image_vector_files" : (self.operating_interface.get_image_vector_files),
             "adc_vector_files" : (self.operating_interface.get_adc_vector_files),
+            "coarse_graph" : (self.asic_interface.get_coarse_graph),
+            "fine_graph" : (self.asic_interface.get_fine_graph),
+            "coarse_complete":(self.asic_interface.get_coarse_cal_complete, self.asic_interface.set_coarse_cal_complete),
+            "fine_complete":(self.asic_interface.get_fine_cal_complete, self.asic_interface.set_fine_cal_complete),
 
         })
 
