@@ -464,8 +464,8 @@ class ASIC_Interface():
             i=0
             self.backplane.set_resistor_register(6, 0) #setting AUXSAMPLE FINE to 0
             #print(self.backplane.get_resistor_value(6))
-            print(delay)
-            print(frames)
+            #print(delay)
+            #print(frames)
             
             # MAIN loop to capture data
             while i < n:
@@ -479,7 +479,7 @@ class ASIC_Interface():
                 self.qemcamera.log_image_stream('/scratch/qem/coarse/adc_cal_AUXSAMPLE_COARSE_%04d' %i, frames)
                 #increment i
                 i=i+1
-                print("%d/1024" %i)
+                #print("%d/1024" %i)
         
             time.sleep(1)
             self.plot_coarse()
@@ -523,7 +523,7 @@ class ASIC_Interface():
                 self.qemcamera.log_image_stream('/scratch/qem/fine/adc_cal_AUXSAMPLE_FINE_%04d' %i, frames)
                 i=i+1
                 #aux = aux + 1
-                print("%d/1024" %i)
+                #print("%d/1024" %i)
             # end of main loop 
 
             # wait for 1 second
@@ -536,17 +536,19 @@ class ASIC_Interface():
         filelist=[]
 
         filelist = self.Listh5Files("fine")
+
+        #print(filelist)
         # voltages for the plot
-        voltages = []
-        voltages = self.generatevoltages(len(filelist))
+        f_voltages = []
+        f_voltages = self.generatevoltages(len(filelist))
         # averaged data for the plot 
-        averages = []
+        f_averages = []
 
         # extract the data from each file in the folder
         for i in filelist:
             #open the file in the filelist array
             f=h5py.File(i, 'r')
-            print(i)
+            #print(i)
             #extract the data key from the file
             a_group_key = list(f.keys())[0]
             #get the data
@@ -556,17 +558,19 @@ class ASIC_Interface():
             #average the column data
             average = sum(column) / len(column)
             #add the averaged data to the averages[] array
-            averages.append(average)
+            f_averages.append(average)
             #close the file
             f.close()
 
         #generate the x / y plot of the data collected
-        plt.plot(voltages, averages, '-')
-        plt.grid(True)
-        plt.xlabel('Voltage')
-        plt.ylabel('fine value')
-        plt.savefig("/aeg_sw/work/projects/qem/python/03052018/fine.png", dpi = 100)
-        #plt.show()
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+        ax.plot(f_voltages, f_averages, '-')
+        ax.grid(True)
+        ax.set_xlabel('Voltage')
+        ax.set_ylabel('fine value')
+        fig.savefig("/aeg_sw/work/projects/qem/python/03052018/fine.png", dpi = 100)
+        fig.clf()
 
     def plot_coarse(self):
 
@@ -578,6 +582,7 @@ class ASIC_Interface():
 
         #generate a list of files to process
         filelist = self.Listh5Files("coarse")
+
         #populate the voltage array
         voltages = self.generatecoarsevoltages(len(filelist))
      
@@ -585,7 +590,7 @@ class ASIC_Interface():
         #process the files in filelist
         for i in filelist:
             f=h5py.File(i, 'r')
-            print(i)
+            #print(i)
             a_group_key = list(f.keys())[0]
             data = list(f[a_group_key])
             column = self.getcoarsebitscolumn(data)
@@ -595,16 +600,19 @@ class ASIC_Interface():
             f.close()
 
         #generate and plot the graph
-        plt.plot(voltages, averages, '-')
-        plt.grid(True)
-        plt.xlabel('Voltage')
-        plt.ylabel('coarse value')
-        plt.savefig("/aeg_sw/work/projects/qem/python/03052018/coarse.png", dpi = 100)
-
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+        ax.plot(voltages, averages, '-')
+        ax.grid(True)
+        ax.set_xlabel('Voltage')
+        ax.set_ylabel('coarse value')
+        fig.savefig("/aeg_sw/work/projects/qem/python/03052018/coarse.png", dpi = 100)
+        fig.clf()
+ 
     def get_coarse_graph(self):
 
-        img = plt.imread("/aeg_sw/work/projects/qem/python/03052018/coarse.png")
-        plt.imsave('static/img/coarse_graph.png', img)
+        coarse_img = plt.imread("/aeg_sw/work/projects/qem/python/03052018/coarse.png")
+        plt.imsave('static/img/coarse_graph.png', coarse_img)
 
     def get_fine_graph(self):
 

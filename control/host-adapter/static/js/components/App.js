@@ -810,7 +810,7 @@ App.prototype.calibrateCoarse =
                     status = apiGET(this.current_adapter, "coarse_complete")
                 }
 
-                document.getElementById('coarse_div').innerHTML = ""
+                //document.getElementById('coarse_div').innerHTML = ""
                 document.getElementById('coarse_div').innerHTML = this.generateCoarseGraph()
                 document.getElementById('coarse_graph').src = "img/coarse_graph.png?" + new Date().getTime()
 
@@ -853,7 +853,7 @@ App.prototype.calibrateFine =
                     status = apiGET(this.current_adapter, "fine_complete")
                 }
 
-                document.getElementById('fine_div').innerHTML = ""
+                //document.getElementById('fine_div').innerHTML = ""
                 document.getElementById('fine_div').innerHTML = this.generateFineGraph()
                 document.getElementById('fine_graph').src = "img/fine_graph.png?" + new Date().getTime()
 
