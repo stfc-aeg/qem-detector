@@ -432,7 +432,7 @@ App.prototype.generate =
                         <div class="child-header-2">
                             <h4 class="non-drop-header">ADC Calibration</h4>
                         </div>
-                        <div class='table-container-left'>
+                        <div class='table-container-left' id='adc-table'>
                             <div class="btn-group">
                                 <button id="fine-calibrate-button" type="button" class="btn btn-default">Calibrate Fine</button>
                                 <button id="coarse-calibrate-button" type="button" class="btn btn-default">Calibrate Coarse</button>
@@ -449,10 +449,22 @@ App.prototype.generate =
                             </div>
                         </div>
                     </div>
-                    <div id="save-image-container" class='flex-item'>
+                    <div id="save-image-container" class='flex-item hidden'>
                         <div class="child-header-2">
                             <h4 class="non-drop-header">Save Images</h4>
                         </div>
+
+                        <div class='table-container-left'>
+                            <div class="btn-group">
+                                <button id="save-images-button" type="button" class="btn btn-default">Save Images</button>
+                            </div>
+                            <div class="input-group" id='image-input'>
+                                <input class="form-control text-right" id="image-value" placeholder="1000" type="text">
+                                <span id='image-addon' class="input-group-addon">Images</span>
+                            </div>
+                        </div>
+
+
                     </div>  
 
                 </div>
@@ -491,6 +503,7 @@ App.prototype.generate =
        document.getElementById('upload-vector-file-button').addEventListener("click", this.uploadVectorPress.bind(this));
        document.getElementById('fine-calibrate-button').addEventListener("click", this.calibrateFine.bind(this));
        document.getElementById('coarse-calibrate-button').addEventListener("click", this.calibrateCoarse.bind(this));
+       document.getElementById('save-images-button').addEventListener("click", this.saveImages)
 
 
        var mode_toggle = document.getElementById('toggle-container');
@@ -513,6 +526,7 @@ App.prototype.generate =
                 mode_toggleContainer.style.clipPath = 'inset(0 0 0 50%)';
                 mode_toggleContainer.style.backgroundColor = '#337ab7';
                 document.getElementById('adc-calibration-container').classList.add("hidden")
+                document.getElementById('save-image-container').classList.remove("hidden")
 
            } else {
                 this.in_calibration_mode = true;   
@@ -527,6 +541,7 @@ App.prototype.generate =
                 mode_toggleContainer.style.clipPath = 'inset(0 50% 0 0)';
                 mode_toggleContainer.style.backgroundColor = '#337ab7';
                 document.getElementById('adc-calibration-container').classList.remove("hidden")
+                document.getElementById('save-image-container').classList.add("hidden")
 
            }
        });
@@ -559,19 +574,27 @@ App.prototype.generate =
         container.innerHTML = `
             <div id="image-capture-container" class="flex-container">
             <div class ="parent-column">
-                <h4>Image Display</h4>s
+                <h4>Image Display</h4>
                 <div class="vertical">
+
                     <div id="image-container">
                         <div>
-                            <img id="image_display" src="img/temp_image.png">
+                            <img id="image_display" src="img/black_img.png">
                         </div>
-                        <div class="input-group-btn">
+                    </div>
+
+                    <div class='table-container-left'>
+                        <div class="flex-item">
                             <button id="display-single-button" class="btn btn-default" type="button">Single Frame</button>
                             <button id="display-continuous-button" class="btn btn-default" type="button">Continuous</button>
                         </div>
                     </div>
+
                 </div>
             </div>
+
+
+
             <div class ="child-column">
                 <div class="child">
                     <div class="child-header">
@@ -582,25 +605,34 @@ App.prototype.generate =
                         </div>
                         <h4>Image Capture Run</h4>
                     </div>
-                    <div id="capture-container">
-                    <div class="flex-container">
-                        <h5>Logging File Name:</h5>
-                        <div class="input-group" title="File location for storing the image logs">
-                            <input id="capture-logging-input" class="form-control text-right"  placeholder=" " type="text">
+                    <div class = "flex-container" id="capture-container">
+                        <div class="flex-item">
+                            <div class = 'table-container-left'>
+
+                                <div class='flex-item'>
+                                    <div class='input-group input-single'>
+                                        <input class="form-control text-right" id="capture-logging-input" placeholder="/scratch/qem/" type="text">
+                                        <span id='log-file-span' class="input-group-addon addon-single"> Log Filename  </span>
+                                    </div>
+                                </div>
+
+                                <div class ='flex-item'>
+                                    <div class='input-group input-single'>
+                                        <input class="form-control text-right" id="capture-fnumber-input" placeholder="1000" type="text">
+                                        <span id='frame-num-span' class="input-group-addon addon-single">Frame Number</span>
+                                    </div>
+                                </div>
+
+                                <div class='flex-item'>
+                                    <button id="display-run-button" class="btn btn-default" type="button">Display Image Run</button>
+                                    <button id="log-run-button" class="btn btn-default" type="button">Log Image Run</button>
+                                </div>
+                                
+                            </div>
                         </div>
-                    </div>
-                    <div class="flex-container">
-                        <h5>Number of frames:</h5>
-                        <div class="input-group" title=" ">
-                            <input id="capture-fnumber-input" class="form-control text-right"  placeholder=" " type="text">
-                        </div>
-                    </div>
-                    <div class="input-group-btn">
-                        <button id="display-run-button" class="btn btn-default" type="button">Display Capture Run</button>
-                        <button id="log-run-button" class="btn btn-default" type="button">Log Capture Run</button>
-                    </div>
                     </div>
                 </div>
+
                 <div class="child">
                     <div class="child-header">
                         <div id="calibration-collapse" class="collapse-button">
@@ -610,35 +642,44 @@ App.prototype.generate =
                         </div>
                         <h4>ASIC Calibration Run</h4>
                     </div>
-                    <div id="calibration-container">
-                    <div class="flex-container">
-                        <h5>Logging File Name:</h5>
-                        <div class="input-group" title="File location for storing the caibration image logs">
-                            <input id="calibration-logging-input" class="form-control text-right"  placeholder=" " type="text">
+                    <div class='flex-container' id="calibration-container">
+                    <div class="flex-item">
+                        <div class='table-container-left'>
+
+                            <div class='flex-item'>
+                                <div class='input-group input-single'>
+                                    <input id="calibration-logging-input" class="form-control text-right"  placeholder=" " type="text">
+                                    <span id='calibration-log-span' class="input-group-addon addon-single">Calibration Log Filename</span>
+                                </div>
+                            </div>
+                            <div class='flex-item'>
+                                <div class='input-group input-single'>
+                                    <input id="configure-input-start" min="0" max="3.3" class="form-control text-right" aria-label="Start" placeholder="0" type="number" step="0.01">
+                                    <span id='auxsample-start-span' class="input-group-addon addon-single">Aux Sample Start (V)</span>
+                                </div>
+                            </div>
+
+                            <div class='flex-item'>
+                                <div class='input-group input-single'>
+                                    <input id="configure-input-step" min="0" max="3.3" class="form-control text-right" aria-label="Step" placeholder="0.1" type="number" step="0.01">
+                                    <span id='auxsample-step-span' class="input-group-addon addon-single">Aux Sample Step (V)</span>
+                                </div>
+                            </div>
+
+                            <div class='flex-item'>
+                                <div class='input-group input-single'>
+                                    <input id="configure-input-finish" min="0" max="3.3" class="form-control text-right" aria-label="Finish" placeholder="1" type="number" step="0.01">
+                                    <span id='auxsample-finish-span' class="input-group-addon addon-single">Aux Sample Finish (V)</span>
+                                </div>
+                            </div>
+
+                            <div class="flex-item">
+                                <button id="calibration-run-button" class="btn btn-default" type="button">Perform Calibration Run</button>
+                            </div>
                         </div>
                     </div>
-                    <div class="flex-container">
-                        <h5>AUXSAMPLE Start(V):</h5>
-                        <div class="input-group" title=" ">
-                            <input id="configure-input-start" min="0" max="3.3" class="form-control text-right" aria-label="Start" placeholder="0" type="number" step="0.01">
-                        </div>
-                    </div>
-                    <div class="flex-container">
-                        <h5>AUXSAMPLE Step(V):</h5>
-                        <div class="input-group" title=" ">
-                            <input id="configure-input-step" min="0" max="3.3" class="form-control text-right" aria-label="Step" placeholder="0.1" type="number" step="0.01">
-                        </div>
-                    </div>
-                    <div class="flex-container">
-                        <h5>AUXSAMPLE Finish(V):</h5>
-                        <div class="input-group" title=" ">
-                            <input id="configure-input-finish" min="0" max="3.3" class="form-control text-right" aria-label="Finish" placeholder="1" type="number" step="0.01">
-                        </div>
-                    </div>
-                    <div class="input-group-btn">
-                        <button id="calibration-run-button" class="btn btn-default" type="button">Perform Calibration Run</button>
-                    </div>
-                    </div>
+
+
                 </div>
             </div>
             </div>

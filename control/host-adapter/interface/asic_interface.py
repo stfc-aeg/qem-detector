@@ -103,6 +103,14 @@ class ASIC_Interface():
     def set_capture_run(self, config):
         fnumber, file_name = config.split(";")
         location = "/aeg_sw/work/projects/qem/images/" + str(file_name)
+
+        self.setup_camera()
+
+        time.sleep(0.1)
+        self.qemcamera.get_aligner_status()
+        locked = self.qemcamera.get_idelay_lock_status()
+        print "%-32s %-8X" % ('-> idelay locked:', locked)
+
         self.qemcamera.log_image_stream(location, int(fnumber))
 
     def set_update_bias(self, update_bias):

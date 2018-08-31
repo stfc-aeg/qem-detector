@@ -50,7 +50,7 @@
 ---------------------------- */
 
 .parent-column {
-    padding: 0 16px;
+    padding: 0 48px;
     background-color: #fbfbfb;
     border-right: #b8c4cb 2px solid;
     z-index: 50;
@@ -294,6 +294,35 @@ td {
     margin-left: 30px;
 }
 
+.input-group-addon, .input-group-btn {
+    width: 10%;
+}
+
+#image_display {
+
+    width: 100%;
+}
+
+.input-single {
+
+    width: 25%;
+}
+
+.addon-single{
+
+    width: 40%;
+}
+
+#display-single-button, #display-continuous-button {
+
+    width : 49%;
+}
+
+#adc-table{
+
+    width: 50%;
+}
+
 table{
     border-spacing: 0.1rem;
     box-shadow: 0px 0px 10px rgba(0,0,0,0.10),
@@ -342,7 +371,8 @@ th, td {
 
 .desc {
     border-bottom: #aaa 1px solid;
-    padding: 10px;
+    padding-top: 20px;
+    padding-bottom: 10px;
 }
 
 .inline-desc {
