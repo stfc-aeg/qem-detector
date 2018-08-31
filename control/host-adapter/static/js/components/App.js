@@ -449,23 +449,7 @@ App.prototype.generate =
                             </div>
                         </div>
                     </div>
-                    <div id="save-image-container" class='flex-item hidden'>
-                        <div class="child-header-2">
-                            <h4 class="non-drop-header">Save Images</h4>
-                        </div>
-
-                        <div class='table-container-left'>
-                            <div class="btn-group">
-                                <button id="save-images-button" type="button" class="btn btn-default">Save Images</button>
-                            </div>
-                            <div class="input-group" id='image-input'>
-                                <input class="form-control text-right" id="image-value" placeholder="1000" type="text">
-                                <span id='image-addon' class="input-group-addon">Images</span>
-                            </div>
-                        </div>
-
-
-                    </div>  
+          
 
                 </div>
                       
@@ -503,7 +487,7 @@ App.prototype.generate =
        document.getElementById('upload-vector-file-button').addEventListener("click", this.uploadVectorPress.bind(this));
        document.getElementById('fine-calibrate-button').addEventListener("click", this.calibrateFine.bind(this));
        document.getElementById('coarse-calibrate-button').addEventListener("click", this.calibrateCoarse.bind(this));
-       document.getElementById('save-images-button').addEventListener("click", this.saveImages)
+       //document.getElementById('save-images-button').addEventListener("click", this.saveImages)
 
 
        var mode_toggle = document.getElementById('toggle-container');
@@ -525,8 +509,8 @@ App.prototype.generate =
                 console.log("in image capture mode")
                 mode_toggleContainer.style.clipPath = 'inset(0 0 0 50%)';
                 mode_toggleContainer.style.backgroundColor = '#337ab7';
-                document.getElementById('adc-calibration-container').classList.add("hidden")
-                document.getElementById('save-image-container').classList.remove("hidden")
+                //document.getElementById('adc-calibration-container').classList.add("hidden")
+                //document.getElementById('save-image-container').classList.remove("hidden")
 
            } else {
                 this.in_calibration_mode = true;   
@@ -540,8 +524,8 @@ App.prototype.generate =
                 console.log("in calibration mode")
                 mode_toggleContainer.style.clipPath = 'inset(0 50% 0 0)';
                 mode_toggleContainer.style.backgroundColor = '#337ab7';
-                document.getElementById('adc-calibration-container').classList.remove("hidden")
-                document.getElementById('save-image-container').classList.add("hidden")
+                //document.getElementById('adc-calibration-container').classList.remove("hidden")
+                //document.getElementById('save-image-container').classList.add("hidden")
 
            }
        });
