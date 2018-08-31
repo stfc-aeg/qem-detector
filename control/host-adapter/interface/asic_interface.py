@@ -102,7 +102,7 @@ class ASIC_Interface():
 
     def set_capture_run(self, config):
         fnumber, file_name = config.split(";")
-        location = "/aeg_sw/work/projects/qem/images/" + str(file_name)
+        location = str(file_name) #"/aeg_sw/work/projects/qem/images/" + str(file_name)
 
         self.setup_camera()
 

@@ -1225,9 +1225,34 @@ App.prototype.updateImage =
 
 App.prototype.logImageCapture =
     function() {
+
+        document.getElementById("log-run-button").classList.add("btn-success");
+        document.getElementById("log-run-button").classList.remove("btn-default");
+
+        document.getElementById("display-run-button").classList.add("btn-default");
+        document.getElementById("display-run-button").classList.remove("btn-sucess");
+
         var fnumber = Number(document.getElementById('capture-fnumber-input').value)
+        if (fnumber == ""){
+            fnumber = Number(document.getElementById('capture-fnumber-input').placeholder)
+        }
         var location = String(document.getElementById('capture-logging-input').value)
+        if (location == ""){
+            var d = new Date()
+            var date = d.getDay() + "-" + d.getMonth() + "-" + d.getFullYear()
+            location = String(document.getElementById('capture-logging-input').placeholder) + date
+        }
+
         apiPUT(this.current_adapter, "capture_run", fnumber.toString() + ";" + location)
+        .done(
+            (
+                function(){
+                    this.sleep(1000)
+                    document.getElementById("log-run-button").classList.remove("btn-success");
+                    document.getElementById("log-run-button").classList.add("btn-default");
+                }
+            ).bind(this)
+        )
     }
 
 App.prototype.calibrationImageCapture =
