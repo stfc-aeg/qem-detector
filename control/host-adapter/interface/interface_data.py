@@ -90,14 +90,15 @@ class DAC(object):
 
 class InterfaceData(object):
     """This class handles the API commands for the interface by constructing a tree structure for the data and passing the commands down to each leaf"""
-    def __init__(self):
+    def __init__(self, **kwargs):
         """Initialises the InterfaceData Data structure
         creates instances of the backplane_interface and asic_interface,
         then creates a tree structure containing all data needed by the interace, and passes the API commands to the relevant interface so they can be sent on to the asic or the backplane server
         """
-        self.backplane_interface = Backplane_Interface()
-        self.asic_interface = ASIC_Interface(self.backplane_interface)
-        self.operating_interface = Operating_Interface()
+
+        self.backplane_interface = Backplane_Interface(kwargs['fem_ip'], kwargs['fem_port'])
+        self.asic_interface = ASIC_Interface(self.backplane_interface, kwargs['working_dir'], kwargs['data_dir'])
+        self.operating_interface = Operating_Interface(kwargs['working_dir'])
 
         #Initialise all backplane power supplies
         self.current_voltage = []
