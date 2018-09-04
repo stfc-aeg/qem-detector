@@ -439,7 +439,7 @@ class ASIC_Interface():
         new_list = []
         for i in input:
             for j in i:
-                new_list.append((j[33]&1984)>>1) # extract the coarse bits
+                new_list.append((j[33]&1984)>>6) # extract the coarse bits
         return new_list
 
     def Listh5Files(self, adc_type):
@@ -559,7 +559,7 @@ class ASIC_Interface():
             #define i and the staring point
             i=0
             #set the default starting point for the COARSE value
-            self.backplane.set_resistor_register(7, 435)
+            self.backplane.set_resistor_register(7, 435) #435
 
             #main loop to capture the data
             while i < n:

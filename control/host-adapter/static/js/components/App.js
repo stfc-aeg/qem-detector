@@ -796,7 +796,7 @@ App.prototype.sleep =
 App.prototype.generateCoarseGraph = 
     function(){
         apiGET(this.current_adapter, "coarse_graph")
-        return "<img id='coarse_graph' class='graph' src='img/coarse_graph.png'>"
+        return "<img id='coarse_graph' class='graph' src='img/coarse_graph.png?" + new Date().getTime() + "'>"
         
     }
 /*
@@ -806,7 +806,7 @@ App.prototype.generateCoarseGraph =
 App.prototype.generateFineGraph =
     function(){
         apiGET(this.current_adapter,"fine_graph")
-        return "<img id='fine_graph' class='graph' src='img/fine_graph.png'>"
+        return "<img id='fine_graph' class='graph' src='img/fine_graph.png?" + new Date().getTime() + "'>"
 
     }
 /*
@@ -847,6 +847,7 @@ App.prototype.calibrateCoarse =
                 while ( status == false){
                     status = apiGET(this.current_adapter, "coarse_complete")
                 }
+                this.sleep(1000)
                 document.getElementById('coarse_div').innerHTML = this.generateCoarseGraph()
                 document.getElementById('coarse_graph').src = "img/coarse_graph.png?" + new Date().getTime()
             }).bind(this)
@@ -891,6 +892,7 @@ App.prototype.calibrateFine =
                 while ( status == false){
                     status = apiGET(this.current_adapter, "fine_complete")
                 }
+                this.sleep(1000)
                 document.getElementById('fine_div').innerHTML = this.generateFineGraph()
                 document.getElementById('fine_graph').src = "img/fine_graph.png?" + new Date().getTime()
             }).bind(this)
