@@ -97,7 +97,15 @@ class InterfaceData(object):
         """
 
         self.backplane_interface = Backplane_Interface(kwargs['fem_ip'], kwargs['fem_port'])
-        self.asic_interface = ASIC_Interface(self.backplane_interface, kwargs['working_dir'], kwargs['data_dir'])
+        self.asic_interface = ASIC_Interface(
+                            self.backplane_interface, 
+                            kwargs['working_dir'], 
+                            kwargs['data_dir'], 
+                            kwargs['server_ctrl_ip'], 
+                            kwargs['server_data_ip'], 
+                            kwargs['camera_ctrl_ip'],
+                            kwargs['camera_data_ip']
+                        )
         self.operating_interface = Operating_Interface(kwargs['working_dir'])
 
         #Initialise all backplane power supplies

@@ -17,13 +17,13 @@ import h5py
 
 class QemCam(object):
 
-    def __init__(self):
+    def __init__(self, server_ctrl_ip_addr, server_data_ip_addr, camera_ctrl_ip_addr, camera_data_ip_addr):
         # qem 1 ctl_ip addresses
-        self.server_ctrl_ip_addr='10.0.1.2'
-        self.camera_ctrl_ip_addr='10.0.1.102'
+        self.server_ctrl_ip_addr = server_ctrl_ip_addr
+        self.camera_ctrl_ip_addr = camera_ctrl_ip_addr
         # qem 1 data_ip addresses
-        self.server_data_ip_addr = "10.0.2.2"
-        self.camera_data_ip_addr = "10.0.2.102"
+        self.server_data_ip_addr = server_data_ip_addr
+        self.camera_data_ip_addr = camera_data_ip_addr
 	# qem 1 base addresses
         self.udp_10G_data    = 0x00000000
         self.udp_10g_control = 0x10000000
