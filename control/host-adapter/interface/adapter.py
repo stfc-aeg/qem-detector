@@ -25,10 +25,18 @@ class InterfaceAdapter(ApiAdapter):
         # into the options used below.
         super(InterfaceAdapter, self).__init__(**kwargs)
 
+        interface_options = {
+
+            'working_dir' : str(self.options.get('working_directory')),
+            'data_dir' : str(self.options.get("data_directory")),
+            'fem_ip' : str(self.options.get("fem_ip")),
+            'fem_port' : str(self.options.get("fem_port"))
+
+        }
         # Retrieve adapter options from incoming argument list
         self.update_interval = float(self.options.get('update_interval', 0.05))
-
-        self.interface_data = InterfaceData()
+       
+        self.interface_data = InterfaceData(**interface_options)
 
         # Start the update loop
         self.update_loop()
@@ -43,8 +51,6 @@ class InterfaceAdapter(ApiAdapter):
         :param request: HTTP request object
         :return: an ApiAdapterResponse object containing the appropriate response from the backplane
         """
-        #print("Printed Request")
-        #print(request)
         try:
             #Check for metadata argument
             metadata = False

@@ -576,8 +576,7 @@ App.prototype.generate =
 
                 </div>
             </div>
-
-
+           
 
             <div class ="child-column">
                 <div class="child">
@@ -587,35 +586,37 @@ App.prototype.generate =
                                 <span id="capture-button-symbol" class="collapse-cell    glyphicon glyphicon-triangle-bottom"></span>
                             </div>
                         </div>
-                        <h4>Image Capture Run</h4>
+                        <h4>Image Capture</h4>
                     </div>
                     <div class = "flex-container" id="capture-container">
                         <div class="flex-item">
-                            <div class = 'table-container-left'>
+                            <div id='image-table-left' class = 'table-container-left'>
 
                                 <div class='flex-item'>
                                     <div class='input-group input-single'>
-                                        <input class="form-control text-right" id="capture-logging-input" placeholder="/scratch/qem/" type="text">
-                                        <span id='log-file-span' class="input-group-addon addon-single"> Log Filename  </span>
+                                        <input class="form-control text-right" id="capture-logging-input" placeholder="/scratch/qem/filename" type="text">
+                                        <span id='log-file-span' class="input-group-addon addon-single">Filename</span>
                                     </div>
                                 </div>
 
                                 <div class ='flex-item'>
                                     <div class='input-group input-single'>
                                         <input class="form-control text-right" id="capture-fnumber-input" placeholder="1000" type="text">
-                                        <span id='frame-num-span' class="input-group-addon addon-single">Frame Number</span>
+                                        <span id='frame-num-span' class="input-group-addon addon-single">Number of Frames</span>
                                     </div>
                                 </div>
 
                                 <div class='flex-item'>
-                                    <button id="display-run-button" class="btn btn-default" type="button">Display Image Run</button>
-                                    <button id="log-run-button" class="btn btn-default" type="button">Log Image Run</button>
+                                    <button id="display-run-button" class="btn btn-default" type="button">Display Images</button>
+                                    <button id="log-run-button" class="btn btn-default" type="button">Save Images</button>
                                 </div>
                                 
                             </div>
                         </div>
                     </div>
                 </div>
+                `
+                /*
 
                 <div class="child">
                     <div class="child-header">
@@ -662,8 +663,9 @@ App.prototype.generate =
                             </div>
                         </div>
                     </div>
-
-
+                     
+            */ +  `
+            
                 </div>
             </div>
             </div>
@@ -672,11 +674,11 @@ App.prototype.generate =
         this.mount.appendChild(container);
 
        document.getElementById("capture-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "capture"));
-       document.getElementById("calibration-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "calibration"));
+       //document.getElementById("calibration-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "calibration"));
 
        document.getElementById("display-single-button").addEventListener("click", this.imageGenerate.bind(this));
        document.getElementById("log-run-button").addEventListener("click", this.logImageCapture.bind(this));
-       document.getElementById("calibration-run-button").addEventListener("click", this.calibrationImageCapture.bind(this));
+       //document.getElementById("calibration-run-button").addEventListener("click", this.calibrationImageCapture.bind(this));
 
        //Update navbar
        var list_elem = document.createElement("li");
@@ -776,7 +778,9 @@ App.prototype.generate =
             this.toggleDark();
     };
 
-
+/*
+*   Sleep function to wait n milliseconds
+*/
 App.prototype.sleep = 
     function(millisec){
         var start = new Date().getTime();
@@ -787,20 +791,41 @@ App.prototype.sleep =
         }
     }
 
+/*
+* Gets the current coarse calibration graph
+* @returns an img tag with the coarse png as the src
+*/
 App.prototype.generateCoarseGraph = 
     function(){
-        apiGET(this.current_adapter, "coarse_graph")
-        return "<img id='coarse_graph' class='graph' src='img/coarse_graph.png'>"
+        /*
+        var img_tag = ""
+        apiGET(this.current_adapter, "coarse_graph").done(
+            img_tag = "<img id='coarse_graph' class='graph' src='img/coarse_graph.png?" + new Date().getTime() + "'>"
+        )
+        */
+        return "<img id='coarse_graph' class='graph' src='img/coarse_graph.png?" + new Date().getTime() + "'>"
         
     }
-
+/*
+* Gets the current find calibration graph
+* @returns an img tag with the fine png as the src.
+*/
 App.prototype.generateFineGraph =
     function(){
-        apiGET(this.current_adapter,"fine_graph")
-        return "<img id='fine_graph' class='graph' src='img/fine_graph.png'>"
+        /*
+        var graph_tag = ""
+        apiGET(this.current_adapter,"fine_graph").done(
+            graph_tag = "<img id='fine_graph' class='graph' src='img/fine_graph.png?" + new Date().getTime() + "'>"
+        )
+        */
+        return "<img id='fine_graph' class='graph' src='img/fine_graph.png?" + new Date().getTime() + "'>"
 
     }
-//Handles onClick events from the navbar
+/*
+* Performs coarse calibration using the frames and delay value from the webpage
+* Calls generateCoarseGraph to refresh the graph on the page after calibration is
+* completed.
+*/  
 App.prototype.calibrateCoarse = 
     function(){
 
@@ -817,32 +842,33 @@ App.prototype.calibrateCoarse =
         if(delay == ""){
             delay = document.getElementById('delay-value').placeholder
         }
+        var config = String(frames) + ":" + String(delay)
 
-        apiPUT(this.current_adapter, 'adc_delay', Number(delay))
-        .done(
-            apiPUT(this.current_adapter, 'adc_frames', Number(frames))
-        )
+        apiPUT(this.current_adapter, 'adc_config', config)
         .done(
             apiPUT(this.current_adapter, 'adc_calibrate_coarse', "true")
-        ).done(
-            (function(){
-                this.sleep(1000)
-                document.getElementById("coarse-calibrate-button").classList.remove("btn-success")
-                document.getElementById("coarse-calibrate-button").classList.add("btn-default")
-
-                var status = apiGET(this.current_adapter, "coarse_complete")
-                while ( status == false){
-                    status = apiGET(this.current_adapter, "coarse_complete")
-                }
-
-                //document.getElementById('coarse_div').innerHTML = ""
-                document.getElementById('coarse_div').innerHTML = this.generateCoarseGraph()
-                document.getElementById('coarse_graph').src = "img/coarse_graph.png?" + new Date().getTime()
-
-            }).bind(this)
+            .done(
+                (function(){
+                    //this.sleep(1000)
+                    document.getElementById("coarse-calibrate-button").classList.remove("btn-success")
+                    document.getElementById("coarse-calibrate-button").classList.add("btn-default")
+    
+                    var status = apiGET(this.current_adapter, "coarse_complete")
+                    while (status == false){
+                        status = apiGET(this.current_adapter, "coarse_complete")
+                    }
+                    //this.sleep(1000)
+                    document.getElementById('coarse_div').innerHTML = this.generateCoarseGraph()
+                    //document.getElementById('coarse_graph').src = "img/coarse_graph.png?" + new Date().getTime()
+                }).bind(this)
+            )
         )
     }
-
+/*
+* Perform coarse calibration using the frames and delay value from the webpage
+* calls generateFineGraph to refresh the graph on the web page once
+* calibration has taken place.
+*/
 App.prototype.calibrateFine = 
     function () {
 
@@ -859,38 +885,35 @@ App.prototype.calibrateFine =
         if(delay == ""){
             delay = document.getElementById('delay-value').placeholder
         }
-        apiPUT(this.current_adapter, 'adc_delay', Number(delay))
-        .done(
-            apiPUT(this.current_adapter, 'adc_frames', Number(frames))
-        )
+        var config = String(frames) + ":" + String(delay)
+
+        apiPUT(this.current_adapter, 'adc_config', config)
         .done(
             apiPUT(this.current_adapter, 'adc_calibrate_fine', "true")
-        ).done(
+            .done(
             
-            (function(){
-                this.sleep(1000)
-
-                document.getElementById("fine-calibrate-button").classList.remove("btn-success")
-                document.getElementById("fine-calibrate-button").classList.add("btn-default")
-
-                var status = apiGET(this.current_adapter, "fine_complete")
-                while ( status == false){
-                    status = apiGET(this.current_adapter, "fine_complete")
-                }
-
-                //document.getElementById('fine_div').innerHTML = ""
-                document.getElementById('fine_div').innerHTML = this.generateFineGraph()
-                document.getElementById('fine_graph').src = "img/fine_graph.png?" + new Date().getTime()
-
-                
-
-            }).bind(this)
+                (function(){
+                    //this.sleep(1000)
+                    document.getElementById("fine-calibrate-button").classList.remove("btn-success")
+                    document.getElementById("fine-calibrate-button").classList.add("btn-default")
+    
+                    var status = apiGET(this.current_adapter, "fine_complete")
+                    while ( status == false){
+                        status = apiGET(this.current_adapter, "fine_complete")
+                    }
+                    //this.sleep(1000)
+                    document.getElementById('fine_div').innerHTML = this.generateFineGraph()
+                    //document.getElementById('fine_graph').src = "img/fine_graph.png?" + new Date().getTime()
+                }).bind(this)
+            )   
         )
-
-
     }
 
-
+/*
+* Generates the resistor table using the data passed from the backplane
+* @param resistors : the data['resistors'] list from the backplane 
+* @returns the resistor table html tag
+*/
 App.prototype.generateResistors =
     function (resistors) {
         resistor_table = `
@@ -930,6 +953,11 @@ App.prototype.generateResistors =
         return resistor_table
     };
 
+/*
+* Generates the variable supply table using the data passed from the backplane
+* @param supplies: the data["current_voltage"]) list from the backplane
+* @returns the supply table html tag.
+*/
 App.prototype.generateSupplies =
     function (supplies) {
         supply_table = `
@@ -961,6 +989,9 @@ App.prototype.generateSupplies =
         return supply_table
     };
 
+/*
+* Sets whether the backplane is constantly updating the values or not
+*/
 App.prototype.updateLoop_bp =
     function() {
         var button = document.getElementById('bp-update-button')
@@ -979,7 +1010,11 @@ App.prototype.updateLoop_bp =
             document.getElementById('bp-refresh-button').disabled = false;
         }
     }
-
+/*
+* updates the variable supplies table by requesting the whole adapter paramtree
+* populates the table and repeats if enabled.
+*
+*/
 App.prototype.update_bp =
     function() {
         apiPUT(this.current_adapter, "update_required", "true")
@@ -1003,114 +1038,133 @@ App.prototype.update_bp =
         )
     }
 
+// opens the fpga warning overlay when "upload vector file" is pressed
+App.prototype.uploadVectorPress = 
+    function(){
+        this.fpga_warn.classList.remove("hidden");
+}
 
-    App.prototype.uploadVectorPress = 
-        function(){
-            this.fpga_warn.classList.remove("hidden");
+//closes the fpga warning overlay when cancel is pressed.
+App.prototype.uploadCancel = 
+    function(){
+        this.fpga_warn.classList.add("hidden");
+    
     }
 
-    App.prototype.uploadCancel = 
-        function(){
-            this.fpga_warn.classList.add("hidden");
-        
+//opens the save vector file overlay when 'save as vector file' is pressed
+App.prototype.saveAsVector = 
+    function(){
+        document.getElementById("file-value").placeholder = "QEM_D4_198_ADC_10_icbias1_ifbias1";
+        this.file_overlay.classList.remove("hidden");
+    }
+
+//closes the save vector file overlay when cancel is pressed
+App.prototype.fileCancel = 
+    function(){
+        document.getElementById("file-value").value = "";
+        this.file_overlay.classList.add("hidden");
+    }
+
+/*
+* Generates a vector file from the current BIAS settings in the webpage
+* closes the save as vector file overlay when the file is created
+*/
+App.prototype.createVectorFile = 
+    function(){
+        var filename = document.getElementById("file-value").value;
+        console.log(filename)
+        apiPUT(this.current_adapter, "update_bias", "false")
+        .done(
+            (function(){
+                apiPUT(this.current_adapter, "vector_file", filename)
+                .done(
+                    (function(){
+                        for(i=0; i < 19; i++){
+                            var value = document.getElementById("DAC-"+ i.toString() + "-input").value;
+                            apiPUT(this.current_adapter, "dacs/" + i.toString() + "/value", value.toString())
+                            
+                        }
+                    }).bind(this)
+                )
+            }).bind(this)
+        )
+        document.getElementById("file-value").value = "";
+        this.file_overlay.classList.add("hidden");
+    }
+/*
+* Sends the command to the asic to upload the current vector file
+* Closes the fpga warning overlay when complete.
+*/
+App.prototype.uploadVector = 
+    function(){
+
+        apiPUT(this.current_adapter, "upload_vector_file", "true")
+        .done(
+            (function(){
+                this.fpga_warn.classList.add("hidden");
+            }).bind(this)
+        )
+    }
+
+/*
+* populates the list of image vector files in the dropdown menu
+* @param image_files: data['image_vector_files'] list of vector files in dev08
+* @returns the list html tag of the vector files
+*/
+App.prototype.generateImageVectorFiles =
+    function(image_files){
+        var image_list = '';
+        var i;
+        for (i=0; i<image_files.length; i++) {
+            image_list += '<li id="image_files" class="image_vectors"><a href="#">' + image_files[i] + '</a></li>';
         }
+        return image_list
+    };
 
-    App.prototype.saveAsVector = 
-        function(){
-            document.getElementById("file-value").placeholder = "QEM_D4_198_ADC_10_icbias1_ifbias1";
-            this.file_overlay.classList.remove("hidden");
-
+/*
+* populates the list of adc vector files in the dropdown menu
+* @param image_files: data['adc_vector_files'] list of vector files in dev08
+* @returns the list html tag of the vector files
+*/
+App.prototype.generateADCVectorFiles =
+    function(image_files){
+        var image_list ='';
+        var i;
+        for (i=0; i<image_files.length; i++) {
+            image_list += '<li class="adc_vectors"><a href="#">' + image_files[i] + '</a></li>';
         }
-
-    App.prototype.fileCancel = 
-        function(){
-            document.getElementById("file-value").value = "";
-            this.file_overlay.classList.add("hidden");
-        }
-
-    // this function actually creates the vector file from the bias values 
-    App.prototype.createVectorFile = 
-        function(){
-            var filename = document.getElementById("file-value").value;
-            console.log(filename)
-            apiPUT(this.current_adapter, "update_bias", "false")
-            .done(
-                (function(){
-                    apiPUT(this.current_adapter, "vector_file", filename)
-                    .done(
-                        (function(){
-                            for(i=0; i < 19; i++){
-                                var value = document.getElementById("DAC-"+ i.toString() + "-input").value;
-                                apiPUT(this.current_adapter, "dacs/" + i.toString() + "/value", value.toString())
-                                
-                            }
-                        }).bind(this)
-                    )
-                }).bind(this)
-                
+        return image_list
+    }; 
 
 
-            )
-            document.getElementById("file-value").value = "";
-            this.file_overlay.classList.add("hidden");
-        }
+/*
+* Reloads the backplane updating the resistors and variable supplies 
+* calls the update_bp method
+*/
+App.prototype.reload_bp =
+    function() {
+        apiPUT(this.current_adapter, "reset", "true")
+        .done(
+            (function() {
+                apiGET(this.current_adapter, "", false)
+                .done(
+                    //console.log(data)
+                    (function(data) {
+                        apiPUT(this.current_adapter, "clock", parseFloat(document.getElementById('clock-input').placeholder));
+                        for (i=0; i<data["resistors"].length; i++) {
+                            document.getElementById('resistor-' + i +  '-input').placeholder=Number(data["resistors"][i]["resistance"]).toFixed(2).toString()
+                        };
+                        this.update_bp();
+                    }).bind(this)
+                )
+                .fail(this.setError.bind(this));
+            }).bind(this)
+        )
+    }
 
-    App.prototype.uploadVector = 
-        function(){
-
-            apiPUT(this.current_adapter, "upload_vector_file", "true")
-            .done(
-                (function(){
-                    this.fpga_warn.classList.add("hidden");
-                }).bind(this)
-            )
-        }
-
-
-    App.prototype.generateImageVectorFiles =
-        function(image_files){
-            var image_list = '';
-            var i;
-            for (i=0; i<image_files.length; i++) {
-                image_list += '<li id="image_files" class="image_vectors"><a href="#">' + image_files[i] + '</a></li>';
-            }
-            return image_list
-        };
-
-    App.prototype.generateADCVectorFiles =
-        function(image_files){
-            var image_list ='';
-            var i;
-            for (i=0; i<image_files.length; i++) {
-                image_list += '<li class="adc_vectors"><a href="#">' + image_files[i] + '</a></li>';
-            }
-            return image_list
-        }; 
-
-
-    // replaced number with i
-    App.prototype.reload_bp =
-        function() {
-            apiPUT(this.current_adapter, "reset", "true")
-            .done(
-                (function() {
-                    apiGET(this.current_adapter, "", false)
-                    .done(
-                        //console.log(data)
-                        (function(data) {
-                            apiPUT(this.current_adapter, "clock", parseFloat(document.getElementById('clock-input').placeholder));
-                            for (i=0; i<data["resistors"].length; i++) {
-                                document.getElementById('resistor-' + i +  '-input').placeholder=Number(data["resistors"][i]["resistance"]).toFixed(2).toString()
-                            };
-                            this.update_bp();
-                        }).bind(this)
-                    )
-                    .fail(this.setError.bind(this));
-                }).bind(this)
-            )
-        }
-
-
+/* 
+* Sets the clock on the backplane using the clock-input from the webpage
+*/
 App.prototype.setClock =
     function() {
         var element = document.getElementById('clock-input');
@@ -1125,7 +1179,11 @@ App.prototype.setClock =
         .fail(this.setError.bind(this))
     }
 
-
+/*
+* Sets the current vector file being used by the asic using the one selected on the drop-down 
+* Retrieves all of the bias settings from the vector file used and populates the bias 
+* settings on the webpage
+*/
 App.prototype.setVectorFile = 
     function(event){
 
@@ -1137,23 +1195,30 @@ App.prototype.setVectorFile =
         apiPUT(this.current_adapter, "update_bias", "true")
         .done(
             apiPUT(this.current_adapter, "vector_file", value)
-            .done(
-                
-                apiGET(this.current_adapter, "", false)
-                .done(
-                    function(data){
+            .done( 
+                (function(){
+                    this.sleep(1500)
+
+                    //this.sleep(1000)
+                    apiGET(this.current_adapter, "", false)
+                    .done(
+                        function(data){
                         for(i=0; i< data["dacs"].length; i++){
                             //console.log(i.toString())
                             document.getElementById('DAC-' + i.toString() + '-input').value = data["dacs"][i]["value"];
                         }
-
                     }
                 )
+                }).bind(this)
             )
             .fail(this.setError.bind(this))
         ).fail(this.setError.bind(this))
     };
 
+/*
+* Sets the resistnce of a given resistor number on the backplane
+* @param number: the number resistor to set 
+*/
 App.prototype.setResistor =
     function(number) {
         var element = document.getElementById('resistor-' + number +  '-input');
@@ -1169,6 +1234,10 @@ App.prototype.setResistor =
         .fail(this.setError.bind(this))
     }
 
+/*
+* Sets whether to use volatile memory when setting the resistor values
+* This would then cause that resistor value to be a default value. 
+*/
 App.prototype.setVolatile =
     function() {
         var button = document.getElementById('save-default-button')
@@ -1184,9 +1253,9 @@ App.prototype.setVolatile =
             button.classList.remove("btn-success");
             button.classList.add("btn-danger");
         }
-        
     }
 
+//this doesn't work and needs fixing.
 App.prototype.imageGenerate =
     function() {
         apiPUT(this.current_adapter, "image", 2)
@@ -1194,6 +1263,7 @@ App.prototype.imageGenerate =
         .fail(this.setError.bind(this));
     }
 
+//this doesn't work and needs fixing.
 App.prototype.updateImage =
     function() {
         apiGET(this.current_adapter, "image")
@@ -1212,7 +1282,6 @@ App.prototype.logImageCapture =
 
         document.getElementById("log-run-button").classList.add("btn-success");
         document.getElementById("log-run-button").classList.remove("btn-default");
-
         document.getElementById("display-run-button").classList.add("btn-default");
         document.getElementById("display-run-button").classList.remove("btn-sucess");
 
@@ -1271,6 +1340,10 @@ App.prototype.calibrationImageCaptureStep =
         .fail(parentthis.setError.bind(this))
     }
 
+/*
+* Changes the current page viewed on the webpage between configuration and image capture
+* @param page: the page to change to the active page
+*/
 App.prototype.changePage =
     function(page) {
         if(page=="Configuration") {
@@ -1282,6 +1355,11 @@ App.prototype.changePage =
         }
     };
 
+/*
+* Collapses the given section from view 
+* @param section : the container section to collapse
+*
+*/    
 App.prototype.toggleCollapsed =
     function(section) {
         document.getElementById(section + "-container").classList.toggle("collapsed");
@@ -1289,7 +1367,9 @@ App.prototype.toggleCollapsed =
         document.getElementById(section + "-button-symbol").classList.toggle("glyphicon-triangle-bottom");
     };
 
-
+/*
+* Parses any given error from the json data and calls showError with the content
+*/
 App.prototype.setError =
     function(data) {
         if(data.hasOwnProperty("json")) {
@@ -1301,6 +1381,10 @@ App.prototype.setError =
         }
     }
 
+/*
+* Shows the error message (msg) in the top error bar
+* @param msg: the error message content to display
+*/
 App.prototype.showError =
     function(msg) {
         if(this.error_timeout !== null) clearTimeout(this.error_timeout);
@@ -1314,33 +1398,33 @@ App.prototype.clearError =
     };
 
 
-    App.prototype.updateFrequency =
-        function()
-        {
-            document.getElementById("frequency-value").placeholder = (Math.round(100 / this.update_delay) / 100).toString();
-            this.freq_overlay.classList.remove("hidden");
-        };
+App.prototype.updateFrequency =
+    function()
+    {
+        document.getElementById("frequency-value").placeholder = (Math.round(100 / this.update_delay) / 100).toString();
+        this.freq_overlay.classList.remove("hidden");
+    };
 
-    App.prototype.frequencyCancel =
-        function()
-        {
-            this.freq_overlay.classList.add("hidden");
-        };
+App.prototype.frequencyCancel =
+    function()
+    {
+        this.freq_overlay.classList.add("hidden");
+    };
 
-    App.prototype.frequencySet =
-        function()
-        {
-            var val = document.getElementById("frequency-value").value;
-            var new_delay = 1 / parseFloat(val);
+App.prototype.frequencySet =
+    function()
+    {
+        var val = document.getElementById("frequency-value").value;
+        var new_delay = 1 / parseFloat(val);
 
-            if(isNaN(new_delay) || !isFinite(new_delay))
-                this.showError("Update frequency must be a valid number");
-            else
-                this.update_delay = new_delay;
+        if(isNaN(new_delay) || !isFinite(new_delay))
+            this.showError("Update frequency must be a valid number");
+        else
+            this.update_delay = new_delay;
 
-            document.getElementById("frequency-value").value = "";
-            this.freq_overlay.classList.add("hidden");
-        };
+        document.getElementById("frequency-value").value = "";
+        this.freq_overlay.classList.add("hidden");
+    };
 
 App.prototype.toggleDark =
     function() {

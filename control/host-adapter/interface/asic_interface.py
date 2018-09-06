@@ -12,11 +12,12 @@ from QemCam import *
 
 class ASIC_Interface():
     """ This class handles communication with the QEM ASIC through use of the QemCam module"""
-    def __init__(self, backplane):
+    def __init__(self, backplane, working_dir, data_dir):
         self.imageStore = []
+        self.working_dir = working_dir
+        self.data_dir = data_dir
         self.backplane = backplane
-        self.adc_delay = 0
-        self.adc_frames = 1
+        self.adc_config = u""
         """ Set up the ASIC as per QemCamTest """
         #Set up QEM sensor/camera
         self.qemcamera = QemCam()
@@ -194,8 +195,8 @@ class ASIC_Interface():
         """ extracts the 19 dac register values from the vector file
         saves the settings to a temporary pkl file for manipulation later.
         """
-        
-        abs_path = "/aeg_sw/work/projects/qem/python/03052018/" + self.vector_file
+        #abs_path = "/aeg_sw/work/projects/qem/python/03052018/" + self.vector_file
+        abs_path = self.working_dir + self.vector_file
         
         ### Adam Davis Code ###
         #extract lines into array
@@ -243,7 +244,6 @@ class ASIC_Interface():
 
         #print the output to the screen
         for i in range(19):
-            #print "%-20s%-10i %-5s%s%s%s%s%s%-4s %s%s%s%s%s%s" % (self.bias_names[18-i] ,i+1, clk_ref[i], data_a[i*6 + 0] ,data_a[i*6 + 1],data_a[i*6 + 2] ,data_a[i*6 + 3] ,data_a[i*6 + 4] ,data_a[i*6 + 5] ,data_a[i*6 + 114] ,data_a[i*6 +115],data_a[i*6 + 116] ,data_a[i*6 + 117] ,data_a[i*6 + 118] ,data_a[i*6 + 119])
             binary_string = data_a[i*6 + 0] + data_a[i*6 + 1] + data_a[i*6 + 2] + data_a[i*6 + 3] + data_a[i*6 + 4] + data_a[i*6 + 5] 
             self.bias_dict[self.bias_names[18-i]] = [i+1, binary_string]
         
@@ -319,7 +319,7 @@ class ASIC_Interface():
             t.close()
             
             #extract lines into array
-            with open('/aeg_sw/work/projects/qem/python/03052018/QEM_D4_198_ADC_10_icbias28_ifbias14.txt', 'r') as f:
+            with open( self.working_dir + 'QEM_D4_198_ADC_10_icbias28_ifbias14.txt', 'r') as f:
                 data = f.readlines()
             f.close()
 
@@ -333,7 +333,7 @@ class ASIC_Interface():
             pkl_file.close()
 
             #open a newfle with the orifional name appended with _mod.txt
-            f=open("/aeg_sw/work/projects/qem/python/03052018/" + self.vector_file, 'w')
+            f=open(self.working_dir + self.vector_file, 'w')
 
             #write the first three lines, don't change!!
             f.write(data[0]) #
@@ -369,7 +369,7 @@ class ASIC_Interface():
 
         @param uplaod: boolean value when true- the file is uploaded
         """
-        abs_path = "/aeg_sw/work/projects/qem/python/03052018/" + self.vector_file
+        abs_path = self.working_dir + self.vector_file
         if upload:
             if self.vector_file is not "undefined":
                 
@@ -420,14 +420,14 @@ class ASIC_Interface():
                 fine_data.append((j[33]&63)) # extract the fine bits
         return fine_data
 
-    def generatevoltages(self, length):
+    def generateFineVoltages(self, length):
         """ generates the voltages for a given length
         @param length: the length to use to generate voltages.
         @returns : an array of voltages
         """
         voltages=[]
         for i in range(length):
-            voltages.append(float(1 + (i * 0.00008)))
+            voltages.append(float(1.544 + (i * 0.00008)))
         return voltages
 
     def getcoarsebitscolumn(self, input):
@@ -438,7 +438,7 @@ class ASIC_Interface():
         new_list = []
         for i in input:
             for j in i:
-                new_list.append((j[33]&1984)>>1) # extract the coarse bits
+                new_list.append((j[33]&1984)>>6) # extract the coarse bits
         return new_list
 
     def Listh5Files(self, adc_type):
@@ -448,7 +448,7 @@ class ASIC_Interface():
         @returns : the list of filenames found
         """
         filenames=[]
-        for file in glob.glob("/scratch/qem/" + adc_type + "/*.h5"):
+        for file in glob.glob(self.data_dir + adc_type + "/*.h5"):
             filenames.append(file)
         filenames.sort()
         return filenames
@@ -463,41 +463,31 @@ class ASIC_Interface():
             voltages.append(float(0.3428 + (i * 0.00153)))
         return voltages
 
-    def set_adc_frames(self, frames):
-        """ sets the number of frames to use during adc calibration
-        @param frames : the number of frames to take during adc calibration
+    def set_adc_config(self, config):
+        """ sets the adc config (frames/delay) to use during adc calibration
+        @param config : the string value of number or frames and delay for adc calibration
         """
-        self.adc_frames = frames
+        self.adc_config = config
 
-    def set_adc_delay(self, delay):
-        """ sets the delay in ms to use during adc calibration
-        @param delay: number of ms to wait before taking frames during adc cal
+    def get_adc_config(self):
+        """ gets the adc config (frames/delay) to use during adc calibration
+        @returns : the string value of number or frames and delay for adc calibration
         """
-        self.adc_delay = delay
-
-    def get_adc_delay(self):
-        """ gets the delay value to be used during adc calibration
-        @returns : the delay value.
-        """
-        return self.adc_delay
-
-    def get_adc_frames(self):
-        """ gets the number of frames to use during adc calibrations
-        @returns adc_frames: the number of frames to take.
-        """
-        return self.adc_frames
+        return self.adc_config
 
     def adc_calibrate_coarse(self, calibrate):
         """ perform adc calibration of the coarse values
         @param calibrate: boolean value to trigger calibration
         gets the adc delay value and adc frame value before setting up
         the qemcam. Performs adc calibration sweep from 0-1023 taking images
-        and storing them in /scratch/qem/coarse
+        and storing them in data_diretory + /coarse
         calls plotcoarse and sets calibration coarse complete to true when finished.
         """
-
-        delay = self.get_adc_delay()
-        frames = self.get_adc_frames()
+        config = self.get_adc_config()
+        frames, delay = config.split(":")
+        frames = int(frames)
+        delay = int(delay)
+        
         if calibrate == "true":
             self.set_coarse_cal_complete(False)
             self.setup_camera()
@@ -521,7 +511,7 @@ class ASIC_Interface():
                 #delay 0 seconds (default) or by number passed to the function
                 time.sleep(delay)
                 #Save the captured data to here using RAH function
-                self.qemcamera.log_image_stream('/scratch/qem/coarse/adc_cal_AUXSAMPLE_COARSE_%04d' %i, frames)
+                self.qemcamera.log_image_stream(self.data_dir + 'coarse/adc_cal_AUXSAMPLE_COARSE_%04d' %i, frames)
                 #increment i
                 i=i+1
         
@@ -538,8 +528,12 @@ class ASIC_Interface():
         and storing them in /scratch/qem/fine
         calls pltofine and sets calibration fine complete to true when finished.
         """
-        delay = self.get_adc_delay()
-        frames = self.get_adc_frames()
+
+        config = self.get_adc_config()
+        frames, delay = config.split(":")
+        frames = int(frames)
+        delay = int(delay)
+        
         if calibrate == "true":
 
             print(delay)
@@ -558,7 +552,7 @@ class ASIC_Interface():
             #define i and the staring point
             i=0
             #set the default starting point for the COARSE value
-            self.backplane.set_resistor_register(7, 435)
+            self.backplane.set_resistor_register(7, 728) #435
 
             #main loop to capture the data
             while i < n:
@@ -567,7 +561,7 @@ class ASIC_Interface():
                 #delay by 0 (default) or by the number passed to the function
                 time.sleep(delay)
                 #capture the data from the stream using rah function
-                self.qemcamera.log_image_stream('/scratch/qem/fine/adc_cal_AUXSAMPLE_FINE_%04d' %i, frames)
+                self.qemcamera.log_image_stream(self.data_dir + 'fine/adc_cal_AUXSAMPLE_FINE_%04d' %i, frames)
                 i=i+1
             # end of main loop 
 
@@ -589,7 +583,7 @@ class ASIC_Interface():
         filelist = self.Listh5Files("fine")
         # voltages for the plot
         f_voltages = []
-        f_voltages = self.generatevoltages(len(filelist))
+        f_voltages = self.generateFineVoltages(len(filelist))
         # averaged data for the plot 
         f_averages = []
 
@@ -617,7 +611,8 @@ class ASIC_Interface():
         ax.grid(True)
         ax.set_xlabel('Voltage')
         ax.set_ylabel('fine value')
-        fig.savefig("/aeg_sw/work/projects/qem/python/03052018/fine.png", dpi = 100)
+        #fig.savefig(self.data_dir + "fine/fine.png", dpi = 100)
+        fig.savefig("static/img/fine_graph.png", dpi=100)
         fig.clf()
 
     def plot_coarse(self):
@@ -657,19 +652,23 @@ class ASIC_Interface():
         ax.grid(True)
         ax.set_xlabel('Voltage')
         ax.set_ylabel('coarse value')
-        fig.savefig("/aeg_sw/work/projects/qem/python/03052018/coarse.png", dpi = 100)
+        #fig.savefig(self.data_dir + "coarse/coarse.png", dpi = 100)
+        fig.savefig("static/img/coarse_graph.png", dpi=100)
         fig.clf()
- 
+
+    """
     def get_coarse_graph(self):
-        """ gets the coarse plot png from /aeg_sw/...etc saves to static 
-        for the webpage to be able to view the graph
-        """
-        coarse_img = plt.imread("/aeg_sw/work/projects/qem/python/03052018/coarse.png")
+        #gets the coarse plot png from working dir and saves to static 
+        #for the webpage to be able to view the graph
+        
+        coarse_img = plt.imread(self.data_dir + "coarse/coarse.png")
         plt.imsave('static/img/coarse_graph.png', coarse_img)
 
     def get_fine_graph(self):
-        """ gets the fine plot png from /aeg_sw/...etc saves to static 
-        for the webpage to be able to view the graph
-        """
-        img = plt.imread("/aeg_sw/work/projects/qem/python/03052018/fine.png")
+        #gets the fine plot png from working dir and saves to static 
+        #the webpage to be able to view the graph
+        #
+        img = plt.imread(self.data_dir + "fine/fine.png")
         plt.imsave('static/img/fine_graph.png', img)
+    """
+        
