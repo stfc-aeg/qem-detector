@@ -576,8 +576,7 @@ App.prototype.generate =
 
                 </div>
             </div>
-
-
+           
 
             <div class ="child-column">
                 <div class="child">
@@ -587,35 +586,37 @@ App.prototype.generate =
                                 <span id="capture-button-symbol" class="collapse-cell    glyphicon glyphicon-triangle-bottom"></span>
                             </div>
                         </div>
-                        <h4>Image Capture Run</h4>
+                        <h4>Image Capture</h4>
                     </div>
                     <div class = "flex-container" id="capture-container">
                         <div class="flex-item">
-                            <div class = 'table-container-left'>
+                            <div id='image-table-left' class = 'table-container-left'>
 
                                 <div class='flex-item'>
                                     <div class='input-group input-single'>
-                                        <input class="form-control text-right" id="capture-logging-input" placeholder="/scratch/qem/" type="text">
-                                        <span id='log-file-span' class="input-group-addon addon-single"> Log Filename  </span>
+                                        <input class="form-control text-right" id="capture-logging-input" placeholder="/scratch/qem/filename" type="text">
+                                        <span id='log-file-span' class="input-group-addon addon-single">Filename</span>
                                     </div>
                                 </div>
 
                                 <div class ='flex-item'>
                                     <div class='input-group input-single'>
                                         <input class="form-control text-right" id="capture-fnumber-input" placeholder="1000" type="text">
-                                        <span id='frame-num-span' class="input-group-addon addon-single">Frame Number</span>
+                                        <span id='frame-num-span' class="input-group-addon addon-single">Number of Frames</span>
                                     </div>
                                 </div>
 
                                 <div class='flex-item'>
-                                    <button id="display-run-button" class="btn btn-default" type="button">Display Image Run</button>
-                                    <button id="log-run-button" class="btn btn-default" type="button">Log Image Run</button>
+                                    <button id="display-run-button" class="btn btn-default" type="button">Display Images</button>
+                                    <button id="log-run-button" class="btn btn-default" type="button">Save Images</button>
                                 </div>
                                 
                             </div>
                         </div>
                     </div>
                 </div>
+                `
+                /*
 
                 <div class="child">
                     <div class="child-header">
@@ -662,8 +663,9 @@ App.prototype.generate =
                             </div>
                         </div>
                     </div>
-
-
+                     
+            */ +  `
+            
                 </div>
             </div>
             </div>
@@ -672,11 +674,11 @@ App.prototype.generate =
         this.mount.appendChild(container);
 
        document.getElementById("capture-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "capture"));
-       document.getElementById("calibration-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "calibration"));
+       //document.getElementById("calibration-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "calibration"));
 
        document.getElementById("display-single-button").addEventListener("click", this.imageGenerate.bind(this));
        document.getElementById("log-run-button").addEventListener("click", this.logImageCapture.bind(this));
-       document.getElementById("calibration-run-button").addEventListener("click", this.calibrationImageCapture.bind(this));
+       //document.getElementById("calibration-run-button").addEventListener("click", this.calibrationImageCapture.bind(this));
 
        //Update navbar
        var list_elem = document.createElement("li");
@@ -795,7 +797,12 @@ App.prototype.sleep =
 */
 App.prototype.generateCoarseGraph = 
     function(){
-        apiGET(this.current_adapter, "coarse_graph")
+        /*
+        var img_tag = ""
+        apiGET(this.current_adapter, "coarse_graph").done(
+            img_tag = "<img id='coarse_graph' class='graph' src='img/coarse_graph.png?" + new Date().getTime() + "'>"
+        )
+        */
         return "<img id='coarse_graph' class='graph' src='img/coarse_graph.png?" + new Date().getTime() + "'>"
         
     }
@@ -805,7 +812,12 @@ App.prototype.generateCoarseGraph =
 */
 App.prototype.generateFineGraph =
     function(){
-        apiGET(this.current_adapter,"fine_graph")
+        /*
+        var graph_tag = ""
+        apiGET(this.current_adapter,"fine_graph").done(
+            graph_tag = "<img id='fine_graph' class='graph' src='img/fine_graph.png?" + new Date().getTime() + "'>"
+        )
+        */
         return "<img id='fine_graph' class='graph' src='img/fine_graph.png?" + new Date().getTime() + "'>"
 
     }
@@ -830,27 +842,26 @@ App.prototype.calibrateCoarse =
         if(delay == ""){
             delay = document.getElementById('delay-value').placeholder
         }
+        var config = String(frames) + ":" + String(delay)
 
-        apiPUT(this.current_adapter, 'adc_delay', Number(delay))
-        .done(
-            apiPUT(this.current_adapter, 'adc_frames', Number(frames))
-        )
+        apiPUT(this.current_adapter, 'adc_config', config)
         .done(
             apiPUT(this.current_adapter, 'adc_calibrate_coarse', "true")
-        ).done(
-            (function(){
-                this.sleep(1000)
-                document.getElementById("coarse-calibrate-button").classList.remove("btn-success")
-                document.getElementById("coarse-calibrate-button").classList.add("btn-default")
-
-                var status = apiGET(this.current_adapter, "coarse_complete")
-                while ( status == false){
-                    status = apiGET(this.current_adapter, "coarse_complete")
-                }
-                this.sleep(1000)
-                document.getElementById('coarse_div').innerHTML = this.generateCoarseGraph()
-                document.getElementById('coarse_graph').src = "img/coarse_graph.png?" + new Date().getTime()
-            }).bind(this)
+            .done(
+                (function(){
+                    //this.sleep(1000)
+                    document.getElementById("coarse-calibrate-button").classList.remove("btn-success")
+                    document.getElementById("coarse-calibrate-button").classList.add("btn-default")
+    
+                    var status = apiGET(this.current_adapter, "coarse_complete")
+                    while (status == false){
+                        status = apiGET(this.current_adapter, "coarse_complete")
+                    }
+                    //this.sleep(1000)
+                    document.getElementById('coarse_div').innerHTML = this.generateCoarseGraph()
+                    //document.getElementById('coarse_graph').src = "img/coarse_graph.png?" + new Date().getTime()
+                }).bind(this)
+            )
         )
     }
 /*
@@ -874,28 +885,27 @@ App.prototype.calibrateFine =
         if(delay == ""){
             delay = document.getElementById('delay-value').placeholder
         }
-        apiPUT(this.current_adapter, 'adc_delay', Number(delay))
-        .done(
-            apiPUT(this.current_adapter, 'adc_frames', Number(frames))
-        )
+        var config = String(frames) + ":" + String(delay)
+
+        apiPUT(this.current_adapter, 'adc_config', config)
         .done(
             apiPUT(this.current_adapter, 'adc_calibrate_fine', "true")
-        ).done(
+            .done(
             
-            (function(){
-                this.sleep(1000)
-
-                document.getElementById("fine-calibrate-button").classList.remove("btn-success")
-                document.getElementById("fine-calibrate-button").classList.add("btn-default")
-
-                var status = apiGET(this.current_adapter, "fine_complete")
-                while ( status == false){
-                    status = apiGET(this.current_adapter, "fine_complete")
-                }
-                this.sleep(1000)
-                document.getElementById('fine_div').innerHTML = this.generateFineGraph()
-                document.getElementById('fine_graph').src = "img/fine_graph.png?" + new Date().getTime()
-            }).bind(this)
+                (function(){
+                    //this.sleep(1000)
+                    document.getElementById("fine-calibrate-button").classList.remove("btn-success")
+                    document.getElementById("fine-calibrate-button").classList.add("btn-default")
+    
+                    var status = apiGET(this.current_adapter, "fine_complete")
+                    while ( status == false){
+                        status = apiGET(this.current_adapter, "fine_complete")
+                    }
+                    //this.sleep(1000)
+                    document.getElementById('fine_div').innerHTML = this.generateFineGraph()
+                    //document.getElementById('fine_graph').src = "img/fine_graph.png?" + new Date().getTime()
+                }).bind(this)
+            )   
         )
     }
 
@@ -1185,18 +1195,21 @@ App.prototype.setVectorFile =
         apiPUT(this.current_adapter, "update_bias", "true")
         .done(
             apiPUT(this.current_adapter, "vector_file", value)
-            .done(
-                
-                apiGET(this.current_adapter, "", false)
-                .done(
-                    function(data){
+            .done( 
+                (function(){
+                    this.sleep(1500)
+
+                    //this.sleep(1000)
+                    apiGET(this.current_adapter, "", false)
+                    .done(
+                        function(data){
                         for(i=0; i< data["dacs"].length; i++){
                             //console.log(i.toString())
                             document.getElementById('DAC-' + i.toString() + '-input').value = data["dacs"][i]["value"];
                         }
-
                     }
                 )
+                }).bind(this)
             )
             .fail(this.setError.bind(this))
         ).fail(this.setError.bind(this))

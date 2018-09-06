@@ -17,8 +17,7 @@ class ASIC_Interface():
         self.working_dir = working_dir
         self.data_dir = data_dir
         self.backplane = backplane
-        self.adc_delay = 0
-        self.adc_frames = 1
+        self.adc_config = u""
         """ Set up the ASIC as per QemCamTest """
         #Set up QEM sensor/camera
         self.qemcamera = QemCam()
@@ -421,14 +420,14 @@ class ASIC_Interface():
                 fine_data.append((j[33]&63)) # extract the fine bits
         return fine_data
 
-    def generatevoltages(self, length):
+    def generateFineVoltages(self, length):
         """ generates the voltages for a given length
         @param length: the length to use to generate voltages.
         @returns : an array of voltages
         """
         voltages=[]
         for i in range(length):
-            voltages.append(float(1 + (i * 0.00008)))
+            voltages.append(float(1.544 + (i * 0.00008)))
         return voltages
 
     def getcoarsebitscolumn(self, input):
@@ -464,29 +463,17 @@ class ASIC_Interface():
             voltages.append(float(0.3428 + (i * 0.00153)))
         return voltages
 
-    def set_adc_frames(self, frames):
-        """ sets the number of frames to use during adc calibration
-        @param frames : the number of frames to take during adc calibration
+    def set_adc_config(self, config):
+        """ sets the adc config (frames/delay) to use during adc calibration
+        @param config : the string value of number or frames and delay for adc calibration
         """
-        self.adc_frames = frames
+        self.adc_config = config
 
-    def set_adc_delay(self, delay):
-        """ sets the delay in ms to use during adc calibration
-        @param delay: number of ms to wait before taking frames during adc cal
+    def get_adc_config(self):
+        """ gets the adc config (frames/delay) to use during adc calibration
+        @returns : the string value of number or frames and delay for adc calibration
         """
-        self.adc_delay = delay
-
-    def get_adc_delay(self):
-        """ gets the delay value to be used during adc calibration
-        @returns : the delay value.
-        """
-        return self.adc_delay
-
-    def get_adc_frames(self):
-        """ gets the number of frames to use during adc calibrations
-        @returns adc_frames: the number of frames to take.
-        """
-        return self.adc_frames
+        return self.adc_config
 
     def adc_calibrate_coarse(self, calibrate):
         """ perform adc calibration of the coarse values
@@ -496,9 +483,11 @@ class ASIC_Interface():
         and storing them in data_diretory + /coarse
         calls plotcoarse and sets calibration coarse complete to true when finished.
         """
-
-        delay = self.get_adc_delay()
-        frames = self.get_adc_frames()
+        config = self.get_adc_config()
+        frames, delay = config.split(":")
+        frames = int(frames)
+        delay = int(delay)
+        
         if calibrate == "true":
             self.set_coarse_cal_complete(False)
             self.setup_camera()
@@ -539,8 +528,12 @@ class ASIC_Interface():
         and storing them in /scratch/qem/fine
         calls pltofine and sets calibration fine complete to true when finished.
         """
-        delay = self.get_adc_delay()
-        frames = self.get_adc_frames()
+
+        config = self.get_adc_config()
+        frames, delay = config.split(":")
+        frames = int(frames)
+        delay = int(delay)
+        
         if calibrate == "true":
 
             print(delay)
@@ -559,7 +552,7 @@ class ASIC_Interface():
             #define i and the staring point
             i=0
             #set the default starting point for the COARSE value
-            self.backplane.set_resistor_register(7, 435) #435
+            self.backplane.set_resistor_register(7, 728) #435
 
             #main loop to capture the data
             while i < n:
@@ -590,7 +583,7 @@ class ASIC_Interface():
         filelist = self.Listh5Files("fine")
         # voltages for the plot
         f_voltages = []
-        f_voltages = self.generatevoltages(len(filelist))
+        f_voltages = self.generateFineVoltages(len(filelist))
         # averaged data for the plot 
         f_averages = []
 
@@ -618,7 +611,8 @@ class ASIC_Interface():
         ax.grid(True)
         ax.set_xlabel('Voltage')
         ax.set_ylabel('fine value')
-        fig.savefig(self.working_dir + "fine.png", dpi = 100)
+        #fig.savefig(self.data_dir + "fine/fine.png", dpi = 100)
+        fig.savefig("static/img/fine_graph.png", dpi=100)
         fig.clf()
 
     def plot_coarse(self):
@@ -658,19 +652,23 @@ class ASIC_Interface():
         ax.grid(True)
         ax.set_xlabel('Voltage')
         ax.set_ylabel('coarse value')
-        fig.savefig(self.working_dir + "coarse.png", dpi = 100)
+        #fig.savefig(self.data_dir + "coarse/coarse.png", dpi = 100)
+        fig.savefig("static/img/coarse_graph.png", dpi=100)
         fig.clf()
- 
+
+    """
     def get_coarse_graph(self):
-        """ gets the coarse plot png from working dir and saves to static 
-        for the webpage to be able to view the graph
-        """
-        coarse_img = plt.imread(self.working_dir + "coarse.png")
+        #gets the coarse plot png from working dir and saves to static 
+        #for the webpage to be able to view the graph
+        
+        coarse_img = plt.imread(self.data_dir + "coarse/coarse.png")
         plt.imsave('static/img/coarse_graph.png', coarse_img)
 
     def get_fine_graph(self):
-        """ gets the fine plot png from working dir and saves to static 
-        for the webpage to be able to view the graph
-        """
-        img = plt.imread(self.working_dir + "fine.png")
+        #gets the fine plot png from working dir and saves to static 
+        #the webpage to be able to view the graph
+        #
+        img = plt.imread(self.data_dir + "fine/fine.png")
         plt.imsave('static/img/fine_graph.png', img)
+    """
+        

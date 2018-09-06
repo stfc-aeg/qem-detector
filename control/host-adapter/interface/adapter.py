@@ -51,8 +51,6 @@ class InterfaceAdapter(ApiAdapter):
         :param request: HTTP request object
         :return: an ApiAdapterResponse object containing the appropriate response from the backplane
         """
-        #print("Printed Request")
-        #print(request)
         try:
             #Check for metadata argument
             metadata = False

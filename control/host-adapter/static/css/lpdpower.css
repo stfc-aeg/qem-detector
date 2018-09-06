@@ -297,10 +297,14 @@ td {
 .input-group-addon, .input-group-btn {
     width: 10%;
 }
-
+ 
 #image_display {
 
     width: 100%;
+}
+
+#image-table-left{
+    margin-top: 20px;
 }
 
 .input-single {
