@@ -12,7 +12,7 @@ from QemCam import *
 
 class ASIC_Interface():
     """ This class handles communication with the QEM ASIC through use of the QemCam module"""
-    def __init__(self, backplane, working_dir, data_dir):
+    def __init__(self, backplane, working_dir, data_dir, server_ctrl_ip, server_data_ip, camera_ctrl_ip, camera_data_ip):
         self.imageStore = []
         self.working_dir = working_dir
         self.data_dir = data_dir
@@ -20,7 +20,7 @@ class ASIC_Interface():
         self.adc_config = u""
         """ Set up the ASIC as per QemCamTest """
         #Set up QEM sensor/camera
-        self.qemcamera = QemCam()
+        self.qemcamera = QemCam(server_ctrl_ip, server_data_ip, camera_ctrl_ip, camera_data_ip)
         self.image = "image1"
         self.qemcamera.connect()
         #increase ifg from minimum
