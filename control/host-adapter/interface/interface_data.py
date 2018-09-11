@@ -135,6 +135,7 @@ class InterfaceData(object):
             # Attach subtrees for each supply and resistor
             "current_voltage" : [cv.param_tree for cv in self.current_voltage],
             "resistors" : [r.param_tree for r in self.resistors],
+            "fpga_reset" : (u'False', self.backplane_interface.set_reset_fpga),
 
             #ASIC subtree
             "image" : (self.asic_interface.get_image, self.asic_interface.set_image_capture),
@@ -144,16 +145,14 @@ class InterfaceData(object):
             "update_bias" :(u'true', self.asic_interface.set_update_bias),
             "upload_vector_file" : (u'False', self.asic_interface.upload_vector_file),
             "adc_config" : (self.asic_interface.get_adc_config, self.asic_interface.set_adc_config),
-            #"adc_delay" : (self.asic_interface.get_adc_delay, self.asic_interface.set_adc_delay),
             "adc_calibrate_fine" : (u'False', self.asic_interface.adc_calibrate_fine),
             "adc_calibrate_coarse" : (u'False', self.asic_interface.adc_calibrate_coarse),
+            "coarse_complete":(self.asic_interface.get_coarse_cal_complete, self.asic_interface.set_coarse_cal_complete),
+            "fine_complete":(self.asic_interface.get_fine_cal_complete, self.asic_interface.set_fine_cal_complete),
             #operating subtree to parse configuration files
             "image_vector_files" : (self.operating_interface.get_image_vector_files),
             "adc_vector_files" : (self.operating_interface.get_adc_vector_files),
-            #"coarse_graph" : (self.asic_interface.get_coarse_graph),
-            #"fine_graph" : (self.asic_interface.get_fine_graph),
-            "coarse_complete":(self.asic_interface.get_coarse_cal_complete, self.asic_interface.set_coarse_cal_complete),
-            "fine_complete":(self.asic_interface.get_fine_cal_complete, self.asic_interface.set_fine_cal_complete),
+
 
         })
 

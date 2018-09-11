@@ -12,6 +12,7 @@ from mcp23008 import MCP23008
 from tpl0102 import TPL0102
 from si570 import SI570
 from ad7998 import AD7998
+from gpio_reset import GPIOReset
 
 try :
     from logger.qem_logger import qemLogger
@@ -134,6 +135,8 @@ class Backplane(I2CContainer):
         self.voltChannelLookup = ((0,2,3,4,5,6,7),(0,2,4,5,6,7))
         self.updates_needed = 1
         self.set_sensors_enable(False)
+
+        self.gpio_reset = GPIOReset()
 
     def connect_handler(self, signum, frame):
         raise Exception("Timeout on I2C connection, Shutting Down")
@@ -400,3 +403,6 @@ class Backplane(I2CContainer):
         return ["VDDO", "VDD_D18", "VDD_D25", "VDD_P18",  "VDD_A18_PLL",  "VDD_D18ADC",
                "VDD_D18_PLL", "VDD_RST", "VDD_A33", "VDD_D33", "VCTRL_NEG", "VRESET",
                "VCTRL_POS", "AUXSAMPLE_SUM", "AUXSAMPLE_MEASURED"][i]
+
+    def set_reset_fpga(self):
+        self.gpio_reset.reset("0x20")

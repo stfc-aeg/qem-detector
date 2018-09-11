@@ -747,10 +747,10 @@ App.prototype.generate =
             <h5>Warning:</h5>
             <div>
                 <div>
-                    <span id = "fpga-warning">You must re-program the FPGA before loading the new vector file</span>
+                    <span id = "fpga-warning">This will reprogram the FPGA, click Upload to continue</span>
                 </div>
                 <div class="overlay-control-buttons" id="fpga-warn-buttons">
-                    <button class="btn btn-success" id="upload-vector-final" type="button">I've re-programmed the FPGA, upload</button>
+                    <button class="btn btn-success" id="upload-vector-final" type="button">Upload</button>
                     <button class="btn btn-danger" id="upload-cancel" type="button">Cancel</button>
                 </div>
             </div>
@@ -1098,12 +1098,16 @@ App.prototype.createVectorFile =
 App.prototype.uploadVector = 
     function(){
 
-        apiPUT(this.current_adapter, "upload_vector_file", "true")
-        .done(
-            (function(){
-                this.fpga_warn.classList.add("hidden");
-            }).bind(this)
+        apiPUT(this.current_adapter, "fpga_reset", "true").done(
+
+            apiPUT(this.current_adapter, "upload_vector_file", "true")
+            .done(
+                (function(){
+                    this.fpga_warn.classList.add("hidden");
+                }).bind(this)
+            )
         )
+
     }
 
 /*
