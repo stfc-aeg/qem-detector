@@ -1099,13 +1099,30 @@ App.prototype.uploadVector =
     function(){
 
         apiPUT(this.current_adapter, "fpga_reset", "true").done(
-
+            
+            (function(){
+            
+            console.log("returned done from fpga reset")
+            this.sleep(2000)
+    
             apiPUT(this.current_adapter, "upload_vector_file", "true")
             .done(
                 (function(){
                     this.fpga_warn.classList.add("hidden");
                 }).bind(this)
             )
+    
+    
+            
+    }).bind(this)
+        /*
+            apiPUT(this.current_adapter, "upload_vector_file", "true")
+            .done(
+                (function(){
+                    this.fpga_warn.classList.add("hidden");
+                }).bind(this)
+            )
+            */
         )
 
     }

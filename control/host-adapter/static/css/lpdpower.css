@@ -528,6 +528,15 @@ body {
 
 #upload-vector-file-button{
     white-space: pre;
+    
+}
+#upload-vector-final{
+    margin-right: 35%;
+}
+
+#upload-cancel{
+
+    margin-left : 25%;
 }
 .input-group-addon{
     white-space: pre;
