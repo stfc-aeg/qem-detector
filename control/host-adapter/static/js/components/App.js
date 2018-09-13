@@ -465,236 +465,224 @@ App.prototype.generate =
 </div>
 `;
 
-       this.mount.appendChild(container);
-        
-       //document.getElementById("ASIC-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "ASIC"));
-       document.getElementById("BIAS-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "BIAS"));
-       document.getElementById("camera-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "camera"));
-       document.getElementById("operating-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "operating"));
+    this.mount.appendChild(container);
+    document.getElementById("BIAS-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "BIAS"));
+    document.getElementById("camera-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "camera"));
+    document.getElementById("operating-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "operating"));
+    document.getElementById('clock-button').addEventListener("click", this.setClock.bind(this));
+    document.getElementById('bp-refresh-button').addEventListener("click", this.update_bp.bind(this));
+    document.getElementById('bp-update-button').addEventListener("click", this.updateLoop_bp.bind(this));
+    document.getElementById('bp-reload-button').addEventListener("click", this.reload_bp.bind(this));
 
-       document.getElementById('clock-button').addEventListener("click", this.setClock.bind(this));
-       document.getElementById('bp-refresh-button').addEventListener("click", this.update_bp.bind(this));
-       document.getElementById('bp-update-button').addEventListener("click", this.updateLoop_bp.bind(this));
-       document.getElementById('bp-reload-button').addEventListener("click", this.reload_bp.bind(this));
+    for (i=0; i<data["resistors"].length; i++) {
+        document.getElementById("resistor-" + i.toString() + "-button").addEventListener("click", this.setResistor.bind(this, i.toString()));
+    };
 
-       for (i=0; i<data["resistors"].length; i++) {
-           document.getElementById("resistor-" + i.toString() + "-button").addEventListener("click", this.setResistor.bind(this, i.toString()));
-       };
+    document.getElementById('save-default-button').addEventListener("click", this.setVolatile.bind(this));
+    document.getElementById('save-as-vector-file-button').addEventListener("click", this.saveAsVector.bind(this));
+    document.getElementById('upload-vector-file-button').addEventListener("click", this.uploadVectorPress.bind(this));
+    document.getElementById('fine-calibrate-button').addEventListener("click", this.calibrateFine.bind(this));
+    document.getElementById('coarse-calibrate-button').addEventListener("click", this.calibrateCoarse.bind(this));
 
-       document.getElementById('save-default-button').addEventListener("click", this.setVolatile.bind(this));
-
-       document.getElementById('save-as-vector-file-button').addEventListener("click", this.saveAsVector.bind(this));
-       document.getElementById('upload-vector-file-button').addEventListener("click", this.uploadVectorPress.bind(this));
-       document.getElementById('fine-calibrate-button').addEventListener("click", this.calibrateFine.bind(this));
-       document.getElementById('coarse-calibrate-button').addEventListener("click", this.calibrateCoarse.bind(this));
-       //document.getElementById('save-images-button').addEventListener("click", this.saveImages)
-
-
-       var mode_toggle = document.getElementById('toggle-container');
-       var image_vector_files = document.getElementsByClassName("image_vectors")
-       var adc_vector_files = document.getElementsByClassName("adc_vectors")
-       var mode_toggleContainer = document.getElementById('inner-toggle-container');
-       var mode_toggleNumber;
-       
-       mode_toggle.addEventListener('click', function() {
-        mode_toggleNumber = !mode_toggleNumber;
-           if (mode_toggleNumber) {
-                this.in_calibration_mode = false;
-                for(var i=0; i<image_vector_files.length;i++){
-                    image_vector_files[i].style.display = 'block';
-                }
-                for(var i=0; i<adc_vector_files.length;i++){
-                    adc_vector_files[i].style.display = 'none';
-                }
-                console.log("in image capture mode")
-                mode_toggleContainer.style.clipPath = 'inset(0 0 0 50%)';
-                mode_toggleContainer.style.backgroundColor = '#337ab7';
-                //document.getElementById('adc-calibration-container').classList.add("hidden")
-                //document.getElementById('save-image-container').classList.remove("hidden")
-
-           } else {
-                this.in_calibration_mode = true;   
-                
-                for(var i=0; i<image_vector_files.length;i++){
-                    image_vector_files[i].style.display = 'none';
-                }
-                for(var i=0; i<adc_vector_files.length;i++){
-                    adc_vector_files[i].style.display = 'block';
-                }
-                console.log("in calibration mode")
-                mode_toggleContainer.style.clipPath = 'inset(0 50% 0 0)';
-                mode_toggleContainer.style.backgroundColor = '#337ab7';
-                //document.getElementById('adc-calibration-container').classList.remove("hidden")
-                //document.getElementById('save-image-container').classList.add("hidden")
-
-           }
-       });
-
-       var vector_list = document.getElementById("file_list");
-
-       for(var i=0; i< vector_list.children.length; i++){
-            vector_list.children[i].addEventListener("click", this.setVectorFile.bind(this));
-       }
-       
-
-
-       
-       //Update navbar
-       var list_elem = document.createElement("li");
-       nav_list.appendChild(list_elem);
-       var link = document.createElement("a");
-       link.href = "#";
-       list_elem.appendChild(link);
-       var link_text = document.createTextNode("Configuration");
-       link.appendChild(link_text);
-       link.addEventListener("click", this.changePage.bind(this, "Configuration"));
-
-        document.getElementById("configuration-page").classList.add("active");
-
-        //Add Capture Page
-        var container = document.createElement("div");
-        container.id = "image-capture-page";
-        container.classList.add("adapter-page");
-        container.innerHTML = `
-            <div id="image-capture-container" class="flex-container">
-            <div class ="parent-column">
-                <h4>Image Display</h4>
-                <div class="vertical">
-
-                    <div id="image-container">
-                        <div>
-                            <img id="image_display" src="img/black_img.png">
-                        </div>
-                    </div>
-
-                    <div class='table-container-left'>
-                        <div class="flex-item">
-                            <button id="display-single-button" class="btn btn-default" type="button">Single Frame</button>
-                            <button id="display-continuous-button" class="btn btn-default" type="button">Continuous</button>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-           
-
-            <div class ="child-column">
-                <div class="child">
-                    <div class="child-header">
-                        <div id="capture-collapse" class="collapse-button">
-                            <div class="collapse-table">
-                                <span id="capture-button-symbol" class="collapse-cell    glyphicon glyphicon-triangle-bottom"></span>
-                            </div>
-                        </div>
-                        <h4>Image Capture</h4>
-                    </div>
-                    <div class = "flex-container" id="capture-container">
-                        <div class="flex-item">
-                            <div id='image-table-left' class = 'table-container-left'>
-
-                                <div class='flex-item'>
-                                    <div class='input-group input-single'>
-                                        <input class="form-control text-right" id="capture-logging-input" placeholder="/scratch/qem/filename" type="text">
-                                        <span id='log-file-span' class="input-group-addon addon-single">Filename</span>
-                                    </div>
-                                </div>
-
-                                <div class ='flex-item'>
-                                    <div class='input-group input-single'>
-                                        <input class="form-control text-right" id="capture-fnumber-input" placeholder="1000" type="text">
-                                        <span id='frame-num-span' class="input-group-addon addon-single">Number of Frames</span>
-                                    </div>
-                                </div>
-
-                                <div class='flex-item'>
-                                    <button id="display-run-button" class="btn btn-default" type="button">Display Images</button>
-                                    <button id="log-run-button" class="btn btn-default" type="button">Save Images</button>
-                                </div>
-                                
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                `
-                /*
-
-                <div class="child">
-                    <div class="child-header">
-                        <div id="calibration-collapse" class="collapse-button">
-                            <div class="collapse-table">
-                                <span id="calibration-button-symbol" class="collapse-cell    glyphicon glyphicon-triangle-bottom"></span>
-                            </div>
-                        </div>
-                        <h4>ASIC Calibration Run</h4>
-                    </div>
-                    <div class='flex-container' id="calibration-container">
-                    <div class="flex-item">
-                        <div class='table-container-left'>
-
-                            <div class='flex-item'>
-                                <div class='input-group input-single'>
-                                    <input id="calibration-logging-input" class="form-control text-right"  placeholder=" " type="text">
-                                    <span id='calibration-log-span' class="input-group-addon addon-single">Calibration Log Filename</span>
-                                </div>
-                            </div>
-                            <div class='flex-item'>
-                                <div class='input-group input-single'>
-                                    <input id="configure-input-start" min="0" max="3.3" class="form-control text-right" aria-label="Start" placeholder="0" type="number" step="0.01">
-                                    <span id='auxsample-start-span' class="input-group-addon addon-single">Aux Sample Start (V)</span>
-                                </div>
-                            </div>
-
-                            <div class='flex-item'>
-                                <div class='input-group input-single'>
-                                    <input id="configure-input-step" min="0" max="3.3" class="form-control text-right" aria-label="Step" placeholder="0.1" type="number" step="0.01">
-                                    <span id='auxsample-step-span' class="input-group-addon addon-single">Aux Sample Step (V)</span>
-                                </div>
-                            </div>
-
-                            <div class='flex-item'>
-                                <div class='input-group input-single'>
-                                    <input id="configure-input-finish" min="0" max="3.3" class="form-control text-right" aria-label="Finish" placeholder="1" type="number" step="0.01">
-                                    <span id='auxsample-finish-span' class="input-group-addon addon-single">Aux Sample Finish (V)</span>
-                                </div>
-                            </div>
-
-                            <div class="flex-item">
-                                <button id="calibration-run-button" class="btn btn-default" type="button">Perform Calibration Run</button>
-                            </div>
-                        </div>
-                    </div>
-                     
-            */ +  `
+    var mode_toggle = document.getElementById('toggle-container');
+    var image_vector_files = document.getElementsByClassName("image_vectors")
+    var adc_vector_files = document.getElementsByClassName("adc_vectors")
+    var mode_toggleContainer = document.getElementById('inner-toggle-container');
+    var mode_toggleNumber;
+    
+    mode_toggle.addEventListener('click', function() {
+    mode_toggleNumber = !mode_toggleNumber;
+        if (mode_toggleNumber) {
+            this.in_calibration_mode = false;
+            for(var i=0; i<image_vector_files.length;i++){
+                image_vector_files[i].style.display = 'block';
+            }
+            for(var i=0; i<adc_vector_files.length;i++){
+                adc_vector_files[i].style.display = 'none';
+            }
+            console.log("in image capture mode")
+            mode_toggleContainer.style.clipPath = 'inset(0 0 0 50%)';
+            mode_toggleContainer.style.backgroundColor = '#337ab7';
+    
+        } else {
+            this.in_calibration_mode = true;   
             
+            for(var i=0; i<image_vector_files.length;i++){
+                image_vector_files[i].style.display = 'none';
+            }
+            for(var i=0; i<adc_vector_files.length;i++){
+                adc_vector_files[i].style.display = 'block';
+            }
+            console.log("in calibration mode")
+            mode_toggleContainer.style.clipPath = 'inset(0 50% 0 0)';
+            mode_toggleContainer.style.backgroundColor = '#337ab7';
+        }
+    });
+
+    var vector_list = document.getElementById("file_list");
+
+    for(var i=0; i< vector_list.children.length; i++){
+        vector_list.children[i].addEventListener("click", this.setVectorFile.bind(this));
+    }
+       
+
+
+    
+    //Update navbar
+    var list_elem = document.createElement("li");
+    nav_list.appendChild(list_elem);
+    var link = document.createElement("a");
+    link.href = "#";
+    list_elem.appendChild(link);
+    var link_text = document.createTextNode("Configuration");
+    link.appendChild(link_text);
+    link.addEventListener("click", this.changePage.bind(this, "Configuration"));
+
+    document.getElementById("configuration-page").classList.add("active");
+
+    //Add Capture Page
+    var container = document.createElement("div");
+    container.id = "image-capture-page";
+    container.classList.add("adapter-page");
+    container.innerHTML = `
+        <div id="image-capture-container" class="flex-container">
+        <div class ="parent-column">
+            <h4>Image Display</h4>
+            <div class="vertical">
+
+                <div id="image-container">
+                    <div>
+                        <img id="image_display" src="img/black_img.png">
+                    </div>
+                </div>
+
+                <div class='table-container-left'>
+                    <div class="flex-item">
+                        <button id="display-single-button" class="btn btn-default" type="button">Single Frame</button>
+                        <button id="display-continuous-button" class="btn btn-default" type="button">Continuous</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        
+
+        <div class ="child-column">
+            <div class="child">
+                <div class="child-header">
+                    <div id="capture-collapse" class="collapse-button">
+                        <div class="collapse-table">
+                            <span id="capture-button-symbol" class="collapse-cell    glyphicon glyphicon-triangle-bottom"></span>
+                        </div>
+                    </div>
+                    <h4>Image Capture</h4>
+                </div>
+                <div class = "flex-container" id="capture-container">
+                    <div class="flex-item">
+                        <div id='image-table-left' class = 'table-container-left'>
+
+                            <div class='flex-item'>
+                                <div class='input-group input-single'>
+                                    <input class="form-control text-right" id="capture-logging-input" placeholder="/scratch/qem/filename" type="text">
+                                    <span id='log-file-span' class="input-group-addon addon-single">Filename</span>
+                                </div>
+                            </div>
+
+                            <div class ='flex-item'>
+                                <div class='input-group input-single'>
+                                    <input class="form-control text-right" id="capture-fnumber-input" placeholder="1000" type="text">
+                                    <span id='frame-num-span' class="input-group-addon addon-single">Number of Frames</span>
+                                </div>
+                            </div>
+
+                            <div class='flex-item'>
+                                <button id="display-run-button" class="btn btn-default" type="button">Display Images</button>
+                                <button id="log-run-button" class="btn btn-default" type="button">Save Images</button>
+                            </div>
+                            
+                        </div>
+                    </div>
                 </div>
             </div>
+            `
+            /*
+
+            <div class="child">
+                <div class="child-header">
+                    <div id="calibration-collapse" class="collapse-button">
+                        <div class="collapse-table">
+                            <span id="calibration-button-symbol" class="collapse-cell    glyphicon glyphicon-triangle-bottom"></span>
+                        </div>
+                    </div>
+                    <h4>ASIC Calibration Run</h4>
+                </div>
+                <div class='flex-container' id="calibration-container">
+                <div class="flex-item">
+                    <div class='table-container-left'>
+
+                        <div class='flex-item'>
+                            <div class='input-group input-single'>
+                                <input id="calibration-logging-input" class="form-control text-right"  placeholder=" " type="text">
+                                <span id='calibration-log-span' class="input-group-addon addon-single">Calibration Log Filename</span>
+                            </div>
+                        </div>
+                        <div class='flex-item'>
+                            <div class='input-group input-single'>
+                                <input id="configure-input-start" min="0" max="3.3" class="form-control text-right" aria-label="Start" placeholder="0" type="number" step="0.01">
+                                <span id='auxsample-start-span' class="input-group-addon addon-single">Aux Sample Start (V)</span>
+                            </div>
+                        </div>
+
+                        <div class='flex-item'>
+                            <div class='input-group input-single'>
+                                <input id="configure-input-step" min="0" max="3.3" class="form-control text-right" aria-label="Step" placeholder="0.1" type="number" step="0.01">
+                                <span id='auxsample-step-span' class="input-group-addon addon-single">Aux Sample Step (V)</span>
+                            </div>
+                        </div>
+
+                        <div class='flex-item'>
+                            <div class='input-group input-single'>
+                                <input id="configure-input-finish" min="0" max="3.3" class="form-control text-right" aria-label="Finish" placeholder="1" type="number" step="0.01">
+                                <span id='auxsample-finish-span' class="input-group-addon addon-single">Aux Sample Finish (V)</span>
+                            </div>
+                        </div>
+
+                        <div class="flex-item">
+                            <button id="calibration-run-button" class="btn btn-default" type="button">Perform Calibration Run</button>
+                        </div>
+                    </div>
+                </div>
+                    
+        */ +  `
+        
             </div>
-            `;
+        </div>
+        </div>
+        `;
 
         this.mount.appendChild(container);
+        document.getElementById("capture-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "capture"));
+        //document.getElementById("calibration-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "calibration"));
 
-       document.getElementById("capture-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "capture"));
-       //document.getElementById("calibration-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "calibration"));
+        document.getElementById("display-single-button").addEventListener("click", this.imageGenerate.bind(this));
+        document.getElementById("log-run-button").addEventListener("click", this.logImageCapture.bind(this));
+        //document.getElementById("calibration-run-button").addEventListener("click", this.calibrationImageCapture.bind(this));
 
-       document.getElementById("display-single-button").addEventListener("click", this.imageGenerate.bind(this));
-       document.getElementById("log-run-button").addEventListener("click", this.logImageCapture.bind(this));
-       //document.getElementById("calibration-run-button").addEventListener("click", this.calibrationImageCapture.bind(this));
+        //Update navbar
+        var list_elem = document.createElement("li");
+        nav_list.appendChild(list_elem);
+        var link = document.createElement("a");
+        link.href = "#";
+        list_elem.appendChild(link);
+        var link_text = document.createTextNode("Image Capture");
+        link.appendChild(link_text);
+        link.addEventListener("click", this.changePage.bind(this, "Capture"));
 
-       //Update navbar
-       var list_elem = document.createElement("li");
-       nav_list.appendChild(list_elem);
-       var link = document.createElement("a");
-       link.href = "#";
-       list_elem.appendChild(link);
-       var link_text = document.createTextNode("Image Capture");
-       link.appendChild(link_text);
-       link.addEventListener("click", this.changePage.bind(this, "Capture"));
-
-       //add file overlay
-       this.file_overlay = document.createElement("div");
-       this.file_overlay.classList.add("overlay-background");
-       this.file_overlay.classList.add("hidden");
-       this.file_overlay.innerHTML = `
+        //add file overlay
+        this.file_overlay = document.createElement("div");
+        this.file_overlay.classList.add("overlay-background");
+        this.file_overlay.classList.add("hidden");
+        this.file_overlay.innerHTML = `
             <div class="overlay-freq_file">
             <h5>Save the current bias settings to a new vector file</h5>
             <div>
@@ -738,7 +726,7 @@ App.prototype.generate =
        document.getElementById("frequency-cancel").addEventListener("click", this.frequencyCancel.bind(this));
        document.getElementById("frequency-set").addEventListener("click", this.frequencySet.bind(this));
 
-        //Add frequency overlay
+        //Add fpga warning overlay
         this.fpga_warn = document.createElement("div");
         this.fpga_warn.classList.add("overlay-background");
         this.fpga_warn.classList.add("hidden");
@@ -761,6 +749,26 @@ App.prototype.generate =
         document.getElementById("upload-cancel").addEventListener("click", this.uploadCancel.bind(this));
         document.getElementById("upload-vector-final").addEventListener("click", this.uploadVector.bind(this));
 
+
+        this.file_warning = document.createElement("div");
+        this.file_warning.classList.add("overlay-background");
+        this.file_warning.classList.add("hidden");
+        this.file_warning.innerHTML = `
+            <div class="overlay-file_warning">
+            <h5>Error:</h5>
+            <div>
+                <div>
+                    <span id = "file_warning">Cannot upload, no vector file has been selected.</span>
+                </div>
+                <div class="overlay-control-buttons" id="file-warning-buttons">
+                    <button class="btn btn-danger" id="dismiss-file-warning" type="button">Ok</button>
+                </div>
+            </div>
+            </div>
+            `;
+
+        this.mount.appendChild(this.file_warning);
+        document.getElementById("dismiss-file-warning").addEventListener("click", this.dismissFileError.bind(this));
 
         //Add footer
         var footer = document.createElement("div");
@@ -1041,8 +1049,19 @@ App.prototype.update_bp =
 // opens the fpga warning overlay when "upload vector file" is pressed
 App.prototype.uploadVectorPress = 
     function(){
-        this.fpga_warn.classList.remove("hidden");
+        var text_file = document.getElementById("current-txt-file").innerHTML
+        if(text_file == ""){
+            this.file_warning.classList.remove("hidden")
+        }
+        else{
+            this.fpga_warn.classList.remove("hidden");
+        }
 }
+
+App.prototype.dismissFileError = 
+    function(){
+        this.file_warning.classList.add("hidden");
+    }
 
 //closes the fpga warning overlay when cancel is pressed.
 App.prototype.uploadCancel = 
@@ -1219,13 +1238,10 @@ App.prototype.setVectorFile =
             .done( 
                 (function(){
                     this.sleep(1500)
-
-                    //this.sleep(1000)
                     apiGET(this.current_adapter, "", false)
                     .done(
                         function(data){
                         for(i=0; i< data["dacs"].length; i++){
-                            //console.log(i.toString())
                             document.getElementById('DAC-' + i.toString() + '-input').value = data["dacs"][i]["value"];
                         }
                     }
