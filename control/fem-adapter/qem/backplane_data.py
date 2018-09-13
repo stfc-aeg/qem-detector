@@ -92,6 +92,7 @@ class BackplaneData(object):
             "resistors" : [r.param_tree for r in self.resistors],
             "reset" : (False, self.backplane.set_reset,{"name" : "Reset Server"}),
             "temperature" : (self.backplane.get_temp,{"units": "C", "dp":1}),
+            "fpga_reset" : (False, self.backplane.set_reset_fpga),
         })
 
     def get(self, path, metadata):

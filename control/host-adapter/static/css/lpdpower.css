@@ -528,7 +528,9 @@ body {
 
 #upload-vector-file-button{
     white-space: pre;
+    
 }
+
 .input-group-addon{
     white-space: pre;
 }
@@ -536,11 +538,11 @@ body {
     display: block;
 }
 
-#fpga-warn-buttons{
 
-    left: 33%
+#dismiss-file-warning{
+    margin-left: 35%;
+    width : 30%;
 }
-
 
 #adc-input{
 
@@ -611,7 +613,7 @@ body {
     display: none;
 }
 
-.overlay-fpga_warn {
+.overlay-fpga_warn, .overlay-freq_file, .overlay-file_warning {
     background-color: #fff;
     width: 400px;
     height: 250px;
@@ -622,11 +624,11 @@ body {
     position: absolute;
     border-radius: 3px;
 }
-.dark .overlay-fpga_warn {
+.dark .overlay-fpga_warn, .dark .overlay-freq_file, .dark .overlay-file_warning  {
     background-color: #35414e;
 }
 
-.overlay-fpga_warn h5 {
+.overlay-fpga_warn h5, .overlay-freq_file h5, .overlay-file_warning h5 {
     text-align: center;
     padding: 20px;
     font-size: 1.2em;
@@ -638,10 +640,10 @@ body {
     border-top-right-radius: 3px;
 }
 
-.overlay-fpga_warn > div{
+.overlay-fpga_warn > div, .overlay-freq_file > div, .overlay-file_warning > div{
     padding: 40px;
 }
-
+/*
 .overlay-freq_file {
     background-color: #fff;
     width: 400px;
@@ -653,9 +655,11 @@ body {
     position: absolute;
     border-radius: 3px;
 }
+
 .dark .overlay-freq_file {
     background-color: #35414e;
 }
+
 
 .overlay-freq_file h5 {
     text-align: center;
@@ -669,9 +673,11 @@ body {
     border-top-right-radius: 3px;
 }
 
+
 .overlay-freq_file > div{
     padding: 40px;
 }
+*/
 
 .overlay-control-buttons {
     position: absolute;
@@ -683,6 +689,7 @@ body {
     justify-content: space-between;
 }
 
+/*
 .overlay-query {
     background-color: #fff;
     width: 600px;
@@ -720,11 +727,11 @@ body {
 .overlay-query .input-group {
     margin-bottom: 10px;
 }
-
+*/
 .noresize {
     resize: none;
 }
-
+/*
 .overlay-query .overlay-control-buttons {
     width: 300px;
     margin-left: -150px;
@@ -767,3 +774,4 @@ body {
 .overlay-logging .input-group {
     width:100%;
 }
+*/

@@ -141,6 +141,10 @@ class Backplane_Interface():
         """
         requests.put(self.url + "reset", str(value), headers=self.put_headers)
 
+    def set_reset_fpga(self, value):
+
+        requests.put(self.url + "fpga_reset", str(value), headers=self.put_headers)
+
     def get_current(self, supply):
         """
         :param supply: index of the supply
