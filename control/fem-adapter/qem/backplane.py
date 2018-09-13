@@ -347,6 +347,7 @@ class Backplane(I2CContainer):
         if value and not self.sensors_enabled: self.updates_needed = 1
 
     def set_reset(self, value):
+	print("set reset also being called")
         self.mcp23008[1].setup(0, MCP23008.OUT)
 #        self.mcp23008[1].setup(7, MCP23008.OUT)
         for i in range(4): # was 5, now 4 with the addition of adc cal module
@@ -404,5 +405,5 @@ class Backplane(I2CContainer):
                "VDD_D18_PLL", "VDD_RST", "VDD_A33", "VDD_D33", "VCTRL_NEG", "VRESET",
                "VCTRL_POS", "AUXSAMPLE_SUM", "AUXSAMPLE_MEASURED"][i]
 
-    def set_reset_fpga(self):
+    def set_reset_fpga(self, reset):
         self.gpio_reset.reset("0x20")
