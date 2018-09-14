@@ -433,15 +433,18 @@ App.prototype.generate =
                             <h4 class="non-drop-header">ADC Calibration</h4>
                         </div>
                         <div class='table-container-left' id='adc-table'>
-                            <div class="btn-group">
-                                <button id="fine-calibrate-button" type="button" class="btn btn-default">Calibrate Fine</button>
-                                <button id="coarse-calibrate-button" type="button" class="btn btn-default">Calibrate Coarse</button>
-                            </div>
+                       
                             <div class="input-group" id='adc-input'>
                                 <input class="form-control text-right" id="frames-value" placeholder="1" type="text">
                                 <span id='frames-addon' class="input-group-addon">Frames</span>
                                 <input class="form-control text-right" id="delay-value" placeholder="0" type="text">
                                 <span class="input-group-addon">Delay</span>
+                            </div>
+                            <div class="btn-group">
+                                <button id="fine-calibrate-button" type="button" class="btn btn-default">Calibrate Fine</button>
+                                <button id="coarse-calibrate-button" type="button" class="btn btn-default">Calibrate Coarse</button>
+                                <button id="fine-plot-button" type="button" class="btn btn-default">Plot Fine</button>
+                                <button id="coarse-plot-button" type="button" class="btn btn-default">Plot Coarse</button>
                             </div>
                             <div class='row'>
                                 <div id='coarse_div' class='column'> ` + this.generateCoarseGraph() + ` </div>
@@ -483,6 +486,10 @@ App.prototype.generate =
     document.getElementById('upload-vector-file-button').addEventListener("click", this.uploadVectorPress.bind(this));
     document.getElementById('fine-calibrate-button').addEventListener("click", this.calibrateFine.bind(this));
     document.getElementById('coarse-calibrate-button').addEventListener("click", this.calibrateCoarse.bind(this));
+
+    document.getElementById('fine-plot-button').addEventListener("click", this.plotFine.bind(this));
+    document.getElementById('coarse-plot-button').addEventListener("click", this.plotCoarse.bind(this));
+
 
     var mode_toggle = document.getElementById('toggle-container');
     var image_vector_files = document.getElementsByClassName("image_vectors")
@@ -840,6 +847,7 @@ App.prototype.calibrateCoarse =
         document.getElementById("fine-calibrate-button").classList.add("btn-default");
         document.getElementById("fine-calibrate-button").classList.remove("btn-success");
         document.getElementById("coarse-calibrate-button").classList.add("btn-success");
+        document.getElementById("coarse-calibrate-button").innerHTML = "Calibrating"
         document.getElementById("coarse-calibrate-button").classList.remove("btn-default");
 
         var frames = document.getElementById('frames-value').value
@@ -858,16 +866,16 @@ App.prototype.calibrateCoarse =
             .done(
                 (function(){
                     //this.sleep(1000)
+   
+                    var status = apiGET(this.current_adapter, "coarse_cal_complete")
+                    while (status == false){
+                        status = apiGET(this.current_adapter, "coarse_cal_complete")
+                    }
+
                     document.getElementById("coarse-calibrate-button").classList.remove("btn-success")
+                    document.getElementById("coarse-calibrate-button").innerHTML = "Calibrate Coarse"
                     document.getElementById("coarse-calibrate-button").classList.add("btn-default")
     
-                    var status = apiGET(this.current_adapter, "coarse_complete")
-                    while (status == false){
-                        status = apiGET(this.current_adapter, "coarse_complete")
-                    }
-                    //this.sleep(1000)
-                    document.getElementById('coarse_div').innerHTML = this.generateCoarseGraph()
-                    //document.getElementById('coarse_graph').src = "img/coarse_graph.png?" + new Date().getTime()
                 }).bind(this)
             )
         )
@@ -882,6 +890,7 @@ App.prototype.calibrateFine =
 
         document.getElementById("fine-calibrate-button").classList.add("btn-success");
         document.getElementById("fine-calibrate-button").classList.remove("btn-default");
+        document.getElementById("fine-calibrate-button").innerHTML = "Calibrating"
         document.getElementById("coarse-calibrate-button").classList.add("btn-default");
         document.getElementById("coarse-calibrate-button").classList.remove("btn-success");
 
@@ -902,21 +911,80 @@ App.prototype.calibrateFine =
             
                 (function(){
                     //this.sleep(1000)
-                    document.getElementById("fine-calibrate-button").classList.remove("btn-success")
-                    document.getElementById("fine-calibrate-button").classList.add("btn-default")
+                    
     
-                    var status = apiGET(this.current_adapter, "fine_complete")
+                    var status = apiGET(this.current_adapter, "fine_cal_complete")
                     while ( status == false){
-                        status = apiGET(this.current_adapter, "fine_complete")
+                        status = apiGET(this.current_adapter, "fine_cal_complete")
                     }
-                    //this.sleep(1000)
-                    document.getElementById('fine_div').innerHTML = this.generateFineGraph()
-                    //document.getElementById('fine_graph').src = "img/fine_graph.png?" + new Date().getTime()
+
+                    document.getElementById("fine-calibrate-button").classList.remove("btn-success")
+                    document.getElementById("fine-calibrate-button").innerHTML = "Calibrate Fine"
+                    document.getElementById("fine-calibrate-button").classList.add("btn-default")
+
                 }).bind(this)
             )   
         )
     }
 
+App.prototype.plotFine = 
+    function(){
+
+        document.getElementById("fine-plot-button").classList.add("btn-success");
+        document.getElementById("fine-plot-button").innerHTML = "Plotting"
+        document.getElementById("fine-plot-button").classList.remove("btn-default");
+        document.getElementById("coarse-plot-button").classList.add("btn-default");
+        document.getElementById("coarse-plot-button").classList.remove("btn-success");
+
+
+        apiPUT(this.current_adapter, 'plot_fine', "true").done(
+                       
+            (function(){
+                //this.sleep(1000)
+                var status = apiGET(this.current_adapter, "fine_plot_complete")
+                while ( status == false){
+                    status = apiGET(this.current_adapter, "fine_plot_complete")
+                }
+                //this.sleep(1000)
+                document.getElementById('fine_div').innerHTML = this.generateFineGraph()
+                document.getElementById("fine-plot-button").classList.remove("btn-success")
+                document.getElementById("fine-plot-button").innerHTML = "Plot Fine"
+                document.getElementById("fine-plot-button").classList.add("btn-default")
+
+
+            }).bind(this)
+        )
+
+    }
+
+App.prototype.plotCoarse = 
+    function(){
+
+        document.getElementById("coarse-plot-button").classList.add("btn-success");
+        document.getElementById("coarse-plot-button").classList.remove("btn-default");
+        document.getElementById("coarse-plot-button").innerHTML = "Plotting"
+        document.getElementById("fine-plot-button").classList.add("btn-default");
+        document.getElementById("fine-plot-button").classList.remove("btn-success");
+
+
+        apiPUT(this.current_adapter, 'plot_coarse', "true").done(
+                       
+            (function(){
+            
+                var status = apiGET(this.current_adapter, "coarse_plot_complete")
+                while ( status == false){
+                    status = apiGET(this.current_adapter, "coarse_plot_complete")
+                }
+                //this.sleep(1000)
+                document.getElementById('coarse_div').innerHTML = this.generateCoarseGraph()
+                document.getElementById("coarse-plot-button").classList.remove("btn-success")
+                document.getElementById("coarse-plot-button").innerHTML = "Plot Coarse"
+                document.getElementById("coarse-plot-button").classList.add("btn-default")
+
+            }).bind(this)
+        )
+
+    }
 /*
 * Generates the resistor table using the data passed from the backplane
 * @param resistors : the data['resistors'] list from the backplane 

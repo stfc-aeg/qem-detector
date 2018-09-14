@@ -64,6 +64,8 @@ class ASIC_Interface():
         self.updated_registers = [False] * 20
         self.fine_calibration_complete = False
         self.coarse_calibration_complete = False
+        self.fine_plot_complete = False
+        self.coarse_plot_complete = False
 
 
     def setup_camera(self):
@@ -408,6 +410,29 @@ class ASIC_Interface():
         """
         self.fine_calibration_complete = complete
 
+    def get_coarse_plot_complete(self):
+        """ getter method for the coarse plot completed flag
+        @Returns : boolean value to indicate whether the coarse plot has completed.
+        """
+        return self.coarse_plot_complete
+
+    def set_coarse_plot_complete(self, complete):
+        """ sets the coarse plot complete flag 
+        @param complete: boolean value to indicate whether the coarse plot is complete.
+        """
+        self.coarse_plot_complete = complete
+
+    def get_fine_plot_complete(self):
+        """ getter method for the fine plot completed flag
+        @Returns : boolean value to indicate whether the fine plot has completed.
+        """
+        return self.coarse_plot_complete
+
+    def set_fine_plot_complete(self, complete):
+        """ sets the fine calibration complete flag 
+        @param complete: boolean value to indicate whether the fine plot is complete.
+        """
+        self.fine_plot_complete = complete
     
     def getfinebitscolumn(self, input):
         """ extracts the fine data bits from the given H5 file.
@@ -516,7 +541,7 @@ class ASIC_Interface():
                 i=i+1
         
             time.sleep(1)
-            self.plot_coarse()
+            #self.plot_coarse()
             self.set_coarse_cal_complete(True)
    
 
@@ -567,10 +592,10 @@ class ASIC_Interface():
 
             # wait for 1 second
             time.sleep(1)
-            self.plot_fine()
+            #self.plot_fine()
             self.set_fine_cal_complete(True)
 
-    def plot_fine(self):
+    def plot_fine(self, plot):
         """ plots the fine bit data from the adc fine calibration onto a graph
 
         lists all of the h5 files for fine calibration and generates
@@ -578,7 +603,7 @@ class ASIC_Interface():
         a new set of axes each time to ensure no overwriting.Saves the file to
         /aeg_sw/work/projects/qem/python/03052018/fine.png
         """
-
+        self.set_fine_plot_complete(False)
         filelist=[]
         filelist = self.Listh5Files("fine")
         # voltages for the plot
@@ -614,8 +639,9 @@ class ASIC_Interface():
         #fig.savefig(self.data_dir + "fine/fine.png", dpi = 100)
         fig.savefig("static/img/fine_graph.png", dpi=100)
         fig.clf()
+        self.set_fine_plot_complete(True)
 
-    def plot_coarse(self):
+    def plot_coarse(self, plot):
         """ plots the coarse bit data from the adc coarse calibration onto a graph
 
         lists all of the h5 files for coarse calibration and generates
@@ -623,6 +649,7 @@ class ASIC_Interface():
         a new set of axes each time to ensure no overwriting.Saves the file to
         /aeg_sw/work/projects/qem/python/03052018/coarse.png
         """
+        self.set_coarse_plot_complete(False)
 
         filelist=[]
         #array of voltages for the plot
@@ -655,20 +682,6 @@ class ASIC_Interface():
         #fig.savefig(self.data_dir + "coarse/coarse.png", dpi = 100)
         fig.savefig("static/img/coarse_graph.png", dpi=100)
         fig.clf()
+        self.set_coarse_plot_complete(True)
 
-    """
-    def get_coarse_graph(self):
-        #gets the coarse plot png from working dir and saves to static 
-        #for the webpage to be able to view the graph
-        
-        coarse_img = plt.imread(self.data_dir + "coarse/coarse.png")
-        plt.imsave('static/img/coarse_graph.png', coarse_img)
-
-    def get_fine_graph(self):
-        #gets the fine plot png from working dir and saves to static 
-        #the webpage to be able to view the graph
-        #
-        img = plt.imread(self.data_dir + "fine/fine.png")
-        plt.imsave('static/img/fine_graph.png', img)
-    """
         

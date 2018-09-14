@@ -130,7 +130,7 @@ class InterfaceData(object):
             "sensors_enabled":(self.backplane_interface.get_sensors_enable, self.backplane_interface.set_sensors_enable, {"name" : "sensors updating"}),
             "update_required" : (self.backplane_interface.get_update, self.backplane_interface.set_update,{"name" : "Update Once"}),
             "non_volatile" : (self.backplane_interface.get_resistor_non_volatile, self.backplane_interface.set_resistor_non_volatile, {"name": "Set Defaults", "description":"When setting resistor values determines if the new value should be set as a temporary value or as the new default"}),
-                #reset always returns false
+            #reset always returns false
             "reset" : (u'False', self.backplane_interface.set_reset,{"name" : "Reset Backplane"}),
             # Attach subtrees for each supply and resistor
             "current_voltage" : [cv.param_tree for cv in self.current_voltage],
@@ -147,8 +147,14 @@ class InterfaceData(object):
             "adc_config" : (self.asic_interface.get_adc_config, self.asic_interface.set_adc_config),
             "adc_calibrate_fine" : (u'False', self.asic_interface.adc_calibrate_fine),
             "adc_calibrate_coarse" : (u'False', self.asic_interface.adc_calibrate_coarse),
-            "coarse_complete":(self.asic_interface.get_coarse_cal_complete, self.asic_interface.set_coarse_cal_complete),
-            "fine_complete":(self.asic_interface.get_fine_cal_complete, self.asic_interface.set_fine_cal_complete),
+            "coarse_cal_complete":(self.asic_interface.get_coarse_cal_complete, self.asic_interface.set_coarse_cal_complete),
+            "fine_cal_complete":(self.asic_interface.get_fine_cal_complete, self.asic_interface.set_fine_cal_complete),
+            "plot_fine" : (u'False', self.asic_interface.plot_fine),
+            "plot_coarse" :(u'False', self.asic_interface.plot_coarse),
+            "coarse_plot_complete":(self.asic_interface.get_coarse_plot_complete, self.asic_interface.set_coarse_plot_complete),
+            "fine_plot_complete":(self.asic_interface.get_fine_plot_complete, self.asic_interface.set_fine_plot_complete),
+
+
             #operating subtree to parse configuration files
             "image_vector_files" : (self.operating_interface.get_image_vector_files),
             "adc_vector_files" : (self.operating_interface.get_adc_vector_files),
