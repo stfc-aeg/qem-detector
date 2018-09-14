@@ -10,8 +10,8 @@ setup(
     author='Tim Nicholls',
     author_email='tim.nicholls@stfc.ac.uk',
     packages=find_packages(),
-    install_requires=['odin==0.2'],
-    dependency_links=['https://github.com/odin-detector/odin-control/zipball/0.2#egg=odin-0.2'],
+    install_requires=['odin==0.2.0'],
+    dependency_links = ['https://github.com/stfc-aeg/odin-control/zipball/0.2.0#egg=odin-0.2.0'],
     extras_require={
         'test': ['nose', 'coverage', 'mock']
     },
