@@ -838,8 +838,6 @@ App.prototype.generateFineGraph =
     }
 /*
 * Performs coarse calibration using the frames and delay value from the webpage
-* Calls generateCoarseGraph to refresh the graph on the page after calibration is
-* completed.
 */  
 App.prototype.calibrateCoarse = 
     function(){
@@ -865,8 +863,6 @@ App.prototype.calibrateCoarse =
             apiPUT(this.current_adapter, 'adc_calibrate_coarse', "true")
             .done(
                 (function(){
-                    //this.sleep(1000)
-   
                     var status = apiGET(this.current_adapter, "coarse_cal_complete")
                     while (status == false){
                         status = apiGET(this.current_adapter, "coarse_cal_complete")
@@ -882,8 +878,6 @@ App.prototype.calibrateCoarse =
     }
 /*
 * Perform coarse calibration using the frames and delay value from the webpage
-* calls generateFineGraph to refresh the graph on the web page once
-* calibration has taken place.
 */
 App.prototype.calibrateFine = 
     function () {
@@ -910,9 +904,7 @@ App.prototype.calibrateFine =
             .done(
             
                 (function(){
-                    //this.sleep(1000)
-                    
-    
+
                     var status = apiGET(this.current_adapter, "fine_cal_complete")
                     while ( status == false){
                         status = apiGET(this.current_adapter, "fine_cal_complete")
@@ -926,7 +918,9 @@ App.prototype.calibrateFine =
             )   
         )
     }
-
+/*
+* Plots all of the fine calibration data and updates the graph on the webpage. 
+*/
 App.prototype.plotFine = 
     function(){
 
