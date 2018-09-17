@@ -138,8 +138,11 @@ class InterfaceData(object):
             "fpga_reset" : (u'False', self.backplane_interface.set_reset_fpga),
 
             #ASIC subtree
-            "image" : (self.asic_interface.get_image, self.asic_interface.set_image_capture),
+            "image" : (1, self.asic_interface.set_image_capture),
             "capture_run": (self.asic_interface.get_capture_run, self.asic_interface.set_capture_run, {"name": "Capture Run"}),
+            "image_ready" :(self.asic_interface.get_image_ready, self.asic_interface.set_image_ready),
+
+
             "dacs" : [d.param_tree for d in self.dacs],
             "vector_file": (self.asic_interface.get_vector_file, self.asic_interface.set_vector_file),
             "update_bias" :(u'true', self.asic_interface.set_update_bias),

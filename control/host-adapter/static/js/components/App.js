@@ -38,6 +38,7 @@ App.prototype.freq_overlay = null;
 App.prototype.update_delay = 0.5;
 App.prototype.dark_mode = false;
 App.prototype.in_calibration_mode = true 
+App.prototype.image_ready = false;
 
 
 
@@ -558,7 +559,7 @@ App.prototype.generate =
             <div class="vertical">
 
                 <div id="image-container">
-                    <div>
+                    <div id='image-div'>
                         <img id="image_display" src="img/black_img.png">
                     </div>
                 </div>
@@ -1354,14 +1355,71 @@ App.prototype.setVolatile =
         }
     }
 
+App.prototype.updateImage = 
+    function(){
+
+        return "<img id='image_display' src='img/current_image.png?" + new Date().getTime() + "'>"
+    }
+
+App.prototype.get_image_ready = 
+    function(){
+
+        
+       apiGET(this.current_adapter, "image_ready").onreadystatechange = function(){
+            if (this.readyState == 4 && this.status == 200) {
+                App.prototype.image_ready = this.responseText;
+            }
+       }
+       return App.prototype.image_ready
+       /*
+       .done(
+                (function(data){
+                    console.log(data)
+                    App.prototype.image_ready = data['image_ready']
+                    console.log(App.prototype.image_ready)
+                    return App.prototype.image_ready
+                }).bind(this)
+            
+        )
+        /*
+        var status = App.prototype.image_ready;
+        console.log(status)
+        return status
+        */
+    }
 //this doesn't work and needs fixing.
 App.prototype.imageGenerate =
     function() {
         apiPUT(this.current_adapter, "image", 2)
-        .done(this.updateImage())
-        .fail(this.setError.bind(this));
+        .done(
+            (function(){            
+                
+                var status = this.get_image_ready()
+
+                console.log(status)
+                while(status === false){
+                    status = this.get_image_ready()
+                }
+
+                /*
+                for(var i = 0; i < 20; i++){
+                    this.sleep(500)
+                   
+                    status = this.get_image_ready()
+                    if(status === true){
+                        console.log("TRUEE")
+                        break;
+                    }
+                }
+             
+                */
+                document.getElementById('image-div').innerHTML = this.updateImage()
+                
+            }).bind(this)
+        ).fail(this.setError.bind(this));
     }
 
+    /*
 //this doesn't work and needs fixing.
 App.prototype.updateImage =
     function() {
@@ -1375,6 +1433,8 @@ App.prototype.updateImage =
         )
         .fail(this.setError.bind(this));
     }
+*/
+
 
 App.prototype.logImageCapture =
     function() {
