@@ -38,7 +38,7 @@ App.prototype.freq_overlay = null;
 App.prototype.update_delay = 0.5;
 App.prototype.dark_mode = false;
 App.prototype.in_calibration_mode = true 
-App.prototype.image_ready = false;
+App.prototype.image_interval;
 
 
 
@@ -554,13 +554,13 @@ App.prototype.generate =
     container.classList.add("adapter-page");
     container.innerHTML = `
         <div id="image-capture-container" class="flex-container">
-        <div class ="parent-column">
+        <div class ="parent-column" id="image-parent">
             <h4>Image Display</h4>
-            <div class="vertical">
+            <div class="vertical" id="image-vertical">
 
                 <div id="image-container">
                     <div id='image-div'>
-                        <img id="image_display" src="img/black_img.png">
+                        <img id="image_display" src="img/black_img.png? ` + new Date().getTime() + `">
                     </div>
                 </div>
 
@@ -1358,63 +1358,43 @@ App.prototype.setVolatile =
 App.prototype.updateImage = 
     function(){
 
-        return "<img id='image_display' src='img/current_image.png?" + new Date().getTime() + "'>"
-    }
-
-App.prototype.get_image_ready = 
-    function(){
-
+        document.getElementById('image-div').innerHTML = "<img id='image_display' src='img/current_image.png?" + new Date().getTime() + "'>"
+        document.getElementById("display-single-button").classList.remove("btn-success");
+        document.getElementById("display-single-button").classList.add("btn-default");
         
-       apiGET(this.current_adapter, "image_ready").onreadystatechange = function(){
-            if (this.readyState == 4 && this.status == 200) {
-                App.prototype.image_ready = this.responseText;
-            }
-       }
-       return App.prototype.image_ready
-       /*
-       .done(
-                (function(data){
-                    console.log(data)
-                    App.prototype.image_ready = data['image_ready']
-                    console.log(App.prototype.image_ready)
-                    return App.prototype.image_ready
-                }).bind(this)
-            
-        )
-        /*
-        var status = App.prototype.image_ready;
-        console.log(status)
-        return status
-        */
     }
-//this doesn't work and needs fixing.
+
+
+App.prototype.pollForImage = 
+    function(){
+       
+        parentthis = this;
+        apiGET(parentthis.current_adapter, "image_ready").done(
+            (function(data){
+                console.log(data['image_ready'])
+                if(data["image_ready"] == true){
+                    parentthis.updateImage()
+                    clearInterval(App.prototype.image_interval)
+                }
+               
+            }).bind(this)
+        )
+    }
+
 App.prototype.imageGenerate =
     function() {
+        document.getElementById("display-single-button").classList.add("btn-success");
+        document.getElementById("display-single-button").classList.remove("btn-default");
+
+        document.getElementById("display-continuous-button").classList.add("btn-default");
+        document.getElementById("display-continuous-button").classList.remove("btn-sucess");
+
         apiPUT(this.current_adapter, "image", 2)
         .done(
             (function(){            
                 
-                var status = this.get_image_ready()
+                App.prototype.image_interval = setInterval(this.pollForImage.bind(this), 500)
 
-                console.log(status)
-                while(status === false){
-                    status = this.get_image_ready()
-                }
-
-                /*
-                for(var i = 0; i < 20; i++){
-                    this.sleep(500)
-                   
-                    status = this.get_image_ready()
-                    if(status === true){
-                        console.log("TRUEE")
-                        break;
-                    }
-                }
-             
-                */
-                document.getElementById('image-div').innerHTML = this.updateImage()
-                
             }).bind(this)
         ).fail(this.setError.bind(this));
     }

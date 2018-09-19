@@ -57,8 +57,13 @@
     flex-grow: 0;
 }
 
-.child-column {
+#image-parent{
+
     flex-grow: 1;
+}
+
+.child-column {
+    flex-grow: 8;
     z-index: 10;
 }
 
@@ -299,8 +304,8 @@ td {
 }
  
 #image_display {
-
-    width: 100%;
+    margin-left: 7%;
+    width: 150%;
 }
 
 #image-table-left{
@@ -361,9 +366,13 @@ th, td {
 }
 
 .vertical {
-    max-width: 300px;
+    max-width: 480px;
 }
-
+/*
+#image-vertical{
+    width:600px
+}
+*/
 .parent-column > div > div h5 {
     margin-right: 10px;
     font-weight: 800;
