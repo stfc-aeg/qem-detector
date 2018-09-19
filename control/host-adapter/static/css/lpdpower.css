@@ -304,8 +304,16 @@ td {
 }
  
 #image_display {
-    margin-left: 7%;
-    width: 150%;
+
+    width: 100%;
+}
+
+
+#image-div{
+
+    margin-left: 4%;
+    width: 432px;
+    height: 153px;
 }
 
 #image-table-left{
@@ -324,7 +332,7 @@ td {
 
 #display-single-button, #display-continuous-button {
 
-    width : 49%;
+    width : 33%;
 }
 
 #adc-table{

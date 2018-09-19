@@ -567,7 +567,8 @@ App.prototype.generate =
                 <div class='table-container-left'>
                     <div class="flex-item">
                         <button id="display-single-button" class="btn btn-default" type="button">Single Frame</button>
-                        <button id="display-continuous-button" class="btn btn-default" type="button">Continuous</button>
+                        <button id="display-continuous-button" class="btn btn-default" type="button">Start Continuous</button>
+                        <button id="stop-continuous-button" class="btn btn-default" type="button">Stop Continuous</button>
                     </div>
                 </div>
 
@@ -673,6 +674,8 @@ App.prototype.generate =
         //document.getElementById("calibration-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "calibration"));
 
         document.getElementById("display-single-button").addEventListener("click", this.imageGenerate.bind(this));
+        document.getElementById("display-continuous-button").addEventListener("click", this.imageGenerateLoop.bind(this));
+        document.getElementById("stop-continuous-button").addEventListener("click", this.stopImageLoop.bind(this));
         document.getElementById("log-run-button").addEventListener("click", this.logImageCapture.bind(this));
         //document.getElementById("calibration-run-button").addEventListener("click", this.calibrationImageCapture.bind(this));
 
@@ -1357,13 +1360,19 @@ App.prototype.setVolatile =
 
 App.prototype.updateImage = 
     function(){
-
-        document.getElementById('image-div').innerHTML = "<img id='image_display' src='img/current_image.png?" + new Date().getTime() + "'>"
-        document.getElementById("display-single-button").classList.remove("btn-success");
-        document.getElementById("display-single-button").classList.add("btn-default");
+        /*
+        var image = document.getElementById('image_display')
+        var downloadimage = new Image()
+        downloadimage.onload = function(){
+            image.src = this.src
+        }
+        */
+        //document.getElementById('image-div').innerHTML = "<img id='image_display' src='img/current_image.png?" + new Date().getTime() + "'>"
+        document.getElementById('image_display').src = "img/current_image.png?" + new Date().getTime()
+        //document.getElementById("display-single-button").classList.remove("btn-success");
+        //document.getElementById("display-single-button").classList.add("btn-default");
         
     }
-
 
 App.prototype.pollForImage = 
     function(){
@@ -1383,20 +1392,30 @@ App.prototype.pollForImage =
 
 App.prototype.imageGenerate =
     function() {
-        document.getElementById("display-single-button").classList.add("btn-success");
-        document.getElementById("display-single-button").classList.remove("btn-default");
+        //document.getElementById("display-single-button").classList.add("btn-success");
+        //document.getElementById("display-single-button").classList.remove("btn-default");
 
-        document.getElementById("display-continuous-button").classList.add("btn-default");
-        document.getElementById("display-continuous-button").classList.remove("btn-sucess");
+        //document.getElementById("display-continuous-button").classList.add("btn-default");
+        //document.getElementById("display-continuous-button").classList.remove("btn-sucess");
 
         apiPUT(this.current_adapter, "image", 2)
         .done(
             (function(){            
                 
-                App.prototype.image_interval = setInterval(this.pollForImage.bind(this), 500)
+                App.prototype.image_interval = setInterval(this.pollForImage.bind(this), 250)
 
             }).bind(this)
         ).fail(this.setError.bind(this));
+    }
+
+App.prototype.imageGenerateLoop = 
+    function(){
+        App.prototype.image_loop_interval = setInterval(this.imageGenerate.bind(this), 300)
+}
+
+App.prototype.stopImageLoop = 
+    function(){
+        clearInterval(App.prototype.image_loop_interval)
     }
 
     /*

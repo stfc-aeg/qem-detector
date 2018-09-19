@@ -129,12 +129,14 @@ class ASIC_Interface():
         @param value: number of images to capture
         """
         self.set_image_ready(False)
+        """
         self.setup_camera()
         time.sleep(0.1)
         self.qemcamera.get_aligner_status()
         locked = self.qemcamera.get_idelay_lock_status()
         print "%-32s %-8X" % ('-> idelay locked:', locked)
         print("I updated")
+        """
         self.imageStore = self.qemcamera.display_image_stream_web(value)
         print(len(self.imageStore))
 
