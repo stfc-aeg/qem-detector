@@ -556,7 +556,7 @@ App.prototype.generate =
         <div id="image-capture-container" class="flex-container">
         <div class ="parent-column" id="image-parent">
             <h4>Image Display</h4>
-            <div class="vertical" id="image-vertical">
+            <div class="vertical-image" id="image-vertical">
 
                 <div id="image-container">
                     <div id='image-div'>
@@ -564,14 +564,17 @@ App.prototype.generate =
                     </div>
                 </div>
 
-                <div class='table-container-left'>
+                <div class='table-container-left' id='image-buttons'> 
+                
+                
                     <div class="flex-item">
-                        <button id="display-single-button" class="btn btn-default" type="button">Single Frame</button>
-                        <button id="display-continuous-button" class="btn btn-default" type="button">Start Continuous</button>
-                        <button id="stop-continuous-button" class="btn btn-default" type="button">Stop Continuous</button>
+                        <button id="display-single-button" class="btn btn-default" type="button">Display Single Frame</button>
+                        <button id="display-continuous-button" class="btn btn-default" type="button">Stream Images</button>
+                       
                     </div>
-                </div>
-
+                    
+                    </div>
+                
             </div>
         </div>
         
@@ -584,7 +587,7 @@ App.prototype.generate =
                             <span id="capture-button-symbol" class="collapse-cell    glyphicon glyphicon-triangle-bottom"></span>
                         </div>
                     </div>
-                    <h4>Image Capture</h4>
+                    <h4>Data Capture</h4>
                 </div>
                 <div class = "flex-container" id="capture-container">
                     <div class="flex-item">
@@ -605,7 +608,6 @@ App.prototype.generate =
                             </div>
 
                             <div class='flex-item'>
-                                <button id="display-run-button" class="btn btn-default" type="button">Display Images</button>
                                 <button id="log-run-button" class="btn btn-default" type="button">Save Images</button>
                             </div>
                             
@@ -613,57 +615,7 @@ App.prototype.generate =
                     </div>
                 </div>
             </div>
-            `
-            /*
-
-            <div class="child">
-                <div class="child-header">
-                    <div id="calibration-collapse" class="collapse-button">
-                        <div class="collapse-table">
-                            <span id="calibration-button-symbol" class="collapse-cell    glyphicon glyphicon-triangle-bottom"></span>
-                        </div>
-                    </div>
-                    <h4>ASIC Calibration Run</h4>
-                </div>
-                <div class='flex-container' id="calibration-container">
-                <div class="flex-item">
-                    <div class='table-container-left'>
-
-                        <div class='flex-item'>
-                            <div class='input-group input-single'>
-                                <input id="calibration-logging-input" class="form-control text-right"  placeholder=" " type="text">
-                                <span id='calibration-log-span' class="input-group-addon addon-single">Calibration Log Filename</span>
-                            </div>
-                        </div>
-                        <div class='flex-item'>
-                            <div class='input-group input-single'>
-                                <input id="configure-input-start" min="0" max="3.3" class="form-control text-right" aria-label="Start" placeholder="0" type="number" step="0.01">
-                                <span id='auxsample-start-span' class="input-group-addon addon-single">Aux Sample Start (V)</span>
-                            </div>
-                        </div>
-
-                        <div class='flex-item'>
-                            <div class='input-group input-single'>
-                                <input id="configure-input-step" min="0" max="3.3" class="form-control text-right" aria-label="Step" placeholder="0.1" type="number" step="0.01">
-                                <span id='auxsample-step-span' class="input-group-addon addon-single">Aux Sample Step (V)</span>
-                            </div>
-                        </div>
-
-                        <div class='flex-item'>
-                            <div class='input-group input-single'>
-                                <input id="configure-input-finish" min="0" max="3.3" class="form-control text-right" aria-label="Finish" placeholder="1" type="number" step="0.01">
-                                <span id='auxsample-finish-span' class="input-group-addon addon-single">Aux Sample Finish (V)</span>
-                            </div>
-                        </div>
-
-                        <div class="flex-item">
-                            <button id="calibration-run-button" class="btn btn-default" type="button">Perform Calibration Run</button>
-                        </div>
-                    </div>
-                </div>
-                    
-        */ +  `
-        
+    
             </div>
         </div>
         </div>
@@ -671,13 +623,9 @@ App.prototype.generate =
 
         this.mount.appendChild(container);
         document.getElementById("capture-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "capture"));
-        //document.getElementById("calibration-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "calibration"));
-
         document.getElementById("display-single-button").addEventListener("click", this.imageGenerate.bind(this));
         document.getElementById("display-continuous-button").addEventListener("click", this.imageGenerateLoop.bind(this));
-        document.getElementById("stop-continuous-button").addEventListener("click", this.stopImageLoop.bind(this));
-        document.getElementById("log-run-button").addEventListener("click", this.logImageCapture.bind(this));
-        //document.getElementById("calibration-run-button").addEventListener("click", this.calibrationImageCapture.bind(this));
+        document.getElementById("log-run-button").addEventListener("click", this.logImageCapture.bind(this)); 
 
         //Update navbar
         var list_elem = document.createElement("li");
@@ -1360,14 +1308,7 @@ App.prototype.setVolatile =
 
 App.prototype.updateImage = 
     function(){
-        /*
-        var image = document.getElementById('image_display')
-        var downloadimage = new Image()
-        downloadimage.onload = function(){
-            image.src = this.src
-        }
-        */
-        //document.getElementById('image-div').innerHTML = "<img id='image_display' src='img/current_image.png?" + new Date().getTime() + "'>"
+
         document.getElementById('image_display').src = "img/current_image.png?" + new Date().getTime()
         //document.getElementById("display-single-button").classList.remove("btn-success");
         //document.getElementById("display-single-button").classList.add("btn-default");
@@ -1375,8 +1316,10 @@ App.prototype.updateImage =
     }
 
 App.prototype.pollForImage = 
-    function(){
-       
+    function(single){
+        if(single){
+
+        }
         parentthis = this;
         apiGET(parentthis.current_adapter, "image_ready").done(
             (function(data){
@@ -1391,18 +1334,13 @@ App.prototype.pollForImage =
     }
 
 App.prototype.imageGenerate =
-    function() {
-        //document.getElementById("display-single-button").classList.add("btn-success");
-        //document.getElementById("display-single-button").classList.remove("btn-default");
-
-        //document.getElementById("display-continuous-button").classList.add("btn-default");
-        //document.getElementById("display-continuous-button").classList.remove("btn-sucess");
-
+    function(single) {
+        
         apiPUT(this.current_adapter, "image", 2)
         .done(
-            (function(){            
+            (function(single){            
                 
-                App.prototype.image_interval = setInterval(this.pollForImage.bind(this), 250)
+                App.prototype.image_interval = setInterval(this.pollForImage.bind(this), 250, single)
 
             }).bind(this)
         ).fail(this.setError.bind(this));
@@ -1410,29 +1348,31 @@ App.prototype.imageGenerate =
 
 App.prototype.imageGenerateLoop = 
     function(){
-        App.prototype.image_loop_interval = setInterval(this.imageGenerate.bind(this), 300)
+        var button = document.getElementById('display-continuous-button')
+
+        document.getElementById("log-run-button").disabled = true;
+
+        if(button.innerHTML  == "Stream Images"){
+            button.innerHTML = "Stop Streaming Images"
+            button.classList.remove("btn-default")
+            button.classList.add("btn-danger")
+            this.imageGenerate()
+            App.prototype.image_loop_interval = setInterval(this.imageGenerate.bind(this), 350, false)
+        }
+        else if (button.innerHTML == "Stop Streaming Images"){
+            button.classList.add("btn-default")
+            button.classList.remove("btn-danger")
+            button.innerHTML = "Stream Images"
+            this.stopImageLoop()
+        }
+       
 }
 
 App.prototype.stopImageLoop = 
     function(){
         clearInterval(App.prototype.image_loop_interval)
+        document.getElementById("log-run-button").disabled = false;
     }
-
-    /*
-//this doesn't work and needs fixing.
-App.prototype.updateImage =
-    function() {
-        apiGET(this.current_adapter, "image")
-        .done(
-            function(imageCount) {
-                if (imageCount > 0) {
-                    this.updateImage()
-                }
-            }
-        )
-        .fail(this.setError.bind(this));
-    }
-*/
 
 
 App.prototype.logImageCapture =
@@ -1440,8 +1380,8 @@ App.prototype.logImageCapture =
 
         document.getElementById("log-run-button").classList.add("btn-success");
         document.getElementById("log-run-button").classList.remove("btn-default");
-        document.getElementById("display-run-button").classList.add("btn-default");
-        document.getElementById("display-run-button").classList.remove("btn-sucess");
+        document.getElementById("display-continuous-button").disabled = true;
+        document.getElementById("display-single-button").disabled = true;
 
         var fnumber = Number(document.getElementById('capture-fnumber-input').value)
         if (fnumber == ""){
@@ -1461,6 +1401,8 @@ App.prototype.logImageCapture =
                     this.sleep(1000)
                     document.getElementById("log-run-button").classList.remove("btn-success");
                     document.getElementById("log-run-button").classList.add("btn-default");
+                    document.getElementById("display-continuous-button").disabled = false;
+                    document.getElementById("display-single-button").disabled = false;
                 }
             ).bind(this)
         )
