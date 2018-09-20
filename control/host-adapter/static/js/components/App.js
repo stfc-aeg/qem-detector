@@ -1308,18 +1308,14 @@ App.prototype.setVolatile =
 
 App.prototype.updateImage = 
     function(){
-
+        this.sleep(100)
         document.getElementById('image_display').src = "img/current_image.png?" + new Date().getTime()
-        //document.getElementById("display-single-button").classList.remove("btn-success");
-        //document.getElementById("display-single-button").classList.add("btn-default");
+        
         
     }
 
 App.prototype.pollForImage = 
-    function(single){
-        if(single){
-
-        }
+    function(){
         parentthis = this;
         apiGET(parentthis.current_adapter, "image_ready").done(
             (function(data){
@@ -1340,7 +1336,7 @@ App.prototype.imageGenerate =
         .done(
             (function(single){            
                 
-                App.prototype.image_interval = setInterval(this.pollForImage.bind(this), 250, single)
+                App.prototype.image_interval = setInterval(this.pollForImage.bind(this), 250)
 
             }).bind(this)
         ).fail(this.setError.bind(this));
@@ -1357,7 +1353,7 @@ App.prototype.imageGenerateLoop =
             button.classList.remove("btn-default")
             button.classList.add("btn-danger")
             this.imageGenerate()
-            App.prototype.image_loop_interval = setInterval(this.imageGenerate.bind(this), 350, false)
+            App.prototype.image_loop_interval = setInterval(this.imageGenerate.bind(this), 350)
         }
         else if (button.innerHTML == "Stop Streaming Images"){
             button.classList.add("btn-default")

@@ -144,9 +144,6 @@ class ASIC_Interface():
             img = self.imageStore.pop(0)
             cv2.imwrite('static/img/current_image.png', img)
             print("written image")
-
-
-
         #self.get_image()
         self.set_image_ready(True)
         print(self.get_image_ready())
