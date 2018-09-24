@@ -39,6 +39,9 @@ App.prototype.update_delay = 0.5;
 App.prototype.dark_mode = false;
 App.prototype.in_calibration_mode = true 
 App.prototype.image_interval;
+App.prototype.image_loop_interval;
+App.prototype.coarse_interval;
+App.prototype.fine_interval;
 
 
 
@@ -791,6 +794,25 @@ App.prototype.generateFineGraph =
         return "<img id='fine_graph' class='graph' src='img/fine_graph.png?" + new Date().getTime() + "'>"
 
     }
+
+
+App.prototype.pollForCoarse =
+    function(){
+
+        parentthis = this;
+        apiGET(parentthis.current_adapter, "coarse_cal_complete").done(
+            (function(data){
+                console.log(data['coarse_cal_complete'])
+                if(data["coarse_cal_complete"] == true){
+                    clearInterval(App.prototype.coarse_interval)
+                    document.getElementById("coarse-calibrate-button").classList.remove("btn-success")
+                    document.getElementById("coarse-calibrate-button").innerHTML = "Calibrate Coarse"
+                    document.getElementById("coarse-calibrate-button").classList.add("btn-default")
+                }
+                
+            }).bind(this)
+        )
+    }
 /*
 * Performs coarse calibration using the frames and delay value from the webpage
 */  
@@ -818,17 +840,29 @@ App.prototype.calibrateCoarse =
             apiPUT(this.current_adapter, 'adc_calibrate_coarse', "true")
             .done(
                 (function(){
-                    var status = apiGET(this.current_adapter, "coarse_cal_complete")
-                    while (status == false){
-                        status = apiGET(this.current_adapter, "coarse_cal_complete")
-                    }
 
-                    document.getElementById("coarse-calibrate-button").classList.remove("btn-success")
-                    document.getElementById("coarse-calibrate-button").innerHTML = "Calibrate Coarse"
-                    document.getElementById("coarse-calibrate-button").classList.add("btn-default")
-    
+                    App.prototype.coarse_interval = setInterval(this.pollForCoarse.bind(this),500)
+  
                 }).bind(this)
             )
+        )
+    }
+
+App.prototype.pollForFine =
+    function(){
+
+        parentthis = this;
+        apiGET(parentthis.current_adapter, "fine_cal_complete").done(
+            (function(data){
+                console.log(data['fine_cal_complete'])
+                if(data["fine_cal_complete"] == true){
+                    clearInterval(App.prototype.fine_interval)
+                    document.getElementById("fine-calibrate-button").classList.remove("btn-success")
+                    document.getElementById("fine-calibrate-button").innerHTML = "Calibrate Fine"
+                    document.getElementById("fine-calibrate-button").classList.add("btn-default")
+                }
+                
+            }).bind(this)
         )
     }
 /*
@@ -859,16 +893,9 @@ App.prototype.calibrateFine =
             .done(
             
                 (function(){
-
-                    var status = apiGET(this.current_adapter, "fine_cal_complete")
-                    while ( status == false){
-                        status = apiGET(this.current_adapter, "fine_cal_complete")
-                    }
-
-                    document.getElementById("fine-calibrate-button").classList.remove("btn-success")
-                    document.getElementById("fine-calibrate-button").innerHTML = "Calibrate Fine"
-                    document.getElementById("fine-calibrate-button").classList.add("btn-default")
-
+                    
+                    App.prototype.fine_interval = setInterval(this.pollForFine.bind(this), 500)
+       
                 }).bind(this)
             )   
         )
@@ -1312,13 +1339,11 @@ App.prototype.setVolatile =
 App.prototype.updateImage = 
     function(){
         this.sleep(100)
-        document.getElementById('image_display').src = "img/current_image.png?" + new Date().getTime()
-        
-        
+        document.getElementById('image_display').src = "img/current_image.png?" + new Date().getTime()    
     }
 
 App.prototype.pollForImage = 
-    function(){
+    function(now){
         parentthis = this;
         apiGET(parentthis.current_adapter, "image_ready").done(
             (function(data){
@@ -1333,12 +1358,12 @@ App.prototype.pollForImage =
     }
 
 App.prototype.imageGenerate =
-    function(single) {
-        
+    function() {
+
         apiPUT(this.current_adapter, "image", 2)
         .done(
             (function(single){            
-                
+                //var now = new Date().getTime()
                 App.prototype.image_interval = setInterval(this.pollForImage.bind(this), 100)
 
             }).bind(this)

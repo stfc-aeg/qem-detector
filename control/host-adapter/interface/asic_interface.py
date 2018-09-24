@@ -79,7 +79,7 @@ class ASIC_Interface():
         self.coarse_plot_complete = False
         self.image_ready = False
         self.image_capture_complete = False
-        self.thread_executor = futures.ThreadPoolExecutor(max_workers=2)
+        self.thread_executor = futures.ThreadPoolExecutor(max_workers=3)
 
 
     def setup_camera(self):
@@ -437,7 +437,7 @@ class ASIC_Interface():
         """ getter method for the fine calibration completed flag
         @Returns : boolean value to indicate whether the fine calibration has completed.
         """
-        return self.coarse_calibration_complete
+        return self.fine_calibration_complete
 
     def set_fine_cal_complete(self, complete):
         """ sets the fine calibration complete flag 
@@ -535,7 +535,7 @@ class ASIC_Interface():
         """
         return self.adc_config
 
-    #@run_on_executor(executor='thread_executor')
+    @run_on_executor(executor='thread_executor')
     def adc_calibrate_coarse(self, calibrate):
         """ perform adc calibration of the coarse values
         @param calibrate: boolean value to trigger calibration
@@ -551,8 +551,8 @@ class ASIC_Interface():
         
         if calibrate == "true":
             self.set_coarse_cal_complete(False)
-            self.setup_camera()
             
+            self.setup_camera()
             time.sleep(0.1)
             self.qemcamera.get_aligner_status()
             locked = self.qemcamera.get_idelay_lock_status()
@@ -580,7 +580,7 @@ class ASIC_Interface():
             #self.plot_coarse()
             self.set_coarse_cal_complete(True)
    
-    #@run_on_executor(executor='thread_executor')
+    @run_on_executor(executor='thread_executor')
     def adc_calibrate_fine(self, calibrate):
         """ perform adc calibration of the fine values
         @param calibrate: boolean value to trigger calibration
@@ -630,6 +630,8 @@ class ASIC_Interface():
             time.sleep(1)
             #self.plot_fine()
             self.set_fine_cal_complete(True)
+            print(self.get_fine_cal_complete())
+
 
     #@run_on_executor(executor='thread_executor')
     def plot_fine(self, plot):
