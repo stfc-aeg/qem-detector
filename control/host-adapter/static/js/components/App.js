@@ -570,6 +570,7 @@ App.prototype.generate =
                     <div class="flex-item">
                         <button id="display-single-button" class="btn btn-default" type="button">Display Single Frame</button>
                         <button id="display-continuous-button" class="btn btn-default" type="button">Stream Images</button>
+                        
                        
                     </div>
                     
@@ -625,6 +626,8 @@ App.prototype.generate =
         document.getElementById("capture-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "capture"));
         document.getElementById("display-single-button").addEventListener("click", this.imageGenerate.bind(this));
         document.getElementById("display-continuous-button").addEventListener("click", this.imageGenerateLoop.bind(this));
+        //document.getElementById("stop-continuous-button").addEventListener("click", this.stopImageLoop.bind(this));
+
         document.getElementById("log-run-button").addEventListener("click", this.logImageCapture.bind(this)); 
 
         //Update navbar
@@ -1336,7 +1339,7 @@ App.prototype.imageGenerate =
         .done(
             (function(single){            
                 
-                App.prototype.image_interval = setInterval(this.pollForImage.bind(this), 250)
+                App.prototype.image_interval = setInterval(this.pollForImage.bind(this), 100)
 
             }).bind(this)
         ).fail(this.setError.bind(this));
@@ -1344,11 +1347,15 @@ App.prototype.imageGenerate =
 
 App.prototype.imageGenerateLoop = 
     function(){
+
+        //console.log("image loop")
         var button = document.getElementById('display-continuous-button')
 
         document.getElementById("log-run-button").disabled = true;
-
+        document.getElementById("display-single-button").disabled = true;
+        
         if(button.innerHTML  == "Stream Images"){
+            //console.log("button = safe")
             button.innerHTML = "Stop Streaming Images"
             button.classList.remove("btn-default")
             button.classList.add("btn-danger")
@@ -1356,18 +1363,38 @@ App.prototype.imageGenerateLoop =
             App.prototype.image_loop_interval = setInterval(this.imageGenerate.bind(this), 350)
         }
         else if (button.innerHTML == "Stop Streaming Images"){
+            //console.log("button = strop")
             button.classList.add("btn-default")
             button.classList.remove("btn-danger")
             button.innerHTML = "Stream Images"
             this.stopImageLoop()
         }
+        
+       /*
+        button.classList.remove("btn-default")
+        button.classList.add("btn-success")
+        this.imageGenerate()
+        App.prototype.image_loop_interval = setInterval(this.imageGenerate.bind(this), 350)
+        */
        
 }
 
 App.prototype.stopImageLoop = 
     function(){
+
+        //var button =  document.getElementById("stop-continuous-button")
+        //var start_button =  document.getElementById("display-continuous-button")
+        //button.classList.remove("btn-default")
+        //button.classList.add("btn-danger")
+        //start_button.classList.remove("btn-success")
+        //start_button.classList.add("btn-default")
+        //console.log("I GOT CALLED")
+        clearInterval(App.prototype.image_interval)
         clearInterval(App.prototype.image_loop_interval)
         document.getElementById("log-run-button").disabled = false;
+        document.getElementById("display-single-button").disabled = false;
+        //button.classList.remove("btn-danger")
+        //button.classList.add("btn-default")
     }
 
 
