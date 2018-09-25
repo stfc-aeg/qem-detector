@@ -1297,6 +1297,32 @@ App.prototype.setClock =
         .fail(this.setError.bind(this))
     }
 
+
+App.prototype.pollForVectorSet = 
+    function(){
+
+        parentthis = this;
+        apiGET(parentthis.current_adapter, "bias_parsed").done(
+            (function(data){
+                console.log(data['bias_parsed'])
+                if(data["bias_parsed"] == true){
+
+                    clearInterval(App.prototype.set_vector_interval)
+                    apiGET(this.current_adapter, "", false)
+                    .done(
+                        function(data){
+                            for(i=0; i< data["dacs"].length; i++){
+                                document.getElementById('DAC-' + i.toString() + '-input').value = data["dacs"][i]["value"];
+                            }
+                        }
+                    )
+                }
+                
+            }).bind(this)
+        )
+
+
+    }
 /*
 * Sets the current vector file being used by the asic using the one selected on the drop-down 
 * Retrieves all of the bias settings from the vector file used and populates the bias 
@@ -1315,15 +1341,9 @@ App.prototype.setVectorFile =
             apiPUT(this.current_adapter, "vector_file", value)
             .done( 
                 (function(){
-                    this.sleep(1500)
-                    apiGET(this.current_adapter, "", false)
-                    .done(
-                        function(data){
-                        for(i=0; i< data["dacs"].length; i++){
-                            document.getElementById('DAC-' + i.toString() + '-input').value = data["dacs"][i]["value"];
-                        }
-                    }
-                )
+
+                    App.prototype.set_vector_interval = setInterval(this.pollForVectorSet.bind(this), 150)
+       
                 }).bind(this)
             )
             .fail(this.setError.bind(this))

@@ -81,7 +81,8 @@ class ASIC_Interface():
         self.coarse_plot_complete = False
         self.image_ready = False
         self.image_capture_complete = False
-        self.thread_executor = futures.ThreadPoolExecutor(max_workers=5)
+        self.bias_data_parsed = False
+        self.thread_executor = futures.ThreadPoolExecutor(max_workers=6)
 
 
     def setup_camera(self):
@@ -228,11 +229,18 @@ class ASIC_Interface():
         if complete:
             self.change_dac_settings()
 
-    #@run_on_executor(executor='thread_executor')
+    def set_bias_data_parsed(self, parsed):
+        self.bias_data_parsed = parsed
+
+    def get_bias_data_parsed(self):
+        return self.bias_data_parsed
+
+    @run_on_executor(executor='thread_executor')
     def extract_vector_data(self):
         """ extracts the 19 dac register values from the vector file
         saves the settings to a temporary pkl file for manipulation later.
         """
+        self.set_bias_data_parsed(False)
         #abs_path = "/aeg_sw/work/projects/qem/python/03052018/" + self.vector_file
         abs_path = self.working_dir + self.vector_file
         
@@ -298,6 +306,8 @@ class ASIC_Interface():
         pickle.dump(l, t)
         t.close()
         ### End of Adam Davis Code ###
+        self.set_bias_data_parsed(True)
+        print(self.get_bias_data_parsed())
 
     def init_bias_dict(self):
         """ initialises the bias_dict holding the bias settings 
