@@ -42,6 +42,8 @@ App.prototype.image_interval;
 App.prototype.image_loop_interval;
 App.prototype.coarse_interval;
 App.prototype.fine_interval;
+App.prototype.plot_fine_interval;
+App.prototype.plot_coarse_interval;
 
 
 
@@ -451,8 +453,13 @@ App.prototype.generate =
                                 <button id="coarse-plot-button" type="button" class="btn btn-default">Plot Coarse</button>
                             </div>
                             <div class='row'>
-                                <div id='coarse_div' class='column'> ` + this.generateCoarseGraph() + ` </div>
-                                <div id='fine_div' class='column'> ` + this.generateFineGraph() + `</div>
+                                <div id='coarse_div' class='column'>
+                                    <img id='coarse_graph' class='graph' src='img/coarse_graph.png'>
+                                </div>
+                                <div id='fine_div' class='column'>
+                                    <img id='fine_graph' class='graph' src='img/fine_graph.png'>
+                                
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -776,6 +783,7 @@ App.prototype.generateCoarseGraph =
             img_tag = "<img id='coarse_graph' class='graph' src='img/coarse_graph.png?" + new Date().getTime() + "'>"
         )
         */
+       document.getElementById('coarse_graph').src = 'img/coarse_graph.png?' + new Date().getTime()
         return "<img id='coarse_graph' class='graph' src='img/coarse_graph.png?" + new Date().getTime() + "'>"
         
     }
@@ -791,7 +799,8 @@ App.prototype.generateFineGraph =
             graph_tag = "<img id='fine_graph' class='graph' src='img/fine_graph.png?" + new Date().getTime() + "'>"
         )
         */
-        return "<img id='fine_graph' class='graph' src='img/fine_graph.png?" + new Date().getTime() + "'>"
+       document.getElementById('fine_graph').src = 'img/fine_graph.png?' + new Date().getTime()
+        //return "<img id='fine_graph' class='graph' src='img/fine_graph.png?" + new Date().getTime() + "'>"
 
     }
 
@@ -900,6 +909,29 @@ App.prototype.calibrateFine =
             )   
         )
     }
+
+
+App.prototype.pollForPlotFine=
+    function(){
+
+        parentthis = this;
+        apiGET(parentthis.current_adapter, "fine_plot_complete").done(
+            (function(data){
+                console.log(data['fine_plot_complete'])
+                if(data["fine_plot_complete"] == true){
+                    clearInterval(App.prototype.plot_fine_interval)
+                    this.generateFineGraph()
+                    document.getElementById("fine-plot-button").classList.remove("btn-success")
+                    document.getElementById("fine-plot-button").innerHTML = "Plot Fine"
+                    document.getElementById("fine-plot-button").classList.add("btn-default")
+    
+                }
+                
+            }).bind(this)
+        )
+
+
+    }
 /*
 * Plots all of the fine calibration data and updates the graph on the webpage. 
 */
@@ -916,18 +948,30 @@ App.prototype.plotFine =
         apiPUT(this.current_adapter, 'plot_fine', "true").done(
                        
             (function(){
-                //this.sleep(1000)
-                var status = apiGET(this.current_adapter, "fine_plot_complete")
-                while ( status == false){
-                    status = apiGET(this.current_adapter, "fine_plot_complete")
+            
+                App.prototype.plot_fine_interval = setInterval(this.pollForPlotFine.bind(this), 500)
+
+            }).bind(this)
+        )
+
+    }
+
+App.prototype.pollForPlotCoarse=
+    function(){
+
+        parentthis = this;
+        apiGET(parentthis.current_adapter, "coarse_plot_complete").done(
+            (function(data){
+                console.log(data['coarse_plot_complete'])
+                if(data["coarse_plot_complete"] == true){
+                    clearInterval(App.prototype.plot_coarse_interval)
+                    this.generateCoarseGraph()
+                    document.getElementById("coarse-plot-button").classList.remove("btn-success")
+                    document.getElementById("coarse-plot-button").innerHTML = "Plot Coarse"
+                    document.getElementById("coarse-plot-button").classList.add("btn-default")
+    
                 }
-                //this.sleep(1000)
-                document.getElementById('fine_div').innerHTML = this.generateFineGraph()
-                document.getElementById("fine-plot-button").classList.remove("btn-success")
-                document.getElementById("fine-plot-button").innerHTML = "Plot Fine"
-                document.getElementById("fine-plot-button").classList.add("btn-default")
-
-
+                
             }).bind(this)
         )
 
@@ -946,17 +990,7 @@ App.prototype.plotCoarse =
         apiPUT(this.current_adapter, 'plot_coarse', "true").done(
                        
             (function(){
-            
-                var status = apiGET(this.current_adapter, "coarse_plot_complete")
-                while ( status == false){
-                    status = apiGET(this.current_adapter, "coarse_plot_complete")
-                }
-                //this.sleep(1000)
-                document.getElementById('coarse_div').innerHTML = this.generateCoarseGraph()
-                document.getElementById("coarse-plot-button").classList.remove("btn-success")
-                document.getElementById("coarse-plot-button").innerHTML = "Plot Coarse"
-                document.getElementById("coarse-plot-button").classList.add("btn-default")
-
+                App.prototype.plot_coarse_interval = setInterval(this.pollForPlotCoarse.bind(this), 500)
             }).bind(this)
         )
 

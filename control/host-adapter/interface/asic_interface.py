@@ -5,6 +5,8 @@ import pprint
 import pickle
 import h5py
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 from tornado.concurrent import run_on_executor
@@ -79,7 +81,7 @@ class ASIC_Interface():
         self.coarse_plot_complete = False
         self.image_ready = False
         self.image_capture_complete = False
-        self.thread_executor = futures.ThreadPoolExecutor(max_workers=3)
+        self.thread_executor = futures.ThreadPoolExecutor(max_workers=5)
 
 
     def setup_camera(self):
@@ -461,7 +463,7 @@ class ASIC_Interface():
         """ getter method for the fine plot completed flag
         @Returns : boolean value to indicate whether the fine plot has completed.
         """
-        return self.coarse_plot_complete
+        return self.fine_plot_complete
 
     def set_fine_plot_complete(self, complete):
         """ sets the fine calibration complete flag 
@@ -633,7 +635,7 @@ class ASIC_Interface():
             print(self.get_fine_cal_complete())
 
 
-    #@run_on_executor(executor='thread_executor')
+    @run_on_executor(executor='thread_executor')
     def plot_fine(self, plot):
         """ plots the fine bit data from the adc fine calibration onto a graph
 
@@ -679,8 +681,9 @@ class ASIC_Interface():
         fig.savefig("static/img/fine_graph.png", dpi=100)
         fig.clf()
         self.set_fine_plot_complete(True)
+        print(self.get_fine_plot_complete())
         
-    #@run_on_executor(executor='thread_executor')
+    @run_on_executor(executor='thread_executor')
     def plot_coarse(self, plot):
         """ plots the coarse bit data from the adc coarse calibration onto a graph
 
