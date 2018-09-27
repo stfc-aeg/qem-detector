@@ -83,7 +83,8 @@ class ASIC_Interface():
         self.image_capture_complete = False
         self.bias_data_parsed = False
         self.vector_file_written = False
-        self.thread_executor = futures.ThreadPoolExecutor(max_workers=7)
+        self.log_image_complete = False
+        self.thread_executor = futures.ThreadPoolExecutor(max_workers=8)
 
 
     def setup_camera(self):
@@ -131,6 +132,12 @@ class ASIC_Interface():
     def get_capture_run(self):
         return u'/aeg_sw/work/projects/qem/images/'
 
+    def set_log_image_complete(self, complete):
+        self.log_image_complete = complete
+    
+    def get_log_image_complete(self):
+        return self.log_image_complete 
+
     #@run_on_executor(executor='thread_executor')
     def set_capture_run(self, config):
         """ set up and log n number of images to a specified directory.
@@ -138,6 +145,7 @@ class ASIC_Interface():
         sets up the qemcam object and parses the frame num/file location
         calls log_imgage_stream to capture and store fnumber of frames.ss
         """
+        self.set_log_image_complete(False)
         fnumber, file_name = config.split(";")
         location = str(file_name) 
         self.setup_camera()
@@ -147,6 +155,7 @@ class ASIC_Interface():
         print "%-32s %-8X" % ('-> idelay locked:', locked)
 
         self.qemcamera.log_image_stream(location, int(fnumber))
+        self.set_log_image_complete(True)
         #set file logging done
 
     def set_image_ready(self, ready):

@@ -149,7 +149,7 @@ class InterfaceData(object):
             "upload_vector_file" : (u'False', self.asic_interface.upload_vector_file),
             "bias_parsed" : (self.asic_interface.get_bias_data_parsed, self.asic_interface.set_bias_data_parsed),
             "vector_file_written" :(self.asic_interface.get_vector_file_written, self.asic_interface.set_vector_file_written),
-
+            "log_complete" :(self.asic_interface.get_log_image_complete, self.asic_interface.set_log_image_complete),
             "adc_config" : (self.asic_interface.get_adc_config, self.asic_interface.set_adc_config),
             "adc_calibrate_fine" : (u'False', self.asic_interface.adc_calibrate_fine),
             "adc_calibrate_coarse" : (u'False', self.asic_interface.adc_calibrate_coarse),

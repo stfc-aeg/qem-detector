@@ -1502,11 +1502,38 @@ App.prototype.stopImageLoop =
     }
 
 
+App.prototype.pollForLogComplete =
+function (){
+    parentthis = this;
+    apiGET(parentthis.current_adapter, "log_complete").done(
+        (function(data){
+            console.log(data['log_complete'])
+            if(data["log_complete"] == true){
+                
+                clearInterval(App.prototype.log_file_interval)
+                document.getElementById("log-run-button").innerHTML = "Images Saved"
+                document.getElementById("display-continuous-button").disabled = false;
+                document.getElementById("display-single-button").disabled = false;
+
+                setTimeout(function(){
+                    document.getElementById("log-run-button").classList.remove("btn-success");
+                    document.getElementById("log-run-button").classList.add("btn-default");
+                    document.getElementById("log-run-button").innerHTML = "Save Images"
+
+                }, 3000)
+            }
+           
+        }).bind(this)
+    )
+ 
+}
+
 App.prototype.logImageCapture =
     function() {
 
         document.getElementById("log-run-button").classList.add("btn-success");
         document.getElementById("log-run-button").classList.remove("btn-default");
+        document.getElementById("log-run-button").innerHTML = "Saving Images"
         document.getElementById("display-continuous-button").disabled = true;
         document.getElementById("display-single-button").disabled = true;
 
@@ -1525,11 +1552,9 @@ App.prototype.logImageCapture =
         .done(
             (
                 function(){
-                    this.sleep(1000)
-                    document.getElementById("log-run-button").classList.remove("btn-success");
-                    document.getElementById("log-run-button").classList.add("btn-default");
-                    document.getElementById("display-continuous-button").disabled = false;
-                    document.getElementById("display-single-button").disabled = false;
+                    //document.getElementById("log-run-button").innerHTML = "Saving Images"
+                    App.prototype.log_file_interval = setInterval(this.pollForLogComplete.bind(this), 100)
+
                 }
             ).bind(this)
         )
