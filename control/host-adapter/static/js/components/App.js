@@ -44,6 +44,7 @@ App.prototype.coarse_interval;
 App.prototype.fine_interval;
 App.prototype.plot_fine_interval;
 App.prototype.plot_coarse_interval;
+App.prototype.file_written_interval;
 
 
 
@@ -1162,12 +1163,44 @@ App.prototype.fileCancel =
         this.file_overlay.classList.add("hidden");
     }
 
+App.prototype.pollForFileWritten = 
+    function(){
+
+        parentthis = this;
+        apiGET(parentthis.current_adapter, "vector_file_written").done(
+            (function(data){
+                console.log(data['vector_file_written'])
+                if(data["vector_file_written"] == true){
+                    clearInterval(App.prototype.file_written_interval)
+                    document.getElementById('save-as-vector-file-button').innerHTML= "File Saved"
+                    setTimeout(function(){
+                        document.getElementById('save-as-vector-file-button').innerHTML= "Save as Vector File"
+                        document.getElementById("save-as-vector-file-button").classList.add("btn-default");
+                        document.getElementById("save-as-vector-file-button").classList.remove("btn-success");
+                        
+                    }, 3000)
+                    
+                }
+                
+            }).bind(this)
+        )
+
+
+
+    }
+
 /*
 * Generates a vector file from the current BIAS settings in the webpage
 * closes the save as vector file overlay when the file is created
 */
 App.prototype.createVectorFile = 
     function(){
+
+        document.getElementById('save-as-vector-file-button').innerHTML= "Saving File"
+        document.getElementById("save-as-vector-file-button").classList.add("btn-success");
+        document.getElementById("save-as-vector-file-button").classList.remove("btn-default");
+        
+
         var filename = document.getElementById("file-value").value;
         console.log(filename)
         apiPUT(this.current_adapter, "update_bias", "false")
@@ -1181,6 +1214,8 @@ App.prototype.createVectorFile =
                             apiPUT(this.current_adapter, "dacs/" + i.toString() + "/value", value.toString())
                             
                         }
+
+                        App.prototype.file_written_interval = setInterval(this.pollForFileWritten.bind(this), 100)
                     }).bind(this)
                 )
             }).bind(this)
@@ -1199,27 +1234,17 @@ App.prototype.uploadVector =
             
             (function(){
             
-            console.log("returned done from fpga reset")
-            this.sleep(2000)
-    
-            apiPUT(this.current_adapter, "upload_vector_file", "true")
-            .done(
-                (function(){
-                    this.fpga_warn.classList.add("hidden");
-                }).bind(this)
-            )
-    
-    
-            
-    }).bind(this)
-        /*
-            apiPUT(this.current_adapter, "upload_vector_file", "true")
-            .done(
-                (function(){
-                    this.fpga_warn.classList.add("hidden");
-                }).bind(this)
-            )
-            */
+                console.log("returned done from fpga reset")
+                this.sleep(2000)
+        
+                apiPUT(this.current_adapter, "upload_vector_file", "true")
+                .done(
+                    (function(){
+                        this.fpga_warn.classList.add("hidden");
+                    }).bind(this)
+                )
+            }).bind(this)
+
         )
 
     }

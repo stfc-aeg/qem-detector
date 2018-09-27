@@ -82,7 +82,8 @@ class ASIC_Interface():
         self.image_ready = False
         self.image_capture_complete = False
         self.bias_data_parsed = False
-        self.thread_executor = futures.ThreadPoolExecutor(max_workers=6)
+        self.vector_file_written = False
+        self.thread_executor = futures.ThreadPoolExecutor(max_workers=7)
 
 
     def setup_camera(self):
@@ -316,7 +317,15 @@ class ASIC_Interface():
         for i in range(19):
             self.bias_dict[self.bias_names[18-i]] = [i+1, '000000']
 
-    #@run_on_executor(executor='thread_executor')
+
+
+    def set_vector_file_written(self, written):
+        self.vector_file_written = written
+    
+    def get_vector_file_written(self):
+        return self.vector_file_written
+
+    @run_on_executor(executor='thread_executor')
     def change_dac_settings(self):
         """ generates a new vector file from the updated bias settings
             Creates a new file with the name of self.vector_file.
@@ -326,6 +335,7 @@ class ASIC_Interface():
         
         else:
         ### Adam Davis Code ###
+            self.set_vector_file_written(False)
 
             # set filename
             file_name   = "tmp2.pkl"
@@ -410,6 +420,7 @@ class ASIC_Interface():
                     f.write(data[i+m+3])
             f.close()
             print("\nNew file has been created, check folder")
+            self.set_vector_file_written(True)
         ### End of Adam Davis Code ###
 
     #@run_on_executor(executor='thread_executor')

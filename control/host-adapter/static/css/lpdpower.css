@@ -550,9 +550,9 @@ body {
     background-color: #1f2127;
 }
 
-#upload-vector-file-button{
+#save-as-vector-file-button, #upload-vector-file-button{
     white-space: pre;
-    
+    width: 180px;
 }
 
 .input-group-addon{
