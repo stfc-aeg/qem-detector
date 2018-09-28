@@ -45,6 +45,7 @@ App.prototype.fine_interval;
 App.prototype.plot_fine_interval;
 App.prototype.plot_coarse_interval;
 App.prototype.file_written_interval;
+App.prototype.upload_vector_interval;
 
 
 
@@ -778,14 +779,9 @@ App.prototype.sleep =
 */
 App.prototype.generateCoarseGraph = 
     function(){
-        /*
-        var img_tag = ""
-        apiGET(this.current_adapter, "coarse_graph").done(
-            img_tag = "<img id='coarse_graph' class='graph' src='img/coarse_graph.png?" + new Date().getTime() + "'>"
-        )
-        */
-       document.getElementById('coarse_graph').src = 'img/coarse_graph.png?' + new Date().getTime()
-        return "<img id='coarse_graph' class='graph' src='img/coarse_graph.png?" + new Date().getTime() + "'>"
+
+        document.getElementById('coarse_graph').src = 'img/coarse_graph.png?' + new Date().getTime()
+   
         
     }
 /*
@@ -794,14 +790,8 @@ App.prototype.generateCoarseGraph =
 */
 App.prototype.generateFineGraph =
     function(){
-        /*
-        var graph_tag = ""
-        apiGET(this.current_adapter,"fine_graph").done(
-            graph_tag = "<img id='fine_graph' class='graph' src='img/fine_graph.png?" + new Date().getTime() + "'>"
-        )
-        */
+   
        document.getElementById('fine_graph').src = 'img/fine_graph.png?' + new Date().getTime()
-        //return "<img id='fine_graph' class='graph' src='img/fine_graph.png?" + new Date().getTime() + "'>"
 
     }
 
@@ -818,6 +808,14 @@ App.prototype.pollForCoarse =
                     document.getElementById("coarse-calibrate-button").classList.remove("btn-success")
                     document.getElementById("coarse-calibrate-button").innerHTML = "Calibrate Coarse"
                     document.getElementById("coarse-calibrate-button").classList.add("btn-default")
+
+                    document.getElementById("fine-calibrate-button").disabled = false;
+                    document.getElementById("coarse-calibrate-button").disabled = false;
+                    //document.getElementById("fine-plot-button").disabled = false;
+                    document.getElementById("coarse-plot-button").disabled = false;
+                    document.getElementById("log-run-button").disabled = false;
+                    document.getElementById("display-single-button").disabled = false;
+                    document.getElementById("display-continuous-button").disabled = false;
                 }
                 
             }).bind(this)
@@ -828,6 +826,15 @@ App.prototype.pollForCoarse =
 */  
 App.prototype.calibrateCoarse = 
     function(){
+
+        document.getElementById("fine-calibrate-button").disabled = true;
+        document.getElementById("coarse-calibrate-button").disabled = true;
+        //document.getElementById("fine-plot-button").disabled = true;
+        document.getElementById("coarse-plot-button").disabled = true;
+
+        document.getElementById("log-run-button").disabled = true;
+        document.getElementById("display-single-button").disabled = true;
+        document.getElementById("display-continuous-button").disabled = true;
 
         document.getElementById("fine-calibrate-button").classList.add("btn-default");
         document.getElementById("fine-calibrate-button").classList.remove("btn-success");
@@ -870,6 +877,14 @@ App.prototype.pollForFine =
                     document.getElementById("fine-calibrate-button").classList.remove("btn-success")
                     document.getElementById("fine-calibrate-button").innerHTML = "Calibrate Fine"
                     document.getElementById("fine-calibrate-button").classList.add("btn-default")
+
+                    document.getElementById("coarse-calibrate-button").disabled = false;
+                    document.getElementById("fine-plot-button").disabled = false;
+                    document.getElementById("log-run-button").disabled = false;
+                    document.getElementById("display-single-button").disabled = false;
+                    document.getElementById("display-continuous-button").disabled = false;
+                    document.getElementById("fine-calibrate-button").disabled = false;
+                    
                 }
                 
             }).bind(this)
@@ -880,6 +895,14 @@ App.prototype.pollForFine =
 */
 App.prototype.calibrateFine = 
     function () {
+
+        document.getElementById("coarse-calibrate-button").disabled = true;
+        document.getElementById("fine-calibrate-button").disabled = true;
+        document.getElementById("fine-plot-button").disabled = true;
+        document.getElementById("log-run-button").disabled = true;
+        document.getElementById("display-single-button").disabled = true;
+        document.getElementById("display-continuous-button").disabled = true;
+        
 
         document.getElementById("fine-calibrate-button").classList.add("btn-success");
         document.getElementById("fine-calibrate-button").classList.remove("btn-default");
@@ -925,6 +948,8 @@ App.prototype.pollForPlotFine=
                     document.getElementById("fine-plot-button").classList.remove("btn-success")
                     document.getElementById("fine-plot-button").innerHTML = "Plot Fine"
                     document.getElementById("fine-plot-button").classList.add("btn-default")
+                    document.getElementById("fine-calibrate-button").disabled = false;
+                    document.getElementById("fine-plot-button").disabled = false;
     
                 }
                 
@@ -939,6 +964,8 @@ App.prototype.pollForPlotFine=
 App.prototype.plotFine = 
     function(){
 
+        document.getElementById("fine-calibrate-button").disabled = true;
+        document.getElementById("fine-plot-button").disabled = true;
         document.getElementById("fine-plot-button").classList.add("btn-success");
         document.getElementById("fine-plot-button").innerHTML = "Plotting"
         document.getElementById("fine-plot-button").classList.remove("btn-default");
@@ -970,6 +997,8 @@ App.prototype.pollForPlotCoarse=
                     document.getElementById("coarse-plot-button").classList.remove("btn-success")
                     document.getElementById("coarse-plot-button").innerHTML = "Plot Coarse"
                     document.getElementById("coarse-plot-button").classList.add("btn-default")
+                    document.getElementById("coarse-calibrate-button").disabled = false;
+                    document.getElementById("coarse-plot-button").disabled = false;
     
                 }
                 
@@ -981,6 +1010,8 @@ App.prototype.pollForPlotCoarse=
 App.prototype.plotCoarse = 
     function(){
 
+        document.getElementById("coarse-calibrate-button").disabled = true;
+        document.getElementById("coarse-plot-button").disabled = true;
         document.getElementById("coarse-plot-button").classList.add("btn-success");
         document.getElementById("coarse-plot-button").classList.remove("btn-default");
         document.getElementById("coarse-plot-button").innerHTML = "Plotting"
@@ -1223,6 +1254,39 @@ App.prototype.createVectorFile =
         document.getElementById("file-value").value = "";
         this.file_overlay.classList.add("hidden");
     }
+
+App.prototype.pollForUploadComplete = 
+    function(){
+        parentthis = this;
+        apiGET(parentthis.current_adapter, "upload_vector_complete").done(
+            (function(data){
+                console.log(data['upload_vector_complete'])
+                if(data["upload_vector_complete"] == true){
+                    clearInterval(App.prototype.upload_vector_interval)
+                    document.getElementById("upload-vector-file-button").innerHTML = "Vector File Uploaded"
+                    document.getElementById("coarse-calibrate-button").disabled = false;
+                    document.getElementById("fine-calibrate-button").disabled = false;
+                    document.getElementById("fine-plot-button").disabled = false;
+                    document.getElementById("coarse-plot-button").disabled = false;
+                    document.getElementById("log-run-button").disabled = false;
+                    document.getElementById("display-single-button").disabled = false;
+                    document.getElementById("display-continuous-button").disabled = false;
+                    document.getElementById("upload-vector-file-button").disabled = false;
+                    setTimeout(function(){
+       
+                        document.getElementById("upload-vector-file-button").innerHTML = "Upload Vector File"
+                        document.getElementById("upload-vector-file-button").classList.remove("btn-success")
+                        document.getElementById("upload-vector-file-button").classList.add("btn-default")
+
+                    
+                    }, 3000)
+            
+    
+                }
+                
+            }).bind(this)
+        )
+    }
 /*
 * Sends the command to the asic to upload the current vector file
 * Closes the fpga warning overlay when complete.
@@ -1230,17 +1294,31 @@ App.prototype.createVectorFile =
 App.prototype.uploadVector = 
     function(){
 
+
         apiPUT(this.current_adapter, "fpga_reset", "true").done(
             
             (function(){
             
                 console.log("returned done from fpga reset")
-                this.sleep(2000)
+                document.getElementById("coarse-calibrate-button").disabled = true;
+                document.getElementById("fine-calibrate-button").disabled = true;
+                document.getElementById("fine-plot-button").disabled = true;
+                document.getElementById("coarse-plot-button").disabled = true;
+                document.getElementById("log-run-button").disabled = true;
+                document.getElementById("display-single-button").disabled = true;
+                document.getElementById("display-continuous-button").disabled = true;
+                document.getElementById("upload-vector-file-button").disabled = true;
+
+                //this.sleep(2000)
+                this.fpga_warn.classList.add("hidden");
         
                 apiPUT(this.current_adapter, "upload_vector_file", "true")
                 .done(
                     (function(){
-                        this.fpga_warn.classList.add("hidden");
+                        document.getElementById("upload-vector-file-button").classList.remove("btn-default")
+                        document.getElementById("upload-vector-file-button").classList.add("btn-success")
+                        document.getElementById("upload-vector-file-button").innerHTML = "Uploading Vector File"
+                        App.prototype.upload_vector_interval = setInterval(this.pollForUploadComplete.bind(this), 250)
                     }).bind(this)
                 )
             }).bind(this)
@@ -1442,7 +1520,6 @@ App.prototype.imageGenerate =
         apiPUT(this.current_adapter, "image", 2)
         .done(
             (function(single){            
-                //var now = new Date().getTime()
                 App.prototype.image_interval = setInterval(this.pollForImage.bind(this), 100)
 
             }).bind(this)
@@ -1453,6 +1530,9 @@ App.prototype.imageGenerateLoop =
     function(){
 
         //console.log("image loop")
+        document.getElementById("fine-calibrate-button").disabled = true;
+        document.getElementById("coarse-calibrate-button").disabled = true;
+
         var button = document.getElementById('display-continuous-button')
 
         document.getElementById("log-run-button").disabled = true;
@@ -1472,33 +1552,20 @@ App.prototype.imageGenerateLoop =
             button.classList.remove("btn-danger")
             button.innerHTML = "Stream Images"
             this.stopImageLoop()
+            document.getElementById("fine-calibrate-button").disabled = false;
+            document.getElementById("coarse-calibrate-button").disabled = false;
         }
-        
-       /*
-        button.classList.remove("btn-default")
-        button.classList.add("btn-success")
-        this.imageGenerate()
-        App.prototype.image_loop_interval = setInterval(this.imageGenerate.bind(this), 350)
-        */
-       
+ 
 }
 
 App.prototype.stopImageLoop = 
     function(){
 
-        //var button =  document.getElementById("stop-continuous-button")
-        //var start_button =  document.getElementById("display-continuous-button")
-        //button.classList.remove("btn-default")
-        //button.classList.add("btn-danger")
-        //start_button.classList.remove("btn-success")
-        //start_button.classList.add("btn-default")
-        //console.log("I GOT CALLED")
         clearInterval(App.prototype.image_interval)
         clearInterval(App.prototype.image_loop_interval)
         document.getElementById("log-run-button").disabled = false;
         document.getElementById("display-single-button").disabled = false;
-        //button.classList.remove("btn-danger")
-        //button.classList.add("btn-default")
+   
     }
 
 
@@ -1519,7 +1586,6 @@ function (){
                     document.getElementById("log-run-button").classList.remove("btn-success");
                     document.getElementById("log-run-button").classList.add("btn-default");
                     document.getElementById("log-run-button").innerHTML = "Save Images"
-
                 }, 3000)
             }
            

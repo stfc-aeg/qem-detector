@@ -84,7 +84,8 @@ class ASIC_Interface():
         self.bias_data_parsed = False
         self.vector_file_written = False
         self.log_image_complete = False
-        self.thread_executor = futures.ThreadPoolExecutor(max_workers=8)
+        self.upload_vector_complete = False
+        self.thread_executor = futures.ThreadPoolExecutor(max_workers=9)
 
 
     def setup_camera(self):
@@ -432,7 +433,13 @@ class ASIC_Interface():
             self.set_vector_file_written(True)
         ### End of Adam Davis Code ###
 
-    #@run_on_executor(executor='thread_executor')
+    def set_upload_vector_complete(self, complete):
+        self.upload_vector_complete = complete
+
+    def get_upload_vector_complete(self):
+        return self.upload_vector_complete
+
+    @run_on_executor(executor='thread_executor')
     def upload_vector_file(self, upload):
         """ uploads the current vector file to the qem camera
 
@@ -441,7 +448,8 @@ class ASIC_Interface():
         abs_path = self.working_dir + self.vector_file
         if upload:
             if self.vector_file is not "undefined":
-                
+                self.set_upload_vector_complete(False)
+                time.sleep(2)
                 self.setup_camera()
                 self.qemcamera.load_vectors_from_file(abs_path)
                 time.sleep(0.1)
@@ -449,6 +457,7 @@ class ASIC_Interface():
                 locked = self.qemcamera.get_idelay_lock_status()
                 print "%-32s %-8X" % ('-> idelay locked:', locked)
                 time.sleep(1)
+                self.set_upload_vector_complete(True)
             else:
                 #manage exceptions and errors
                 print("No vector file has been loaded, cannot upload vector file")
