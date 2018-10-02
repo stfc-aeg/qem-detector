@@ -39,6 +39,13 @@ App.prototype.update_delay = 0.5;
 App.prototype.dark_mode = false;
 App.prototype.in_calibration_mode = true 
 App.prototype.image_interval;
+App.prototype.image_loop_interval;
+App.prototype.coarse_interval;
+App.prototype.fine_interval;
+App.prototype.plot_fine_interval;
+App.prototype.plot_coarse_interval;
+App.prototype.file_written_interval;
+App.prototype.upload_vector_interval;
 
 
 
@@ -448,8 +455,13 @@ App.prototype.generate =
                                 <button id="coarse-plot-button" type="button" class="btn btn-default">Plot Coarse</button>
                             </div>
                             <div class='row'>
-                                <div id='coarse_div' class='column'> ` + this.generateCoarseGraph() + ` </div>
-                                <div id='fine_div' class='column'> ` + this.generateFineGraph() + `</div>
+                                <div id='coarse_div' class='column'>
+                                    <img id='coarse_graph' class='graph' src='img/coarse_graph.png'>
+                                </div>
+                                <div id='fine_div' class='column'>
+                                    <img id='fine_graph' class='graph' src='img/fine_graph.png'>
+                                
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -570,6 +582,7 @@ App.prototype.generate =
                     <div class="flex-item">
                         <button id="display-single-button" class="btn btn-default" type="button">Display Single Frame</button>
                         <button id="display-continuous-button" class="btn btn-default" type="button">Stream Images</button>
+                        
                        
                     </div>
                     
@@ -625,6 +638,8 @@ App.prototype.generate =
         document.getElementById("capture-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "capture"));
         document.getElementById("display-single-button").addEventListener("click", this.imageGenerate.bind(this));
         document.getElementById("display-continuous-button").addEventListener("click", this.imageGenerateLoop.bind(this));
+        //document.getElementById("stop-continuous-button").addEventListener("click", this.stopImageLoop.bind(this));
+
         document.getElementById("log-run-button").addEventListener("click", this.logImageCapture.bind(this)); 
 
         //Update navbar
@@ -764,13 +779,9 @@ App.prototype.sleep =
 */
 App.prototype.generateCoarseGraph = 
     function(){
-        /*
-        var img_tag = ""
-        apiGET(this.current_adapter, "coarse_graph").done(
-            img_tag = "<img id='coarse_graph' class='graph' src='img/coarse_graph.png?" + new Date().getTime() + "'>"
-        )
-        */
-        return "<img id='coarse_graph' class='graph' src='img/coarse_graph.png?" + new Date().getTime() + "'>"
+
+        document.getElementById('coarse_graph').src = 'img/coarse_graph.png?' + new Date().getTime()
+   
         
     }
 /*
@@ -779,20 +790,51 @@ App.prototype.generateCoarseGraph =
 */
 App.prototype.generateFineGraph =
     function(){
-        /*
-        var graph_tag = ""
-        apiGET(this.current_adapter,"fine_graph").done(
-            graph_tag = "<img id='fine_graph' class='graph' src='img/fine_graph.png?" + new Date().getTime() + "'>"
-        )
-        */
-        return "<img id='fine_graph' class='graph' src='img/fine_graph.png?" + new Date().getTime() + "'>"
+   
+       document.getElementById('fine_graph').src = 'img/fine_graph.png?' + new Date().getTime()
 
+    }
+
+
+App.prototype.pollForCoarse =
+    function(){
+
+        parentthis = this;
+        apiGET(parentthis.current_adapter, "coarse_cal_complete").done(
+            (function(data){
+                console.log(data['coarse_cal_complete'])
+                if(data["coarse_cal_complete"] == true){
+                    clearInterval(App.prototype.coarse_interval)
+                    document.getElementById("coarse-calibrate-button").classList.remove("btn-success")
+                    document.getElementById("coarse-calibrate-button").innerHTML = "Calibrate Coarse"
+                    document.getElementById("coarse-calibrate-button").classList.add("btn-default")
+
+                    document.getElementById("fine-calibrate-button").disabled = false;
+                    document.getElementById("coarse-calibrate-button").disabled = false;
+                    //document.getElementById("fine-plot-button").disabled = false;
+                    document.getElementById("coarse-plot-button").disabled = false;
+                    document.getElementById("log-run-button").disabled = false;
+                    document.getElementById("display-single-button").disabled = false;
+                    document.getElementById("display-continuous-button").disabled = false;
+                }
+                
+            }).bind(this)
+        )
     }
 /*
 * Performs coarse calibration using the frames and delay value from the webpage
 */  
 App.prototype.calibrateCoarse = 
     function(){
+
+        document.getElementById("fine-calibrate-button").disabled = true;
+        document.getElementById("coarse-calibrate-button").disabled = true;
+        //document.getElementById("fine-plot-button").disabled = true;
+        document.getElementById("coarse-plot-button").disabled = true;
+
+        document.getElementById("log-run-button").disabled = true;
+        document.getElementById("display-single-button").disabled = true;
+        document.getElementById("display-continuous-button").disabled = true;
 
         document.getElementById("fine-calibrate-button").classList.add("btn-default");
         document.getElementById("fine-calibrate-button").classList.remove("btn-success");
@@ -815,17 +857,37 @@ App.prototype.calibrateCoarse =
             apiPUT(this.current_adapter, 'adc_calibrate_coarse', "true")
             .done(
                 (function(){
-                    var status = apiGET(this.current_adapter, "coarse_cal_complete")
-                    while (status == false){
-                        status = apiGET(this.current_adapter, "coarse_cal_complete")
-                    }
 
-                    document.getElementById("coarse-calibrate-button").classList.remove("btn-success")
-                    document.getElementById("coarse-calibrate-button").innerHTML = "Calibrate Coarse"
-                    document.getElementById("coarse-calibrate-button").classList.add("btn-default")
-    
+                    App.prototype.coarse_interval = setInterval(this.pollForCoarse.bind(this),500)
+  
                 }).bind(this)
             )
+        )
+    }
+
+App.prototype.pollForFine =
+    function(){
+
+        parentthis = this;
+        apiGET(parentthis.current_adapter, "fine_cal_complete").done(
+            (function(data){
+                console.log(data['fine_cal_complete'])
+                if(data["fine_cal_complete"] == true){
+                    clearInterval(App.prototype.fine_interval)
+                    document.getElementById("fine-calibrate-button").classList.remove("btn-success")
+                    document.getElementById("fine-calibrate-button").innerHTML = "Calibrate Fine"
+                    document.getElementById("fine-calibrate-button").classList.add("btn-default")
+
+                    document.getElementById("coarse-calibrate-button").disabled = false;
+                    document.getElementById("fine-plot-button").disabled = false;
+                    document.getElementById("log-run-button").disabled = false;
+                    document.getElementById("display-single-button").disabled = false;
+                    document.getElementById("display-continuous-button").disabled = false;
+                    document.getElementById("fine-calibrate-button").disabled = false;
+                    
+                }
+                
+            }).bind(this)
         )
     }
 /*
@@ -833,6 +895,14 @@ App.prototype.calibrateCoarse =
 */
 App.prototype.calibrateFine = 
     function () {
+
+        document.getElementById("coarse-calibrate-button").disabled = true;
+        document.getElementById("fine-calibrate-button").disabled = true;
+        document.getElementById("fine-plot-button").disabled = true;
+        document.getElementById("log-run-button").disabled = true;
+        document.getElementById("display-single-button").disabled = true;
+        document.getElementById("display-continuous-button").disabled = true;
+        
 
         document.getElementById("fine-calibrate-button").classList.add("btn-success");
         document.getElementById("fine-calibrate-button").classList.remove("btn-default");
@@ -856,19 +926,37 @@ App.prototype.calibrateFine =
             .done(
             
                 (function(){
-
-                    var status = apiGET(this.current_adapter, "fine_cal_complete")
-                    while ( status == false){
-                        status = apiGET(this.current_adapter, "fine_cal_complete")
-                    }
-
-                    document.getElementById("fine-calibrate-button").classList.remove("btn-success")
-                    document.getElementById("fine-calibrate-button").innerHTML = "Calibrate Fine"
-                    document.getElementById("fine-calibrate-button").classList.add("btn-default")
-
+                    
+                    App.prototype.fine_interval = setInterval(this.pollForFine.bind(this), 500)
+       
                 }).bind(this)
             )   
         )
+    }
+
+
+App.prototype.pollForPlotFine=
+    function(){
+
+        parentthis = this;
+        apiGET(parentthis.current_adapter, "fine_plot_complete").done(
+            (function(data){
+                console.log(data['fine_plot_complete'])
+                if(data["fine_plot_complete"] == true){
+                    clearInterval(App.prototype.plot_fine_interval)
+                    this.generateFineGraph()
+                    document.getElementById("fine-plot-button").classList.remove("btn-success")
+                    document.getElementById("fine-plot-button").innerHTML = "Plot Fine"
+                    document.getElementById("fine-plot-button").classList.add("btn-default")
+                    document.getElementById("fine-calibrate-button").disabled = false;
+                    document.getElementById("fine-plot-button").disabled = false;
+    
+                }
+                
+            }).bind(this)
+        )
+
+
     }
 /*
 * Plots all of the fine calibration data and updates the graph on the webpage. 
@@ -876,6 +964,8 @@ App.prototype.calibrateFine =
 App.prototype.plotFine = 
     function(){
 
+        document.getElementById("fine-calibrate-button").disabled = true;
+        document.getElementById("fine-plot-button").disabled = true;
         document.getElementById("fine-plot-button").classList.add("btn-success");
         document.getElementById("fine-plot-button").innerHTML = "Plotting"
         document.getElementById("fine-plot-button").classList.remove("btn-default");
@@ -886,18 +976,32 @@ App.prototype.plotFine =
         apiPUT(this.current_adapter, 'plot_fine', "true").done(
                        
             (function(){
-                //this.sleep(1000)
-                var status = apiGET(this.current_adapter, "fine_plot_complete")
-                while ( status == false){
-                    status = apiGET(this.current_adapter, "fine_plot_complete")
+            
+                App.prototype.plot_fine_interval = setInterval(this.pollForPlotFine.bind(this), 500)
+
+            }).bind(this)
+        )
+
+    }
+
+App.prototype.pollForPlotCoarse=
+    function(){
+
+        parentthis = this;
+        apiGET(parentthis.current_adapter, "coarse_plot_complete").done(
+            (function(data){
+                console.log(data['coarse_plot_complete'])
+                if(data["coarse_plot_complete"] == true){
+                    clearInterval(App.prototype.plot_coarse_interval)
+                    this.generateCoarseGraph()
+                    document.getElementById("coarse-plot-button").classList.remove("btn-success")
+                    document.getElementById("coarse-plot-button").innerHTML = "Plot Coarse"
+                    document.getElementById("coarse-plot-button").classList.add("btn-default")
+                    document.getElementById("coarse-calibrate-button").disabled = false;
+                    document.getElementById("coarse-plot-button").disabled = false;
+    
                 }
-                //this.sleep(1000)
-                document.getElementById('fine_div').innerHTML = this.generateFineGraph()
-                document.getElementById("fine-plot-button").classList.remove("btn-success")
-                document.getElementById("fine-plot-button").innerHTML = "Plot Fine"
-                document.getElementById("fine-plot-button").classList.add("btn-default")
-
-
+                
             }).bind(this)
         )
 
@@ -906,6 +1010,8 @@ App.prototype.plotFine =
 App.prototype.plotCoarse = 
     function(){
 
+        document.getElementById("coarse-calibrate-button").disabled = true;
+        document.getElementById("coarse-plot-button").disabled = true;
         document.getElementById("coarse-plot-button").classList.add("btn-success");
         document.getElementById("coarse-plot-button").classList.remove("btn-default");
         document.getElementById("coarse-plot-button").innerHTML = "Plotting"
@@ -916,17 +1022,7 @@ App.prototype.plotCoarse =
         apiPUT(this.current_adapter, 'plot_coarse', "true").done(
                        
             (function(){
-            
-                var status = apiGET(this.current_adapter, "coarse_plot_complete")
-                while ( status == false){
-                    status = apiGET(this.current_adapter, "coarse_plot_complete")
-                }
-                //this.sleep(1000)
-                document.getElementById('coarse_div').innerHTML = this.generateCoarseGraph()
-                document.getElementById("coarse-plot-button").classList.remove("btn-success")
-                document.getElementById("coarse-plot-button").innerHTML = "Plot Coarse"
-                document.getElementById("coarse-plot-button").classList.add("btn-default")
-
+                App.prototype.plot_coarse_interval = setInterval(this.pollForPlotCoarse.bind(this), 500)
             }).bind(this)
         )
 
@@ -1098,12 +1194,44 @@ App.prototype.fileCancel =
         this.file_overlay.classList.add("hidden");
     }
 
+App.prototype.pollForFileWritten = 
+    function(){
+
+        parentthis = this;
+        apiGET(parentthis.current_adapter, "vector_file_written").done(
+            (function(data){
+                console.log(data['vector_file_written'])
+                if(data["vector_file_written"] == true){
+                    clearInterval(App.prototype.file_written_interval)
+                    document.getElementById('save-as-vector-file-button').innerHTML= "File Saved"
+                    setTimeout(function(){
+                        document.getElementById('save-as-vector-file-button').innerHTML= "Save as Vector File"
+                        document.getElementById("save-as-vector-file-button").classList.add("btn-default");
+                        document.getElementById("save-as-vector-file-button").classList.remove("btn-success");
+                        
+                    }, 3000)
+                    
+                }
+                
+            }).bind(this)
+        )
+
+
+
+    }
+
 /*
 * Generates a vector file from the current BIAS settings in the webpage
 * closes the save as vector file overlay when the file is created
 */
 App.prototype.createVectorFile = 
     function(){
+
+        document.getElementById('save-as-vector-file-button').innerHTML= "Saving File"
+        document.getElementById("save-as-vector-file-button").classList.add("btn-success");
+        document.getElementById("save-as-vector-file-button").classList.remove("btn-default");
+        
+
         var filename = document.getElementById("file-value").value;
         console.log(filename)
         apiPUT(this.current_adapter, "update_bias", "false")
@@ -1117,12 +1245,47 @@ App.prototype.createVectorFile =
                             apiPUT(this.current_adapter, "dacs/" + i.toString() + "/value", value.toString())
                             
                         }
+
+                        App.prototype.file_written_interval = setInterval(this.pollForFileWritten.bind(this), 100)
                     }).bind(this)
                 )
             }).bind(this)
         )
         document.getElementById("file-value").value = "";
         this.file_overlay.classList.add("hidden");
+    }
+
+App.prototype.pollForUploadComplete = 
+    function(){
+        parentthis = this;
+        apiGET(parentthis.current_adapter, "upload_vector_complete").done(
+            (function(data){
+                console.log(data['upload_vector_complete'])
+                if(data["upload_vector_complete"] == true){
+                    clearInterval(App.prototype.upload_vector_interval)
+                    document.getElementById("upload-vector-file-button").innerHTML = "Vector File Uploaded"
+                    document.getElementById("coarse-calibrate-button").disabled = false;
+                    document.getElementById("fine-calibrate-button").disabled = false;
+                    document.getElementById("fine-plot-button").disabled = false;
+                    document.getElementById("coarse-plot-button").disabled = false;
+                    document.getElementById("log-run-button").disabled = false;
+                    document.getElementById("display-single-button").disabled = false;
+                    document.getElementById("display-continuous-button").disabled = false;
+                    document.getElementById("upload-vector-file-button").disabled = false;
+                    setTimeout(function(){
+       
+                        document.getElementById("upload-vector-file-button").innerHTML = "Upload Vector File"
+                        document.getElementById("upload-vector-file-button").classList.remove("btn-success")
+                        document.getElementById("upload-vector-file-button").classList.add("btn-default")
+
+                    
+                    }, 3000)
+            
+    
+                }
+                
+            }).bind(this)
+        )
     }
 /*
 * Sends the command to the asic to upload the current vector file
@@ -1131,31 +1294,35 @@ App.prototype.createVectorFile =
 App.prototype.uploadVector = 
     function(){
 
+
         apiPUT(this.current_adapter, "fpga_reset", "true").done(
             
             (function(){
             
-            console.log("returned done from fpga reset")
-            this.sleep(2000)
-    
-            apiPUT(this.current_adapter, "upload_vector_file", "true")
-            .done(
-                (function(){
-                    this.fpga_warn.classList.add("hidden");
-                }).bind(this)
-            )
-    
-    
-            
-    }).bind(this)
-        /*
-            apiPUT(this.current_adapter, "upload_vector_file", "true")
-            .done(
-                (function(){
-                    this.fpga_warn.classList.add("hidden");
-                }).bind(this)
-            )
-            */
+                console.log("returned done from fpga reset")
+                document.getElementById("coarse-calibrate-button").disabled = true;
+                document.getElementById("fine-calibrate-button").disabled = true;
+                document.getElementById("fine-plot-button").disabled = true;
+                document.getElementById("coarse-plot-button").disabled = true;
+                document.getElementById("log-run-button").disabled = true;
+                document.getElementById("display-single-button").disabled = true;
+                document.getElementById("display-continuous-button").disabled = true;
+                document.getElementById("upload-vector-file-button").disabled = true;
+
+                //this.sleep(2000)
+                this.fpga_warn.classList.add("hidden");
+        
+                apiPUT(this.current_adapter, "upload_vector_file", "true")
+                .done(
+                    (function(){
+                        document.getElementById("upload-vector-file-button").classList.remove("btn-default")
+                        document.getElementById("upload-vector-file-button").classList.add("btn-success")
+                        document.getElementById("upload-vector-file-button").innerHTML = "Uploading Vector File"
+                        App.prototype.upload_vector_interval = setInterval(this.pollForUploadComplete.bind(this), 250)
+                    }).bind(this)
+                )
+            }).bind(this)
+
         )
 
     }
@@ -1233,6 +1400,32 @@ App.prototype.setClock =
         .fail(this.setError.bind(this))
     }
 
+
+App.prototype.pollForVectorSet = 
+    function(){
+
+        parentthis = this;
+        apiGET(parentthis.current_adapter, "bias_parsed").done(
+            (function(data){
+                console.log(data['bias_parsed'])
+                if(data["bias_parsed"] == true){
+
+                    clearInterval(App.prototype.set_vector_interval)
+                    apiGET(this.current_adapter, "", false)
+                    .done(
+                        function(data){
+                            for(i=0; i< data["dacs"].length; i++){
+                                document.getElementById('DAC-' + i.toString() + '-input').value = data["dacs"][i]["value"];
+                            }
+                        }
+                    )
+                }
+                
+            }).bind(this)
+        )
+
+
+    }
 /*
 * Sets the current vector file being used by the asic using the one selected on the drop-down 
 * Retrieves all of the bias settings from the vector file used and populates the bias 
@@ -1251,15 +1444,9 @@ App.prototype.setVectorFile =
             apiPUT(this.current_adapter, "vector_file", value)
             .done( 
                 (function(){
-                    this.sleep(1500)
-                    apiGET(this.current_adapter, "", false)
-                    .done(
-                        function(data){
-                        for(i=0; i< data["dacs"].length; i++){
-                            document.getElementById('DAC-' + i.toString() + '-input').value = data["dacs"][i]["value"];
-                        }
-                    }
-                )
+
+                    App.prototype.set_vector_interval = setInterval(this.pollForVectorSet.bind(this), 150)
+       
                 }).bind(this)
             )
             .fail(this.setError.bind(this))
@@ -1309,13 +1496,11 @@ App.prototype.setVolatile =
 App.prototype.updateImage = 
     function(){
         this.sleep(100)
-        document.getElementById('image_display').src = "img/current_image.png?" + new Date().getTime()
-        
-        
+        document.getElementById('image_display').src = "img/current_image.png?" + new Date().getTime()    
     }
 
 App.prototype.pollForImage = 
-    function(){
+    function(now){
         parentthis = this;
         apiGET(parentthis.current_adapter, "image_ready").done(
             (function(data){
@@ -1330,13 +1515,12 @@ App.prototype.pollForImage =
     }
 
 App.prototype.imageGenerate =
-    function(single) {
-        
+    function() {
+
         apiPUT(this.current_adapter, "image", 2)
         .done(
             (function(single){            
-                
-                App.prototype.image_interval = setInterval(this.pollForImage.bind(this), 250)
+                App.prototype.image_interval = setInterval(this.pollForImage.bind(this), 100)
 
             }).bind(this)
         ).fail(this.setError.bind(this));
@@ -1344,11 +1528,18 @@ App.prototype.imageGenerate =
 
 App.prototype.imageGenerateLoop = 
     function(){
+
+        //console.log("image loop")
+        document.getElementById("fine-calibrate-button").disabled = true;
+        document.getElementById("coarse-calibrate-button").disabled = true;
+
         var button = document.getElementById('display-continuous-button')
 
         document.getElementById("log-run-button").disabled = true;
-
+        document.getElementById("display-single-button").disabled = true;
+        
         if(button.innerHTML  == "Stream Images"){
+            //console.log("button = safe")
             button.innerHTML = "Stop Streaming Images"
             button.classList.remove("btn-default")
             button.classList.add("btn-danger")
@@ -1356,26 +1547,59 @@ App.prototype.imageGenerateLoop =
             App.prototype.image_loop_interval = setInterval(this.imageGenerate.bind(this), 350)
         }
         else if (button.innerHTML == "Stop Streaming Images"){
+            //console.log("button = strop")
             button.classList.add("btn-default")
             button.classList.remove("btn-danger")
             button.innerHTML = "Stream Images"
             this.stopImageLoop()
+            document.getElementById("fine-calibrate-button").disabled = false;
+            document.getElementById("coarse-calibrate-button").disabled = false;
         }
-       
+ 
 }
 
 App.prototype.stopImageLoop = 
     function(){
+
+        clearInterval(App.prototype.image_interval)
         clearInterval(App.prototype.image_loop_interval)
         document.getElementById("log-run-button").disabled = false;
+        document.getElementById("display-single-button").disabled = false;
+   
     }
 
+
+App.prototype.pollForLogComplete =
+function (){
+    parentthis = this;
+    apiGET(parentthis.current_adapter, "log_complete").done(
+        (function(data){
+            console.log(data['log_complete'])
+            if(data["log_complete"] == true){
+                
+                clearInterval(App.prototype.log_file_interval)
+                document.getElementById("log-run-button").innerHTML = "Images Saved"
+                document.getElementById("display-continuous-button").disabled = false;
+                document.getElementById("display-single-button").disabled = false;
+
+                setTimeout(function(){
+                    document.getElementById("log-run-button").classList.remove("btn-success");
+                    document.getElementById("log-run-button").classList.add("btn-default");
+                    document.getElementById("log-run-button").innerHTML = "Save Images"
+                }, 3000)
+            }
+           
+        }).bind(this)
+    )
+ 
+}
 
 App.prototype.logImageCapture =
     function() {
 
         document.getElementById("log-run-button").classList.add("btn-success");
         document.getElementById("log-run-button").classList.remove("btn-default");
+        document.getElementById("log-run-button").innerHTML = "Saving Images"
         document.getElementById("display-continuous-button").disabled = true;
         document.getElementById("display-single-button").disabled = true;
 
@@ -1394,11 +1618,9 @@ App.prototype.logImageCapture =
         .done(
             (
                 function(){
-                    this.sleep(1000)
-                    document.getElementById("log-run-button").classList.remove("btn-success");
-                    document.getElementById("log-run-button").classList.add("btn-default");
-                    document.getElementById("display-continuous-button").disabled = false;
-                    document.getElementById("display-single-button").disabled = false;
+                    //document.getElementById("log-run-button").innerHTML = "Saving Images"
+                    App.prototype.log_file_interval = setInterval(this.pollForLogComplete.bind(this), 100)
+
                 }
             ).bind(this)
         )
