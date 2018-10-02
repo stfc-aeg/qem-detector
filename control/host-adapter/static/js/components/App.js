@@ -230,13 +230,15 @@ App.prototype.generate =
                                 <th class="text-right">iBiasCol</th>
                                 <td>
                                     <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-0-input" aria-label="Value" placeholder="010100" type="text">
+                                        <input class="form-control text-right bias" id="DAC-0-input" aria-label="Value" placeholder="010100" type="text" maxlength='6'>
+                                        <span id='dac-0-addon' class="input-group-addon">20</span>
                                     </div>
                                 </td>
                                 <th class="text-right">iBiasSF0</th>
                                 <td>
                                     <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-1-input" aria-label="Value" placeholder="001100" type="text">
+                                        <input class="form-control text-right bias" id="DAC-1-input" aria-label="Value" placeholder="001100" type="text" maxlength='6'>
+                                        <span id='dac-1-addon' class="input-group-addon">12</span>
                                     </div>
                                 </td>
                             </tr>
@@ -244,13 +246,15 @@ App.prototype.generate =
                                 <th class="text-right">vBiasPGA</th>
                                 <td>
                                     <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-2-input" aria-label="Value" placeholder="101101" type="text">
+                                        <input class="form-control text-right bias" id="DAC-2-input" aria-label="Value" placeholder="101101" type="text" maxlength='6'>
+                                        <span id='dac-2-addon' class="input-group-addon">45</span>
                                     </div>
                                 </td>
                                 <th class="text-right">iBiasPGA</th>
                                 <td>
                                     <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-3-input" aria-label="Value" placeholder="001100" type="text">
+                                        <input class="form-control text-right bias" id="DAC-3-input" aria-label="Value" placeholder="001100" type="text" maxlength='6'>
+                                        <span id='dac-3-addon' class="input-group-addon">12</span>
                                     </div>
                                 </td>
                             </tr>
@@ -258,13 +262,15 @@ App.prototype.generate =
                                 <th class="text-right">iBiasSF1</th>
                                 <td>
                                     <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-4-input"  aria-label="Value" placeholder="010000" type="text">
+                                        <input class="form-control text-right bias" id="DAC-4-input"  aria-label="Value" placeholder="010000" type="text" maxlength='6'>
+                                        <span id='dac-4-addon' class="input-group-addon">16</span>
                                     </div>
                                 </td>
                                 <th class="text-right">iBiasOutSF</th>
                                 <td>
                                     <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-5-input" aria-label="Value" placeholder="001010" type="text">
+                                        <input class="form-control text-right bias" id="DAC-5-input" aria-label="Value" placeholder="001010" type="text" maxlength='6'>
+                                        <span id='dac-5-addon' class="input-group-addon">10</span>
                                     </div>
                                 </td>
                             </tr>
@@ -272,13 +278,15 @@ App.prototype.generate =
                                 <th class="text-right">iBiasLoad</th>
                                 <td>
                                     <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-6-input" aria-label="Value" placeholder="010100" type="text">
+                                        <input class="form-control text-right bias" id="DAC-6-input" aria-label="Value" placeholder="010100" type="text" maxlength='6'>
+                                        <span id='dac-6-addon' class="input-group-addon">20</span>
                                     </div>
                                 </td>
                                 <th class="text-right">iBiasADCbuffer</th>
                                 <td>
                                     <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-7-input" aria-label="Value" placeholder="011001" type="text">
+                                        <input class="form-control text-right bias" id="DAC-7-input" aria-label="Value" placeholder="011001" type="text" maxlength='6'>
+                                        <span id='dac-7-addon' class="input-group-addon">25</span>
                                     </div>
                                 </td>
                             </tr>
@@ -286,13 +294,15 @@ App.prototype.generate =
                                 <th class="text-right">iBiasCalC</th>
                                 <td>
                                     <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-8-input" aria-label="Value" placeholder="010100" type="text">
+                                        <input class="form-control text-right bias" id="DAC-8-input" aria-label="Value" placeholder="010100" type="text" maxlength='6'>
+                                        <span id='dac-8-addon' class="input-group-addon">20</span>
                                     </div>
                                 </td>
                                 <th class="text-right">iBiasRef</th>
                                 <td>
                                     <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-9-input" aria-label="Value" placeholder="001010" type="text">
+                                        <input class="form-control text-right bias" id="DAC-9-input" aria-label="Value" placeholder="001010" type="text" maxlength='6'>
+                                        <span id='dac-9-addon' class="input-group-addon">10</span>
                                     </div>
                                 </td>
                             </tr>
@@ -300,13 +310,15 @@ App.prototype.generate =
                                 <th class="text-right">iCbiasP</th>
                                 <td>
                                     <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-10-input" aria-label="Value" placeholder="010010" type="text">
+                                        <input class="form-control text-right bias" id="DAC-10-input" aria-label="Value" placeholder="010010" type="text" maxlength='6'>
+                                        <span id='dac-10-addon' class="input-group-addon">18</span>
                                     </div>
                                 </td>
                                 <th class="text-right">vBiasCasc</th>
                                 <td>
                                     <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-11-input" aria-label="Value" placeholder="001100" type="text">
+                                        <input class="form-control text-right bias" id="DAC-11-input" aria-label="Value" placeholder="001100" type="text" maxlength='6'>
+                                        <span id='dac-11-addon' class="input-group-addon">12</span>
                                     </div>
                                 </td>
                             </tr>
@@ -314,13 +326,15 @@ App.prototype.generate =
                                 <th class="text-right">iFbiasN</th>
                                 <td>
                                     <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-12-input" aria-label="Value" placeholder="011000" type="text">
+                                        <input class="form-control text-right bias" id="DAC-12-input" aria-label="Value" placeholder="011000" type="text" maxlength='6'>
+                                        <span id='dac-12-addon' class="input-group-addon">24</span>
                                     </div>
                                 </td>
                                 <th class="text-right">iBiasCalF</th>
                                 <td>
                                     <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-13-input" aria-label="Value" placeholder="000000" type="text">
+                                        <input class="form-control text-right bias" id="DAC-13-input" aria-label="Value" placeholder="000000" type="text" maxlength='6'>
+                                        <span id='dac-13-addon' class="input-group-addon">0</span>
                                     </div>
                                 </td>
                             </tr>
@@ -328,13 +342,15 @@ App.prototype.generate =
                                 <th class="text-right">iBiasADC1</th>
                                 <td>
                                     <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-14-input" aria-label="Value" placeholder="100000" type="text">
+                                        <input class="form-control text-right bias" id="DAC-14-input" aria-label="Value" placeholder="100000" type="text" maxlength='6'>
+                                        <span id='dac-14-addon' class="input-group-addon">32</span>
                                     </div>
                                 </td>
                                 <th class="text-right">iBiasADC2</th>
                                 <td>
                                     <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-15-input" aria-label="Value" placeholder="000101" type="text">
+                                        <input class="form-control text-right bias" id="DAC-15-input" aria-label="Value" placeholder="000101" type="text" maxlength='6'>
+                                        <span id='dac-15-addon' class="input-group-addon">5</span>
                                     </div>
                                 </td>
                             </tr>
@@ -342,13 +358,15 @@ App.prototype.generate =
                                 <th class="text-right">iBiasAmpLVDS</th>
                                 <td>
                                     <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-16-input" aria-label="Value" placeholder="011010" type="text">
+                                        <input class="form-control text-right bias" id="DAC-16-input" aria-label="Value" placeholder="011010" type="text" maxlength='6'>
+                                        <span id='dac-16-addon' class="input-group-addon">26</span>
                                     </div>
                                 </td>
                                 <th class="text-right">iBiasLVDS</th>
                                 <td>
                                     <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-17-input" aria-label="Value" placeholder="001100" type="text">
+                                        <input class="form-control text-right bias" id="DAC-17-input" aria-label="Value" placeholder="001100" type="text" maxlength='6'>
+                                        <span id='dac-17-addon' class="input-group-addon">12</span>
                                     </div>
                                 </td>
                             </tr>
@@ -356,8 +374,10 @@ App.prototype.generate =
                                 <th class="text-right">iBiasPLL</th>
                                 <td>
                                     <div class="input-group">
-                                        <input class="form-control text-right" id="DAC-18-input" aria-label="Value" placeholder="001010" type="text">
+                                        <input class="form-control text-right bias" id="DAC-18-input" aria-label="Value" placeholder="001010" type="text" maxlength='6'>
+                                        <span id='dac-18-addon' class="input-group-addon">10</span>
                                     </div>
+                                   
                                 </td>
                                 <th></th>
                                 <th></th>
@@ -544,7 +564,12 @@ App.prototype.generate =
     for(var i=0; i< vector_list.children.length; i++){
         vector_list.children[i].addEventListener("click", this.setVectorFile.bind(this));
     }
-       
+    
+    var bias = document.getElementsByClassName("bias");
+
+    for(var i=0; i < bias.length; i++){
+        bias[i].addEventListener("change", this.setDecimalBias.bind(this));
+    }
 
 
     
@@ -772,6 +797,16 @@ App.prototype.sleep =
           }
         }
     }
+
+App.prototype.setDecimalBias =
+    function(event){
+
+        var element = event.target;
+        var bin_value = element.value;
+        dec_value = parseInt(bin_value, 2)
+        element.nextElementSibling.innerHTML = dec_value
+    
+}
 
 /*
 * Gets the current coarse calibration graph
@@ -1242,6 +1277,7 @@ App.prototype.createVectorFile =
                     (function(){
                         for(i=0; i < 19; i++){
                             var value = document.getElementById("DAC-"+ i.toString() + "-input").value;
+                            
                             apiPUT(this.current_adapter, "dacs/" + i.toString() + "/value", value.toString())
                             
                         }
@@ -1416,6 +1452,7 @@ App.prototype.pollForVectorSet =
                         function(data){
                             for(i=0; i< data["dacs"].length; i++){
                                 document.getElementById('DAC-' + i.toString() + '-input').value = data["dacs"][i]["value"];
+                                document.getElementById("dac-" + i.toString() + "-addon").innerHTML = parseInt(data["dacs"][i]["value"], 2)
                             }
                         }
                     )
