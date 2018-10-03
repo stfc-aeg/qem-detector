@@ -25,6 +25,7 @@ class InterfaceAdapter(ApiAdapter):
         # into the options used below.
         super(InterfaceAdapter, self).__init__(**kwargs)
 
+
         interface_options = {
 
             'working_dir' : str(self.options.get('working_directory')),
@@ -34,9 +35,11 @@ class InterfaceAdapter(ApiAdapter):
             'server_ctrl_ip' : str(self.options.get("server_ctrl_ip")),
             'server_data_ip' : str(self.options.get("server_data_ip")),
             'camera_ctrl_ip' : str(self.options.get("camera_ctrl_ip")),
-            'camera_data_ip' : str(self.options.get("camera_data_ip"))
-
+            'camera_data_ip' : str(self.options.get("camera_data_ip")),
+            'resistor_defaults' : str(self.options.get('settings')),
         }
+
+        #print interface_options
         # Retrieve adapter options from incoming argument list
         self.update_interval = float(self.options.get('update_interval', 0.05))
        

@@ -96,7 +96,7 @@ class InterfaceData(object):
         then creates a tree structure containing all data needed by the interace, and passes the API commands to the relevant interface so they can be sent on to the asic or the backplane server
         """
 
-        self.backplane_interface = Backplane_Interface(kwargs['fem_ip'], kwargs['fem_port'])
+        self.backplane_interface = Backplane_Interface(kwargs['fem_ip'], kwargs['fem_port'], kwargs['resistor_defaults'])
         self.asic_interface = ASIC_Interface(
                             self.backplane_interface, 
                             kwargs['working_dir'], 
@@ -136,6 +136,7 @@ class InterfaceData(object):
             "current_voltage" : [cv.param_tree for cv in self.current_voltage],
             "resistors" : [r.param_tree for r in self.resistors],
             "fpga_reset" : (u'False', self.backplane_interface.set_reset_fpga),
+            "load_defaults" : (u'False', self.backplane_interface.load_default_resistors),
 
             #ASIC subtree
             "image" : (1, self.asic_interface.set_image_capture),
