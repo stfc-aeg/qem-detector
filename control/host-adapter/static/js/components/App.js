@@ -1144,6 +1144,22 @@ App.prototype.generateSupplies =
         return supply_table
     };
 
+App.prototype.pollForDefaults =
+    function(){
+
+        parentthis = this;
+        apiGET(parentthis.current_adapter, "defaults_loaded").done(
+            (function(data){
+                console.log(data['defaults_loaded'])
+                if(data["defaults_loaded"] == true){
+                    clearInterval(App.prototype.defaults_interval)
+                    this.reload_bp()
+                }
+                
+            }).bind(this)
+        )
+    }
+
 App.prototype.load_defaults = 
     function(){
 
@@ -1151,8 +1167,8 @@ App.prototype.load_defaults =
         apiPUT(this.current_adapter, "load_defaults", "true").done(
             (function(){
 
-                    this.sleep(1000)
-                    this.reload_bp()
+                    App.prototype.defaults_interval = setInterval(this.pollForDefaults.bind(this), 100)
+                   
 
             }).bind(this)
         )

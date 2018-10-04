@@ -137,6 +137,7 @@ class InterfaceData(object):
             "resistors" : [r.param_tree for r in self.resistors],
             "fpga_reset" : (u'False', self.backplane_interface.set_reset_fpga),
             "load_defaults" : (u'False', self.backplane_interface.load_default_resistors),
+            "defaults_loaded" : (self.backplane_interface.get_defaults_loaded, self.backplane_interface.set_defaults_loaded),
 
             #ASIC subtree
             "image" : (1, self.asic_interface.set_image_capture),

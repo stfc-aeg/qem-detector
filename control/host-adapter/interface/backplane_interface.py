@@ -1,5 +1,6 @@
 import requests
 import json
+from concurrent import futures
 
 class Backplane_Interface():
     """ This class handles communication with the odin_qem backplane server by passing get and set commands to the appropriate requests"""
@@ -13,6 +14,10 @@ class Backplane_Interface():
         self.put_headers = {'Content-Type': 'application/json'}
         #headers to receive the metadata from the odin-qem server
         self.meta_headers = {'Accept': 'application/json;metadata=true'}
+        self.defaults_loaded = False
+
+        self.thread_executor = futures.ThreadPoolExecutor(max_workers=1)
+
         #self.resistor_defaults = resistor_defaults
         self.non_volatile = False
 
@@ -29,14 +34,21 @@ class Backplane_Interface():
 
         # print(self.resistor_defaults)
 
+    def set_defaults_loaded(self, true):
+        self.defaults_loaded = True
+
+    def get_defaults_loaded(self):
+        return self.defaults_loaded
+
     def load_default_resistors(self, load):
+        self.set_defaults_loaded(False)
         i = 0 
         for resistor in self.resistor_defaults:
             url = self.url + "resistors/" + str(i)+ "/voltage_current"
             requests.put(url, str(resistor), headers=self.put_headers)
             print resistor
             i = i+1
-
+        self.set_defaults_loaded(True)
 
     def set_resistor_register(self, resistor, value):
         #sets the resistor given name or location 'resistor' to 'value'
