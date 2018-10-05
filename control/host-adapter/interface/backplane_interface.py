@@ -15,24 +15,44 @@ class Backplane_Interface():
         #headers to receive the metadata from the odin-qem server
         self.meta_headers = {'Accept': 'application/json;metadata=true'}
         self.defaults_loaded = False
-
         self.thread_executor = futures.ThreadPoolExecutor(max_workers=1)
-
-        #self.resistor_defaults = resistor_defaults
         self.non_volatile = False
-
         self.settings_file = settings_file
-        self.resistor_defaults = []
-        self.lines = []
+        self.resistor_defaults = [0] * 8
+        self.lines = [0] * 8
 
         file = open(self.settings_file, "r")
         for line in file:
             name, value = line.split("=")
-            name = name.replace(" ", "")
-            self.lines.append(line)
-            self.resistor_defaults.append(str(value).replace(" ", "").replace("\n", ""))
-
-        # print(self.resistor_defaults)
+            name = str(name.replace(" ", ""))
+           
+            if name == "AUXRESET":
+                self.resistor_defaults[0] = str(value).replace(" ", "").replace("\n", "")
+                self.lines[0] = line
+            elif name == "VCM":
+                self.resistor_defaults[1] = str(value).replace(" ", "").replace("\n", "")
+                self.lines[1] = line
+            elif name == "DACEXTREF":
+                self.resistor_defaults[2] = str(value).replace(" ", "").replace("\n", "")
+                self.lines[2] = line
+            elif name == "VDD_RST":
+                self.resistor_defaults[3] = str(value).replace(" ", "").replace("\n", "")
+                self.lines[3] = line
+            elif name == "VRESET":
+                self.resistor_defaults[4] = str(value).replace(" ", "").replace("\n", "")
+                self.lines[4] = line
+            elif name == "VCTRL":
+                self.resistor_defaults[5] = str(value).replace(" ", "").replace("\n", "")
+                self.lines[5] = line
+            elif name == "AUXSAMPLE_FINE":
+                self.resistor_defaults[6] = str(value).replace(" ", "").replace("\n", "")
+                self.lines[6] = line
+            elif name == "AUXSAMPLE_COARSE":
+                self.resistor_defaults[7] = str(value).replace(" ", "").replace("\n", "")
+                self.lines[7] = line
+            else:
+                print "resistor name not recognised"
+                #TODO Exception
 
     def set_defaults_loaded(self, true):
         self.defaults_loaded = True
@@ -46,7 +66,7 @@ class Backplane_Interface():
         for resistor in self.resistor_defaults:
             url = self.url + "resistors/" + str(i)+ "/voltage_current"
             requests.put(url, str(resistor), headers=self.put_headers)
-            print resistor
+            #print resistor
             i = i+1
         self.set_defaults_loaded(True)
 
