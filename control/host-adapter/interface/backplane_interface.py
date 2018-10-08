@@ -95,8 +95,9 @@ class Backplane_Interface():
         """
         resistor_url = self.url + "resistors/" + str(resistor)+ "/voltage_current"
         requests.put(resistor_url, str(value), headers=self.put_headers)
-
-        if self.non_volatile:
+       
+        if self.non_volatile is True:
+           
             self.resistor_defaults[resistor] = value
             name, number = self.lines[resistor].split("=")
             number = str(value)
@@ -156,7 +157,12 @@ class Backplane_Interface():
         :param value: non volatility of all resistors as a unicode string "true" or "false"
         (unicode due to js requests generating unicode strings)
         """
-        self.non_volatile = value
+      
+        if value == "true":
+            self.non_volatile = True 
+        else:
+            self.non_volatile = False
+            
         requests.put(self.url + "non_volatile", str(value), headers=self.put_headers)
 
     def get_clock_frequency(self):
