@@ -523,6 +523,8 @@ App.prototype.generate =
     document.getElementById('fine-plot-button').addEventListener("click", this.plotFine.bind(this));
     document.getElementById('coarse-plot-button').addEventListener("click", this.plotCoarse.bind(this));
 
+    document.getElementById("load-default-button").addEventListener("click", this.load_defaults.bind(this));
+
 
     var mode_toggle = document.getElementById('toggle-container');
     var image_vector_files = document.getElementsByClassName("image_vectors")
@@ -1141,6 +1143,39 @@ App.prototype.generateSupplies =
         </table>`
         return supply_table
     };
+
+App.prototype.pollForDefaults =
+    function(){
+
+        parentthis = this;
+        apiGET(parentthis.current_adapter, "defaults_loaded").done(
+            (function(data){
+                console.log(data['defaults_loaded'])
+                if(data["defaults_loaded"] == true){
+                    clearInterval(App.prototype.defaults_interval)
+                    this.reload_bp()
+                }
+                
+            }).bind(this)
+        )
+    }
+
+App.prototype.load_defaults = 
+    function(){
+
+
+        apiPUT(this.current_adapter, "load_defaults", "true").done(
+            (function(){
+
+                    App.prototype.defaults_interval = setInterval(this.pollForDefaults.bind(this), 100)
+                   
+
+            }).bind(this)
+        )
+
+
+
+    }
 
 /*
 * Sets whether the backplane is constantly updating the values or not

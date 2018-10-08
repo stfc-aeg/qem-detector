@@ -1,9 +1,10 @@
 import requests
 import json
+from concurrent import futures
 
 class Backplane_Interface():
     """ This class handles communication with the odin_qem backplane server by passing get and set commands to the appropriate requests"""
-    def __init__(self, address="192.168.0.122", port="8888"):
+    def __init__(self, address="192.168.0.122", port="8888", settings_file=""):
         """
         :param address: The IP address of the odin_qem server on the FEM
         :param address: The port number of the odin_qem server
@@ -13,6 +14,61 @@ class Backplane_Interface():
         self.put_headers = {'Content-Type': 'application/json'}
         #headers to receive the metadata from the odin-qem server
         self.meta_headers = {'Accept': 'application/json;metadata=true'}
+        self.defaults_loaded = False
+        self.thread_executor = futures.ThreadPoolExecutor(max_workers=1)
+        self.non_volatile = False
+        self.settings_file = settings_file
+        self.resistor_defaults = [0] * 8
+        self.lines = [0] * 8
+
+        file = open(self.settings_file, "r")
+        for line in file:
+            name, value = line.split("=")
+            name = str(name.replace(" ", ""))
+           
+            if name == "AUXRESET":
+                self.resistor_defaults[0] = str(value).replace(" ", "").replace("\n", "")
+                self.lines[0] = line
+            elif name == "VCM":
+                self.resistor_defaults[1] = str(value).replace(" ", "").replace("\n", "")
+                self.lines[1] = line
+            elif name == "DACEXTREF":
+                self.resistor_defaults[2] = str(value).replace(" ", "").replace("\n", "")
+                self.lines[2] = line
+            elif name == "VDD_RST":
+                self.resistor_defaults[3] = str(value).replace(" ", "").replace("\n", "")
+                self.lines[3] = line
+            elif name == "VRESET":
+                self.resistor_defaults[4] = str(value).replace(" ", "").replace("\n", "")
+                self.lines[4] = line
+            elif name == "VCTRL":
+                self.resistor_defaults[5] = str(value).replace(" ", "").replace("\n", "")
+                self.lines[5] = line
+            elif name == "AUXSAMPLE_FINE":
+                self.resistor_defaults[6] = str(value).replace(" ", "").replace("\n", "")
+                self.lines[6] = line
+            elif name == "AUXSAMPLE_COARSE":
+                self.resistor_defaults[7] = str(value).replace(" ", "").replace("\n", "")
+                self.lines[7] = line
+            else:
+                print "resistor name not recognised"
+                #TODO Exception
+
+    def set_defaults_loaded(self, true):
+        self.defaults_loaded = True
+
+    def get_defaults_loaded(self):
+        return self.defaults_loaded
+
+    def load_default_resistors(self, load):
+        self.set_defaults_loaded(False)
+        i = 0 
+        for resistor in self.resistor_defaults:
+            url = self.url + "resistors/" + str(i)+ "/voltage_current"
+            requests.put(url, str(resistor), headers=self.put_headers)
+            #print resistor
+            i = i+1
+        self.set_defaults_loaded(True)
 
     def set_resistor_register(self, resistor, value):
         #sets the resistor given name or location 'resistor' to 'value'
@@ -29,6 +85,7 @@ class Backplane_Interface():
         """
         response = requests.get(self.url + "resistors/" + str(resistor) + "/voltage_current")
         parsed_response = float(json.loads(response.text)[u'voltage_current'])
+
         return parsed_response
 
     def set_resistor_value(self, resistor, value):
@@ -38,6 +95,14 @@ class Backplane_Interface():
         """
         resistor_url = self.url + "resistors/" + str(resistor)+ "/voltage_current"
         requests.put(resistor_url, str(value), headers=self.put_headers)
+
+        if self.non_volatile:
+            self.resistor_defaults[resistor] = value
+            name, number = self.lines[resistor].split("=")
+            number = str(value)
+            self.lines[resistor] = str(name + "=" + number + "\n")
+            open(self.settings_file, "w").writelines(self.lines)
+
 
     def get_resistor_name(self, resistor):
         """
@@ -91,6 +156,7 @@ class Backplane_Interface():
         :param value: non volatility of all resistors as a unicode string "true" or "false"
         (unicode due to js requests generating unicode strings)
         """
+        self.non_volatile = value
         requests.put(self.url + "non_volatile", str(value), headers=self.put_headers)
 
     def get_clock_frequency(self):
