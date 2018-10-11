@@ -19,8 +19,8 @@ class AD5694(I2CDevice):
         value = (voltage - 0.1975) / 0.0015
 
     
-    def set_fine_from_value(self, value):
-
+    def set_coarse_from_value(self, value):
+        print "setting coarse"
         self.write8(0x38, value)
 
         pass
