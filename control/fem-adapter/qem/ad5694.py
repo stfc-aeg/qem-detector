@@ -16,11 +16,13 @@ class AD5694(I2CDevice):
         #setupdevice
 
     def set_from_voltage(self, voltage): 
-
         value = (voltage - 0.1975) / 0.0015
-            
+
     
-    def set_from_value(self, value):
+    def set_fine_from_value(self, value):
+
+        self.write8(0x38, value)
+
         pass
 
     def write_dac_reg(self, dac, value):

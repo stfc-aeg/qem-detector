@@ -45,6 +45,10 @@ class Backplane(I2CContainer):
 	    for i in range(2):
 		self.ad5272.append(self.tca.attach_device(4, AD5272, 0x2E + i, busnum=1))
 		# resistors 0x2E = fine adjustment, 0x2F coarse adjustment
+        
+        self.ad5694 = self.tca.attach_device(5, AD5694, 0x0E, busnum=1)
+        self.ad5694.set_coarse_from_value(0x21)
+
 
 	    #set the resistance and number of positions for each ad5272
 	    #the fine (0x2E) is 256 and 20K
@@ -64,7 +68,9 @@ class Backplane(I2CContainer):
             self.ad7998 = []
             for i in range(4):
                 self.ad7998.append(self.tca.attach_device(2, AD7998, 0x21 + i, busnum=1))
+        
 
+        
 	    # add the GPIO devices
             self.mcp23008 = []
             self.mcp23008.append(self.tca.attach_device(3, MCP23008, 0x20, busnum=1))
