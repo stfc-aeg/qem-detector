@@ -13,6 +13,7 @@ from tpl0102 import TPL0102
 from si570 import SI570
 from ad7998 import AD7998
 from gpio_reset import GPIOReset
+from ad5694 import AD5694
 
 try :
     from logger.qem_logger import qemLogger
