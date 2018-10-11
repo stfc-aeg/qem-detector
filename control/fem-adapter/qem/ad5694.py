@@ -20,14 +20,14 @@ class AD5694(I2CDevice):
         value = (voltage - 0.1975) / 0.0015
         self.write_from_value(dac, value)
     
-    def write_from_value(self, dac, value):
+    def set_from_value(self, dac, value):
         
         print ("setting dac %d from  value %d" % (dac, value))
         self.write16(WRITE_UPDATE + self.dacs[dac-1], value)
 
     def read_dac_voltage(sel, dac):
 
-        return ((self.read_dac_value * 0.0015) + 0.1975)
+        return ((self.read_dac_value() * 0.0015) + 0.1975)
 
     def read_dac_value(self, dac):
 
