@@ -129,10 +129,10 @@ class AD5272(I2CDevice):
     def store_50TP(self, enable):
         #stores the current RDAC value in the 50TP memory locations
         #
-	if enable :
-		self.write8(0x0C, 0x00) # move the contents of the RDAC register to the memory
-		tmp=self.readU16(0) # read the result into tmp variable
-		return (((tmp&0x03) << 8) + ((tmp&0xFF00) >> 8))
+        if enable :
+            self.write8(0x0C, 0x00) # move the contents of the RDAC register to the memory
+            tmp=self.readU16(0) # read the result into tmp variable
+            return (((tmp&0x03) << 8) + ((tmp&0xFF00) >> 8))
 
 
     def set_shutdown(self, enable):
