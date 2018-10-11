@@ -107,7 +107,7 @@ class AD5272(I2CDevice):
 
     def get_wiper(self, force=False):
         #Gets a wiper position
-  	#:param: 
+  	    #:param: 
         #:returns: Current position [0-255]
         #
 

@@ -45,8 +45,8 @@ class Backplane(I2CContainer):
             self.ad5272 = []
             for i in range(2):
                 self.ad5272.append(self.tca.attach_device(4, AD5272, 0x2E + i, busnum=1))
+
             # resistors 0x2E = fine adjustment, 0x2F coarse adjustment
-            
             self.ad5694 = self.tca.attach_device(5, AD5694, 0x0E, busnum=1)
             self.ad5694.set_coarse_from_value(0x21)
 
@@ -92,9 +92,9 @@ class Backplane(I2CContainer):
                 self.tpl0102[2].get_wiper(1),
                 self.tpl0102[3].get_wiper(0),
                 #self.tpl0102[4].get_wiper(0)
-		self.ad5272[0].get_wiper(),
-		self.ad5272[1].get_wiper()
-]
+		        self.ad5272[0].get_wiper(),
+		        self.ad5272[1].get_wiper()
+            ]
 
 	    # not sure where this is used as yet, labelled resisrots, yet calculating voltage
 	    # will come back and comment when I know more AD.  The new cal
@@ -108,10 +108,10 @@ class Backplane(I2CContainer):
                 0.0001 * (49900 * (390 * self.resistors_raw[4])) / (49900 + (390 * self.resistors_raw[4])),
                 -3.775 + (1.225/22600 + .35*.000001) * (390 * self.resistors_raw[5] + 32400),
                 # removed for new cal board 3.3 * (390 * self.resistors_raw[6]) / (390 * self.resistors_raw[6] + 32000),
-		79.10 * self.resistors_raw[6], # this is 79.1 micro-volts / step
-		1.51 * self.resistors_raw[7] # this is 1.42 mili-volts / step
+		        79.10 * self.resistors_raw[6], # this is 79.1 micro-volts / step
+		        1.51 * self.resistors_raw[7] # this is 1.42 mili-volts / step
 
-]
+            ]
 
         except Exception, exc:
             if exc == 13:
