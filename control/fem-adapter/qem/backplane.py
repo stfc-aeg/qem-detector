@@ -309,11 +309,11 @@ class Backplane(I2CContainer):
 
     # allows the current value to be stored to the resistors that support this fuction - only 50 memory spaces!!!
     def enable_value_storage(self, value):
-	self.ad5272[value].enable_50TP("TRUE")
+	    self.ad5272[value].enable_50TP("TRUE")
 
     # store the value function for the adc_cal resistors
     def store_value(self, value):
-	self.ad5272[value].store_50TP("TRUE")
+	    self.ad5272[value].store_50TP("TRUE")
 
     def get_power_good(self, i):
         return self.power_good[i]
@@ -354,7 +354,7 @@ class Backplane(I2CContainer):
         if value and not self.sensors_enabled: self.updates_needed = 1
 
     def set_reset(self, value):
-	print("set reset also being called")
+	   
         self.mcp23008[1].setup(0, MCP23008.OUT)
 #        self.mcp23008[1].setup(7, MCP23008.OUT)
         for i in range(4): # was 5, now 4 with the addition of adc cal module
