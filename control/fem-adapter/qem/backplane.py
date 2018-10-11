@@ -41,25 +41,25 @@ class Backplane(I2CContainer):
             for i in range(4): #was 5 but removed last one
                 self.tpl0102[i].set_non_volatile(False)
 
-	    # this is the new calibration board resistors 07/06/18 : added by AOD, attached to PL27, mux bus 4
-	    self.ad5272 = []
-	    for i in range(2):
-		    self.ad5272.append(self.tca.attach_device(4, AD5272, 0x2E + i, busnum=1))
-		# resistors 0x2E = fine adjustment, 0x2F coarse adjustment
-        
-        self.ad5694 = self.tca.attach_device(5, AD5694, 0x0E, busnum=1)
-        self.ad5694.set_coarse_from_value(0x21)
+            # this is the new calibration board resistors 07/06/18 : added by AOD, attached to PL27, mux bus 4
+            self.ad5272 = []
+            for i in range(2):
+                self.ad5272.append(self.tca.attach_device(4, AD5272, 0x2E + i, busnum=1))
+            # resistors 0x2E = fine adjustment, 0x2F coarse adjustment
+            
+            self.ad5694 = self.tca.attach_device(5, AD5694, 0x0E, busnum=1)
+            self.ad5694.set_coarse_from_value(0x21)
 
 
-	    #set the resistance and number of positions for each ad5272
-	    #the fine (0x2E) is 256 and 20K
-	    self.ad5272[0].set_num_wiper_pos(1024)
-	    self.ad5272[0].set_total_resistance(20) #20K Ohms
+            #set the resistance and number of positions for each ad5272
+            #the fine (0x2E) is 256 and 20K
+            self.ad5272[0].set_num_wiper_pos(1024)
+            self.ad5272[0].set_total_resistance(20) #20K Ohms
 
 
-	    #the course is 1024 and 100K
-	    self.ad5272[1].set_num_wiper_pos(1024)
-	    self.ad5272[1].set_total_resistance(20) #100K Ohms
+            #the course is 1024 and 100K
+            self.ad5272[1].set_num_wiper_pos(1024)
+            self.ad5272[1].set_total_resistance(20) #100K Ohms
 
 	    # attach the clock and set default frequency
             self.si570 = self.tca.attach_device(1, SI570, 0x5d, 'SI570', busnum=1)
