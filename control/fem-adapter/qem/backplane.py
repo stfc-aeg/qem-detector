@@ -26,6 +26,8 @@ class Backplane(I2CContainer):
 
     # not sure what this is yet, will add comments as I understand it
     CURRENT_RESISTANCE = [2.5, 1, 1, 1, 10, 1, 10, 1, 1, 1, 10, 1, 10]
+    FINE = 1
+    COARSE = 4
 
     def __init__(self):
         #Set up I2C devices
@@ -48,7 +50,9 @@ class Backplane(I2CContainer):
 
             # resistors 0x2E = fine adjustment, 0x2F coarse adjustment
             self.ad5694 = self.tca.attach_device(5, AD5694, 0x0E, busnum=1)
-            self.ad5694.set_from_value(0x21)
+            
+            self.ad5694.set_from_value(FINE, 0x22)
+            print(self.ad5694.read_dac_value(FINE))
 
 
             #set the resistance and number of positions for each ad5272

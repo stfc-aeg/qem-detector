@@ -13,7 +13,7 @@ class AD5694(I2CDevice):
 
         I2CDevice.__init__(self, address, **kwargs)
         self.address = address
-        self.dacs[4] = {0x01, 0x02, 0x04, 0x08}
+        self.dacs = {0x01, 0x02, 0x04, 0x08}
         #setupdevice
 
     def set_from_voltage(self, dac, voltage): 
