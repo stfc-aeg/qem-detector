@@ -44,7 +44,7 @@ class Backplane(I2CContainer):
 	    # this is the new calibration board resistors 07/06/18 : added by AOD, attached to PL27, mux bus 4
 	    self.ad5272 = []
 	    for i in range(2):
-		self.ad5272.append(self.tca.attach_device(4, AD5272, 0x2E + i, busnum=1))
+		    self.ad5272.append(self.tca.attach_device(4, AD5272, 0x2E + i, busnum=1))
 		# resistors 0x2E = fine adjustment, 0x2F coarse adjustment
         
         self.ad5694 = self.tca.attach_device(5, AD5694, 0x0E, busnum=1)
