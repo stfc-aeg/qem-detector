@@ -1,6 +1,6 @@
 """ AD5694 - 
 
-Sophie Kirkham, STFC Application Engineering Group
+Sophie Kirkham,  STFC Application Engineering Group
 """
 
 WRITE_UPDATE = 0x30
