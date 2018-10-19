@@ -1,4 +1,5 @@
-""" AD5694 - 
+""" AD5694 Driver class, implements read/write access 
+for the four DACs on the AD5694 chip 
 
 Sophie Kirkham,  STFC Application Engineering Group
 """
@@ -13,44 +14,62 @@ class AD5694(I2CDevice):
 
         I2CDevice.__init__(self, address, **kwargs)
         self.address = address
+	#addresses of the 4 DACs
         self.dacs = [0x01, 0x02, 0x04, 0x08]
-        self.dac_values = [self.read_dac_value(1), 0x00, 0x00, self.read_dac_value(4)]
+	#store dac values to minimise i2c traffic	
+        self.dac_values = [0x00, 0x00, 0x00, 0x00]
 
+    def set_up(self):
+	""" Sets up the dac values readings,
+	reads the raw i2c value from dac 1 (fine) and dac 4 (coarse)
+	"""
+	self.dac_values[0] = self.read_dac_value(1, True)
+        self.dac_values[3] = self.read_dac_value(4, True)
 
-    def set_from_voltage(self, dac, voltage): 
+    def set_from_voltage(self, dac, voltage):
+	""" sets the dac i2c value from a voltage
+	@param dac : the dac number to set
+	@param voltage : the voltage value to use
+	""" 
         if dac == 1:
-		value = (voltage - 0.1999) / 0.00002
-		print(value)
-		self.set_from_value(dac, int(value))
-	elif dac == 4:
-		value = (voltage - 0.1987) / 0.0004
-        	self.set_from_value(dac, int(value))
-	else:
-		raise I2CException("Choose DAC 1 or 4, 2/3 not currently implemented")    
+            value = (voltage - 0.1999) / 0.00002
+            self.set_from_value(dac, int(value))
+
+        elif dac == 4:
+            value = (voltage - 0.1987) / 0.0004
+            self.set_from_value(dac, int(value))
+        else:
+            raise I2CException("Choose DAC 1 or 4, 2/3 not currently implemented")    
    
     def set_from_value(self, dac, value):
-	
-	bytearray = [0x00, 0x00]
-	data = (value & 0xFFFF) << 4
-	bytearray[0] = (data & 0xFFFF) >> 8
-	bytearray[1] = (data & 0x00FF)
-	self.writeList(WRITE_UPDATE + self.dacs[dac-1], bytearray)
+	""" sets the raw i2c dac value from an i2c value
+	@param dac : the dac to set
+	@param value : the value to set
+	"""	
+        bytearray = [0x00, 0x00]
+        data = (value & 0xFFFF) << 4
+        bytearray[0] = (data & 0xFFFF) >> 8
+        bytearray[1] = (data & 0x00FF)
+        self.writeList(WRITE_UPDATE + self.dacs[dac-1], bytearray)
 
     def read_dac_voltage(self, dac):
-	if dac == 1:
-        	return ((self.read_dac_value(dac) * 0.00002) + 0.1999)
-	elif dac == 4:
-		return ((self.read_dac_value(dac) * 0.0004) + 0.1987)
-	else:
-		raise I2CException("Choose DAC 1 or 4, 2/3 not currently implemented")
+	""" reads the dac value and returns it as a voltage
+	@param dac : the dac to set
+	"""
+        if dac == 1:
+            return ((self.read_dac_value(dac) * 0.00002) + 0.1999)
+        elif dac == 4:
+            return ((self.read_dac_value(dac) * 0.0004) + 0.1987)
+        else:
+            raise I2CException("Choose DAC 1 or 4, 2/3 not currently implemented")
 
     def read_dac_value(self, dac, force=False):
-	
-	if dac != 1 | dac != 4:
-		raise I2CException("Choose DAC 1 or 4, 2/3 not currently implemented")
-	if force:
-		result = [0x00, 0x00]
-        	byte1, byte2 =  self.readList(WRITE_UPDATE + self.dacs[dac-1], 2)
-		self.dac_values[dac-1] = (((byte1 & 0xFF) << 8) + byte2) >> 4
-	
-	return self.dac_values[dac-1] 
+        """ returns the dac value, if force - performs a new i2c read
+	@param dac : the dac to read from
+	@param force : boolean flag to determine whether to perform a new read
+	"""
+        if force:
+            result = [0x00, 0x00]
+            byte1, byte2 =  self.readList(WRITE_UPDATE + self.dacs[dac-1], 2)
+            self.dac_values[dac-1] = (((byte1 & 0xFF) << 8) + byte2) >> 4	
+        return self.dac_values[dac-1] 

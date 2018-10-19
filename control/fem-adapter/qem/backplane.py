@@ -50,7 +50,8 @@ class Backplane(I2CContainer):
 
             # resistors 0x2E = fine adjustment, 0x2F coarse adjustment
             self.ad5694 = self.tca.attach_device(5, AD5694, 0x0E, busnum=1)
-            
+            self.ad5694.set_up()
+
 	    #this is quick testing for the new DAC chip, 1 = FINE 4 = COARSE
             self.ad5694.set_from_value(1, 0x19)
             print(self.ad5694.read_dac_value(1))
