@@ -32,11 +32,11 @@ class AD5694(I2CDevice):
 	@param voltage : the voltage value to use
 	""" 
         if dac == 1:
-            value = (voltage - 0.1999) / 0.00002
+            value = voltage / 0.00002
             self.set_from_value(dac, int(value))
 
         elif dac == 4:
-            value = (voltage - 0.1987) / 0.0004
+            value = voltage / 0.0004
             self.set_from_value(dac, int(value))
         else:
             raise I2CException("Choose DAC 1 or 4, 2/3 not currently implemented")    
@@ -57,9 +57,9 @@ class AD5694(I2CDevice):
 	@param dac : the dac to set
 	"""
         if dac == 1:
-            return ((self.read_dac_value(dac) * 0.00002) + 0.1999)
+            return (self.read_dac_value(dac) * 0.00002)
         elif dac == 4:
-            return ((self.read_dac_value(dac) * 0.0004) + 0.1987)
+            return (self.read_dac_value(dac) * 0.0004)
         else:
             raise I2CException("Choose DAC 1 or 4, 2/3 not currently implemented")
 
