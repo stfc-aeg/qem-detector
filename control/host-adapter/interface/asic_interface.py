@@ -86,6 +86,7 @@ class ASIC_Interface():
         self.log_image_complete = False
         self.upload_vector_complete = False
         self.thread_executor = futures.ThreadPoolExecutor(max_workers=9)
+        self.coarse_calibration_value = 2670 #this is 1.2 volts for the coarse in i2C
 
 
     def setup_camera(self):
@@ -527,8 +528,10 @@ class ASIC_Interface():
         @returns : an array of voltages
         """
         voltages=[]
+        offset = 0.19862 + (0.000375 * self.coarse_calibration_value)
         for i in range(length):
-            voltages.append(float(1.544 + (i * 0.00008)))
+            #voltages.append(float(1.544 + (i * 0.00008)))
+            voltages.append(float(offset + (i * 0.00002)))
         return voltages
 
     def getcoarsebitscolumn(self, input):
@@ -561,7 +564,7 @@ class ASIC_Interface():
         """
         voltages=[]
         for i in range(length):
-            voltages.append(float(0.3428 + (i * 0.00153)))
+            voltages.append(float(0.19862 + (i * 0.000375)))
         return voltages
 
     def set_adc_config(self, config):
@@ -601,10 +604,10 @@ class ASIC_Interface():
             print "%-32s" % ('-> Calibration started ...')
 
             #define number of sweep
-            n=1024
+            n=4096 #changed from 1024
             #define i and the starting point of the capture
             i=0
-            self.backplane.set_resistor_register(6, 0) #setting AUXSAMPLE FINE to 0
+            self.backplane.set_resistor_register(6, 4095) #setting AUXSAMPLE FINE to 0
   
             # MAIN loop to capture data
             while i < n:
@@ -650,7 +653,7 @@ class ASIC_Interface():
             print "%-32s" % ('-> Calibration started ...')
 
             #define the number of loops for the adc calibration
-            n=1024
+            n=4096 #changed from 1024
             #define i and the staring point
             i=0
             #set the default starting point for the COARSE value

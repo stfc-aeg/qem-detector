@@ -2,7 +2,7 @@ import sys
 import signal
 import logging
 import math
-
+	
 from i2c_device import I2CDevice, I2CException
 from i2c_container import I2CContainer
 
@@ -13,6 +13,7 @@ from tpl0102 import TPL0102
 from si570 import SI570
 from ad7998 import AD7998
 from gpio_reset import GPIOReset
+from ad5694 import AD5694
 
 try :
     from logger.qem_logger import qemLogger
@@ -25,6 +26,8 @@ class Backplane(I2CContainer):
 
     # not sure what this is yet, will add comments as I understand it
     CURRENT_RESISTANCE = [2.5, 1, 1, 1, 10, 1, 10, 1, 1, 1, 10, 1, 10]
+    FINE = 1
+    COARSE = 4
 
     def __init__(self):
         #Set up I2C devices
@@ -40,21 +43,35 @@ class Backplane(I2CContainer):
             for i in range(4): #was 5 but removed last one
                 self.tpl0102[i].set_non_volatile(False)
 
-	    # this is the new calibration board resistors 07/06/18 : added by AOD, attached to PL27, mux bus 4
-	    self.ad5272 = []
-	    for i in range(2):
-		self.ad5272.append(self.tca.attach_device(4, AD5272, 0x2E + i, busnum=1))
-		# resistors 0x2E = fine adjustment, 0x2F coarse adjustment
+            # this is the new calibration board resistors 07/06/18 : added by AOD, attached to PL27, mux bus 4
+            self.ad5272 = []
+            for i in range(2):
+                self.ad5272.append(self.tca.attach_device(4, AD5272, 0x2E + i, busnum=1))
 
-	    #set the resistance and number of positions for each ad5272
-	    #the fine (0x2E) is 256 and 20K
-	    self.ad5272[0].set_num_wiper_pos(1024)
-	    self.ad5272[0].set_total_resistance(20) #20K Ohms
+            # resistors 0x2E = fine adjustment, 0x2F coarse adjustment
+            self.ad5694 = self.tca.attach_device(5, AD5694, 0x0E, busnum=1)
+            self.ad5694.set_up()
+
+	    """this is quick testing for the new DAC chip, 1 = FINE 4 = COARSE
+            self.ad5694.set_from_value(1, 0x19)
+            print(self.ad5694.read_dac_value(1))
+	    self.ad5694.set_from_voltage(1, 0.24024)
+	    print(self.ad5694.read_dac_value(1))
+    	    print(self.ad5694.read_dac_voltage(1))
+	    self.ad5694.set_from_voltage(4, 0.9987)
+	    print(self.ad5694.read_dac_value(4))
+	    print(self.ad5694.read_dac_voltage(4))
+	    """
+
+            #set the resistance and number of positions for each ad5272
+            #the fine (0x2E) is 256 and 20K
+            self.ad5272[0].set_num_wiper_pos(1024)
+            self.ad5272[0].set_total_resistance(20) #20K Ohms
 
 
-	    #the course is 1024 and 100K
-	    self.ad5272[1].set_num_wiper_pos(1024)
-	    self.ad5272[1].set_total_resistance(20) #100K Ohms
+            #the course is 1024 and 100K
+            self.ad5272[1].set_num_wiper_pos(1024)
+            self.ad5272[1].set_total_resistance(20) #100K Ohms
 
 	    # attach the clock and set default frequency
             self.si570 = self.tca.attach_device(1, SI570, 0x5d, 'SI570', busnum=1)
@@ -64,7 +81,9 @@ class Backplane(I2CContainer):
             self.ad7998 = []
             for i in range(4):
                 self.ad7998.append(self.tca.attach_device(2, AD7998, 0x21 + i, busnum=1))
+        
 
+        
 	    # add the GPIO devices
             self.mcp23008 = []
             self.mcp23008.append(self.tca.attach_device(3, MCP23008, 0x20, busnum=1))
@@ -85,9 +104,11 @@ class Backplane(I2CContainer):
                 self.tpl0102[2].get_wiper(1),
                 self.tpl0102[3].get_wiper(0),
                 #self.tpl0102[4].get_wiper(0)
-		self.ad5272[0].get_wiper(),
-		self.ad5272[1].get_wiper()
-]
+                self.ad5694.read_dac_value(4),
+		self.ad5694.read_dac_value(1),
+	        #self.ad5272[0].get_wiper(),
+		#self.ad5272[1].get_wiper()
+            ]
 
 	    # not sure where this is used as yet, labelled resisrots, yet calculating voltage
 	    # will come back and comment when I know more AD.  The new cal
@@ -101,10 +122,12 @@ class Backplane(I2CContainer):
                 0.0001 * (49900 * (390 * self.resistors_raw[4])) / (49900 + (390 * self.resistors_raw[4])),
                 -3.775 + (1.225/22600 + .35*.000001) * (390 * self.resistors_raw[5] + 32400),
                 # removed for new cal board 3.3 * (390 * self.resistors_raw[6]) / (390 * self.resistors_raw[6] + 32000),
-		79.10 * self.resistors_raw[6], # this is 79.1 micro-volts / step
-		1.51 * self.resistors_raw[7] # this is 1.42 mili-volts / step
+		20 * self.resistors_raw[6], #this is fine as a microvolts
+                0.4 * self.resistors_raw[7], #this is coarse as a millivolts
+		#79.10 * self.resistors_raw[6], # this is 79.1 micro-volts / step
+		#1.51 * self.resistors_raw[7] # this is 1.42 mili-volts / step
 
-]
+            ]
 
         except Exception, exc:
             if exc == 13:
@@ -178,8 +201,8 @@ class Backplane(I2CContainer):
             self.voltages[14] = self.voltages_raw[14] * 3 /4095.0
 
             self.voltages[10] *= -1
-            self.voltages[13]= 0.3428 + (self.resistors[6]*0.000001) + (self.resistors[7]*0.001)
-            
+            #self.voltages[13]= 0.3428 + (self.resistors[6]*0.000001) + (self.resistors[7]*0.001)
+            self.voltages[13] = 0.1987 + (self.resistors[6]*0.000001) +(self.resistors[7]*0.001) #0.1987 is the minimum value of coarse but needs testing 
 
 
             #first calculate the voltage from the register
@@ -220,13 +243,22 @@ class Backplane(I2CContainer):
         #elif resistor == 6:
         #    self.resistors_raw[resistor] = int(0.5+(32000/3.3)*value/(390-390*value/3.3))
         #    self.tpl0102[4].set_wiper(0, self.resistors_raw[resistor])
-        elif resistor == 6:
-            self.resistors_raw[resistor] = int(value/79.10) # this is the fine value 70.058 mico-volts / step 0 - 17997.9 micro-volts (uV) updated to 79.10 11/07/18
-            self.ad5272[0].set_wiper(self.resistors_raw[resistor])
+        
+
+
+	elif resistor == 6:
+	    self.resistors_raw[resistor] = int(value/20) #store the i2c value
+	    self.ad5694.set_from_voltage(4, value*0.000001) #this converts back to volts from uV
+            
+            #self.resistors_raw[resistor] = int(value/79.10) # this is the fine value 70.058 mico-volts / step 0 - 17997.9 micro-volts (uV) updated to 79.10 11/07/18
+            #self.ad5272[0].set_wiper(self.resistors_raw[resistor])
         elif resistor == 7:
-            self.resistors_raw[resistor] = int(value/1.51) # this is the coarse value for the 1.42mV / step range 0 - 1454.08 mV updated to 1.51 11/07/18
-            self.ad5272[1].set_wiper(self.resistors_raw[resistor])
-        self.resistors[resistor] = value
+	    self.resistors_raw[resistor] = int(value/0.4)#convert to i2c value
+	    self.ad5694.set_from_voltage(1, value*0.001)#this is converting back to volts from mV
+
+            #self.resistors_raw[resistor] = int(value/1.51) # this is the coarse value for the 1.42mV / step range 0 - 1454.08 mV updated to 1.51 11/07/18
+            #self.ad5272[1].set_wiper(self.resistors_raw[resistor])
+            #self.resistors[resistor] = value
         if not self.sensors_enabled: self.updates_needed = 1
 
     def set_resistor_value_raw(self, resistor, value):
@@ -252,12 +284,19 @@ class Backplane(I2CContainer):
 #            self.tpl0102[4].set_wiper(0, value)
 #            self.resistors[resistor] = 3.3 * (390 * value) / (390 * value + 32000)
         elif resistor == 6:
-            self.ad5272[0].set_wiper(value)
-            self.resistors[resistor] = (value * 79.10) # updated to 79.10 from 70.58 11/07/18
+            self.ad5694.set_from_value(4, value)
+	    print(value)
+            self.resistors[resistor] = (value * 20) #setting the voltage
+            
+	    #self.ad5272[0].set_wiper(value)
+            #self.resistors[resistor] = (value * 79.10) # updated to 79.10 from 70.58 11/07/18
         elif resistor == 7:
-            self.ad5272[1].set_wiper(value)
-            self.resistors[resistor] = (value * 1.51) # updated to 1.51 from 1.42 11/07/18
-        self.resistors_raw[resistor] = value
+            self.ad5694.set_from_value(1, value)
+            self.resistors[resistor] = (value * 0.4)
+
+	    #self.ad5272[1].set_wiper(value)
+            #self.resistors[resistor] = (value * 1.51) # updated to 1.51 from 1.42 11/07/18
+            #self.resistors_raw[resistor] = value
         if not self.sensors_enabled: self.updates_needed = 1
 
     # this gets the resistor value from the loacal variable list and does not need
@@ -276,7 +315,7 @@ class Backplane(I2CContainer):
 
     # returns the units for the values returned
     def get_resistor_units(self, resistor):
-        return ["V", "V", "uA", "V", "V", "V", "uV", "mV"][resistor]
+        return ["V", "V", "uA", "V", "V", "V", "uV", "mV"][resistor] #changed 6/7 from uV and mV to V
 
     # returns the minimum voltage that can be set
     def get_resistor_min(self, resistor):
@@ -284,11 +323,11 @@ class Backplane(I2CContainer):
 
     # returns the maximum voltage that can be set for a given resistor
     def get_resistor_max(self, resistor):
-        return [2.497, 2.497, 101.1, 3.318, 3.322, 3.41, 80919.3, 1544.73][resistor]
+        return [2.497, 2.497, 101.1, 3.318, 3.322, 3.41, 81900, 1638][resistor]#changed from 80919.3uV and 1544.73mV 
 
     # returns the maximum register value that can be set for a given resistor
     def get_register_max(self, resistor):
-        return [255, 255, 255, 255, 255, 255, 1023, 1023][resistor]
+        return [255, 255, 255, 255, 255, 255, 4095, 4095][resistor] #changed from 1023, 1023.
 
     # returns the status of the non-volatile local variable
     def get_resistor_non_volatile(self):
@@ -302,11 +341,11 @@ class Backplane(I2CContainer):
 
     # allows the current value to be stored to the resistors that support this fuction - only 50 memory spaces!!!
     def enable_value_storage(self, value):
-	self.ad5272[value].enable_50TP("TRUE")
+	    self.ad5272[value].enable_50TP("TRUE")
 
     # store the value function for the adc_cal resistors
     def store_value(self, value):
-	self.ad5272[value].store_50TP("TRUE")
+	    self.ad5272[value].store_50TP("TRUE")
 
     def get_power_good(self, i):
         return self.power_good[i]
@@ -347,13 +386,13 @@ class Backplane(I2CContainer):
         if value and not self.sensors_enabled: self.updates_needed = 1
 
     def set_reset(self, value):
-	print("set reset also being called")
+	   
         self.mcp23008[1].setup(0, MCP23008.OUT)
 #        self.mcp23008[1].setup(7, MCP23008.OUT)
         for i in range(4): # was 5, now 4 with the addition of adc cal module
             self.tpl0102[i].set_non_volatile(False)
         self.resistor_non_volatile = False
-        self.set_clock_frequency(10)
+        self.set_clock_frequency(17.5)#used to be 10
         self.resistors_raw = [
             self.tpl0102[0].get_wiper(0,True),
             self.tpl0102[0].get_wiper(1,True),
@@ -362,8 +401,10 @@ class Backplane(I2CContainer):
             self.tpl0102[2].get_wiper(1,True),
             self.tpl0102[3].get_wiper(0,True),
             #self.tpl0102[4].get_wiper(0,True)
-	    self.ad5272[0].get_wiper(True),
-	    self.ad5272[1].get_wiper(True)
+	    self.ad5694.read_dac_value(4, True),
+	    self.ad5694.read_dac_value(1, True),
+	    #self.ad5272[0].get_wiper(True),
+	    #self.ad5272[1].get_wiper(True)
 ]
 
 	# not sure where this is used as yet, labelled resistors, yet calculating voltage
@@ -378,8 +419,10 @@ class Backplane(I2CContainer):
             0.0001 * (49900 * (390 * self.resistors_raw[4])) / (49900 + (390 * self.resistors_raw[4])),
             -3.775 + (1.225/22600 + .35*.000001) * (390 * self.resistors_raw[5] + 32400),
             #3.3 * (390 * self.resistors_raw[6]) / (390 * self.resistors_raw[6] + 32000),
-	    79.1 * self.resistors_raw[6], # this is 70.58 micro-volts / step changed to 79.1 11/07/18
-	    1.51 * self.resistors_raw[7] # this is 1.42 mili-volts / step changed to 1.51 11/07/18
+	    (20 * self.resistors_raw[6]),
+	    (0.4 * self.resistors_raw[7]),
+	    #79.1 * self.resistors_raw[6], # this is 70.58 micro-volts / step changed to 79.1 11/07/18
+	    #1.51 * self.resistors_raw[7] # this is 1.42 mili-volts / step changed to 1.51 11/07/18
 
 ]
         self.set_psu_enable(True)
@@ -406,4 +449,5 @@ class Backplane(I2CContainer):
                "VCTRL_POS", "AUXSAMPLE_SUM", "AUXSAMPLE_MEASURED"][i]
 
     def set_reset_fpga(self, reset):
+	print("set reset called") 
         self.gpio_reset.reset("0x20")

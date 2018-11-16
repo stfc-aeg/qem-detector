@@ -75,6 +75,16 @@ Button.prototype.generate =
             }
             ret += `>Reset</button>`;
         }
+        else if(this.meta.name === "Reset FPGA")                            
+        {                                                                     
+            var ret = `                                                       
+<button id="${this.getID()}" type="button" class="btn btn-default"`;          
+            if(this.meta.hasOwnProperty("description"))                       
+            {                                                                 
+                ret += `title="${this.meta.description}"`;                    
+            }                                                                 
+            ret += `>Reset</button>`;                                         
+        }                                                                     
         else
         {
             var ret = `
