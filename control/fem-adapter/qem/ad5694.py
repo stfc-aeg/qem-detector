@@ -51,8 +51,6 @@ class AD5694(I2CDevice):
         bytearray[0] = (data & 0xFFFF) >> 8
         bytearray[1] = (data & 0x00FF)
         self.writeList(WRITE_UPDATE + self.dacs[dac-1], bytearray)
-        #print "write address", WRITE_UPDATE + self.dacs[dac-1]
-        #print self.read_dac_value(dac, True)
 
     def read_dac_voltage(self, dac):
 	""" reads the dac value and returns it as a voltage
@@ -73,6 +71,5 @@ class AD5694(I2CDevice):
         if force:
             result = [0x00, 0x00]
             byte1, byte2 =  self.readList(WRITE_UPDATE + self.dacs[dac-1], 2)
-            #print "reading address", WRITE_UPDATE + self.dacs[dac-1]
             self.dac_values[dac-1] = (((byte1 & 0xFF) << 8) + byte2) >> 4	
         return self.dac_values[dac-1] 
