@@ -387,10 +387,17 @@ class ASIC_Interface():
             pickle.dump(l, t)
             t.close()
             
-            #extract lines into array
-            with open( self.working_dir + 'QEM_D4_198_ADC_10_icbias28_ifbias14.txt', 'r') as f:
-                data = f.readlines()
-            f.close()
+
+            if "ADC" in self.vector_file:
+                #extract lines into array
+                with open( self.working_dir + 'QEM_D4_198_ADC_10_icbias28_ifbias14.txt', 'r') as f:
+                    data = f.readlines()
+                f.close()
+            elif "IMG" in self.vector_file:
+                #extract lines into array
+                with open( self.working_dir + 'QEM_D4_198_10_icbias30_ifbias24.txt', 'r') as f:
+                    data = f.readlines()
+                f.close()
 
             length=len(data)
 
@@ -657,7 +664,7 @@ class ASIC_Interface():
             #define i and the staring point
             i=0
             #set the default starting point for the COARSE value
-            self.backplane.set_resistor_register(7, 728) #435
+            self.backplane.set_resistor_register(7, self.coarse_calibration_value) #435
 
             #main loop to capture the data
             while i < n:

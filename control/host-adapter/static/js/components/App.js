@@ -536,6 +536,7 @@ App.prototype.generate =
     mode_toggleNumber = !mode_toggleNumber;
         if (mode_toggleNumber) {
             this.in_calibration_mode = false;
+            App.prototype.in_calibration_mode = false;
             for(var i=0; i<image_vector_files.length;i++){
                 image_vector_files[i].style.display = 'block';
             }
@@ -543,11 +544,13 @@ App.prototype.generate =
                 adc_vector_files[i].style.display = 'none';
             }
             console.log("in image capture mode")
+            console.log(App.prototype.in_calibration_mode)
             mode_toggleContainer.style.clipPath = 'inset(0 0 0 50%)';
             mode_toggleContainer.style.backgroundColor = '#337ab7';
     
         } else {
-            this.in_calibration_mode = true;   
+            this.in_calibration_mode = true;
+            App.prototype.in_calibration_mode = true;   
             
             for(var i=0; i<image_vector_files.length;i++){
                 image_vector_files[i].style.display = 'none';
@@ -1303,7 +1306,31 @@ App.prototype.createVectorFile =
         
 
         var filename = document.getElementById("file-value").value;
+
         console.log(filename)
+  
+        if (App.prototype.in_calibration_mode == true && !filename.includes("ADC")){
+          
+            extension = filename.substr(-4)
+            if (extension == ".txt"){
+               file_name = filename.substr(0, filename.length-4)
+               filename = file_name + "_ADC" + extension
+            }
+            console.log(filename)
+        }
+        else if (App.prototype.in_calibration_mode == false && !filename.includes("IMG")){
+            
+            extension = filename.substr(-4)
+            if (extension == ".txt"){
+               file_name = filename.substr(0, filename.length-4)
+               filename = file_name + "_IMG" + extension
+            }
+            console.log(filename)
+        }
+
+        console.log(filename)
+
+
         apiPUT(this.current_adapter, "update_bias", "false")
         .done(
             (function(){
