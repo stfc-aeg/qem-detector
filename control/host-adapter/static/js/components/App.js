@@ -1442,6 +1442,12 @@ App.prototype.updateFileList =
         .done(
             (function(data){
                 this.populateFileList(data["image_vector_files"], data["adc_vector_files"])
+                var vector_list = document.getElementById("file_list");
+
+                for(var i=0; i< vector_list.children.length; i++){
+                    vector_list.children[i].addEventListener("click", this.setVectorFile.bind(this));
+                }
+                
             }).bind(this)
 
         )

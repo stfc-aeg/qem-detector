@@ -93,6 +93,7 @@ class Backplane_Interface():
         :param resistor: the index of the wanted resistor
         :param value: the new value for the resistor as a float
         """
+        print value
         resistor_url = self.url + "resistors/" + str(resistor)+ "/voltage_current"
         requests.put(resistor_url, str(value), headers=self.put_headers)
        
