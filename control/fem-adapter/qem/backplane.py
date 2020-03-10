@@ -129,9 +129,10 @@ class Backplane(I2CContainer):
         self.power_good = [False] * 8
         self.psu_enabled = True
         self.capture_enabled = False
-        self.clock_freq = 10.0
+        self.clock_freq = 22.5
         self.resistor_non_volatile = False
-        self.temperature = 0
+        self.temperature = 0.0
+        self.temperature_far = 0.0
         self.voltChannelLookup = ((0,2,3,4,5,6,7),(0,2,4,5,6,7))
         self.updates_needed = 1
         self.set_sensors_enable(False)
@@ -142,6 +143,14 @@ class Backplane(I2CContainer):
 
     def timeout_handler(self, signum, frame):
         raise Exception("Timeout on I2C communication")
+
+    def GetTemperature(self, v, Ro=30000.00, To=25.0, beta=4964):
+        i = (5.0-v)/15000.0
+        r = v/i
+        temp = math.log(r/Ro)/beta
+        temp += 1.0 / (To + 273.15)
+        temp = (1.0 / temp - 273.15)
+        return temp
 
     def poll_all_sensors(self):
 
@@ -182,11 +191,18 @@ class Backplane(I2CContainer):
 
 
             #first calculate the voltage from the register
-            temp_volt = (self.ad7998[3].read_input_raw(3) & 0xfff) * 5.0 / 4095.0
+            #temp_volt = (self.ad7998[3].read_input_raw(3) & 0xfff) * 5.0 / 4095.0
 			#then calculate the natural log of the calculated resistance (5V potential divider with 15K resistor) divided by the resistance at 25 degrees celcius(10K)
-            ln_x = math.log(1.5*temp_volt/(5.0-temp_volt))
+            #ln_x = math.log(1.5*temp_volt/(5.0-temp_volt))
 			#then calulate the temperature using formula from the data sheet of thermistor NTCALUG03A103G and convert from Kelvin
-            self.temperature = 1.0/(0.00335402 + ln_x*(0.00025624 + ln_x*(0.00000260597 + ln_x*0.0000000632926)))-273.15
+            #self.temperature = 1.0/(0.00335402 + ln_x*(0.00025624 + ln_x*(0.00000260597 + ln_x*0.0000000632926)))-273.15
+            
+            #GET TEMPERATURES
+            temp_volt = (self.ad7998[3].read_input_raw(3) & 0xfff) * 4.986 / 4095.0 # NEAR VOLTAGE SENSOR
+            self.temperature = self.GetTemperature(temp_volt)
+
+            temp_volt = (self.ad7998[3].read_input_raw(1) & 0xFFF) * 5.1 / 4095.0 #FAR VOLTAGE SENSOR, suspect damaged ADC, 5.1V to fudge result
+            self.temperature_far = self.GetTemperature(temp_volt)
 
             #Power good monitors
             self.power_good = self.mcp23008[0].input_pins([0,1,2,3,4,5,6,7,8])
@@ -384,6 +400,9 @@ class Backplane(I2CContainer):
 
     def get_temp(self):
         return self.temperature
+
+    def get_temp_far(self):
+        return self.temperature_far
 
     def get_current(self, i):
         return self.currents[i]
