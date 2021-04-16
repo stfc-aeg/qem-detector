@@ -217,33 +217,41 @@ class Backplane(I2CContainer):
         if resistor == 0 : # this is auxreset
             self.resistors_raw[resistor] = int(0.5+(32000/3.3)*value/(390-390*value/3.3))
             self.tpl0102[0].set_wiper(0, self.resistors_raw[resistor])
+            self.resistors[resistor] = value
         elif resistor == 1: # this is vcm (to be removed)
             self.resistors_raw[resistor] = int(0.5+(32000/3.3)*value/(390-390*value/3.3))
             self.tpl0102[0].set_wiper(1, self.resistors_raw[resistor])
+            self.resistors[resistor] = value
         elif resistor == 2: # this is DACEXTREF
             self.resistors_raw[resistor] = int(0.5+(294000/400)*value/(390-390*value/400))
             self.tpl0102[1].set_wiper(0, self.resistors_raw[resistor])
+            self.resistors[resistor] = value
         elif resistor == 3: # this is VDD_REST
             
 	    #******* Add code here to change the pre-regulation stage of this output *********
 
 	    self.resistors_raw[resistor] = int(0.5+(18200/0.0001)*(value-1.78)/(390*18200-390*(value-1.78)/0.0001))
             self.tpl0102[2].set_wiper(0, self.resistors_raw[resistor])
+            self.resistors[resistor] = value
         elif resistor == 4: # this is VRESET
 
 	    #******* Add code here to change the pre-regulation stage of this output *********
 
             self.resistors_raw[resistor] = int(0.5+(49900/0.0001)*value/(390*49900-390*value/0.0001))
             self.tpl0102[2].set_wiper(1, self.resistors_raw[resistor])
+            self.resistors[resistor] = value
         elif resistor == 5: # this is VCTRL
             self.resistors_raw[resistor] = int(0.5+((value+3.775)/(1.225/22600+.35*.000001)-32400)/390)
             self.tpl0102[3].set_wiper(1, self.resistors_raw[resistor])
+            self.resistors[resistor] = value
 	elif resistor == 6: # This is AUXSAMPLE COARSE
 	    self.resistors_raw[resistor] = int(value/20) #store the i2c value
 	    self.ad5694.set_from_voltage(4, value*0.000001) #this converts back to volts from uV
+            self.resistors[resistor] = value
         elif resistor == 7: # this is AUXSAMPLE FINE
 	    self.resistors_raw[resistor] = int(value/0.4)#convert to i2c value
 	    self.ad5694.set_from_voltage(1, value*0.001)#this is converting back to volts from mV
+            self.resistors[resistor] = value
 
         if not self.sensors_enabled: self.updates_needed = 1
 
@@ -251,34 +259,42 @@ class Backplane(I2CContainer):
         if resistor == 0: #this is auxreset
             self.tpl0102[0].set_wiper(0, value)
             self.resistors[resistor] = 3.3 * (390 * value) / (390 * value + 32000)
+            self.resistors_raw[resistor] = value
         elif resistor == 1: # this is vcm (to be removed)
             self.tpl0102[0].set_wiper(1, value)
             self.resistors[resistor] = 3.3 * (390 * value) / (390 * value + 32000)
+            self.resistors_raw[resistor] = value
         elif resistor == 2: # this is DACEXTREF
             self.tpl0102[1].set_wiper(0, value)
             self.resistors[resistor] = 400 * (390 * value) / (390 * value + 294000)
+            self.resistors_raw[resistor] = value
         elif resistor == 3: # this is VDD_RST
 
 	    # *********** add code here to change the pre-regulation stage of this output **********
 
             self.tpl0102[2].set_wiper(0, value)
             self.resistors[resistor] = 0.0001 * (17800 + (18200 * (390 * value)) / (18200 + (390 * value)))
+            self.resistors_raw[resistor] = value
         elif resistor == 4: # this is VRESET
 
 	    # *********** Add code here to change the pre-regulation stage of this output **********
 
             self.tpl0102[2].set_wiper(1, value)
             self.resistors[resistor] = 0.0001 * (49900 * (390 * value)) / (49900 + (390 * value))
+            self.resistors_raw[resistor] = value
         elif resistor == 5: # this is VCTRL
             self.tpl0102[3].set_wiper(0, value)
             self.resistors[resistor] = -3.775 + (1.225/22600 + .35*.000001) * (390 * value + 32400)
+            self.resistors_raw[resistor] = value
         elif resistor == 6: # this is AUXSAMPLE COARSE
             self.ad5694.set_from_value(4, value)
 	    print(value)
             self.resistors[resistor] = (value * 20) #setting the voltage
+            self.resistors_raw[resistor] = value
         elif resistor == 7: # this is AUXSAMPLE FINE
             self.ad5694.set_from_value(1, value)
             self.resistors[resistor] = (value * 0.4)
+            self.resistors_raw[resistor] = value
         if not self.sensors_enabled: self.updates_needed = 1
 
     # this gets the resistor value from the loacal variable list and does not need
