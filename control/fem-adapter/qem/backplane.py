@@ -244,13 +244,13 @@ class Backplane(I2CContainer):
             self.resistors_raw[resistor] = int(0.5+((value+3.775)/(1.225/22600+.35*.000001)-32400)/390)
             self.tpl0102[3].set_wiper(1, self.resistors_raw[resistor])
             self.resistors[resistor] = value
-	elif resistor == 6: # This is AUXSAMPLE COARSE
+	elif resistor == 6: # This is AUXSAMPLE FINE
 	    self.resistors_raw[resistor] = int(value/20) #store the i2c value
-	    self.ad5694.set_from_voltage(4, value*0.000001) #this converts back to volts from uV
+            self.ad5694.set_from_value(4, self.resistors_raw[resistor])
             self.resistors[resistor] = value
-        elif resistor == 7: # this is AUXSAMPLE FINE
-	    self.resistors_raw[resistor] = int(value/0.4)#convert to i2c value
-	    self.ad5694.set_from_voltage(1, value*0.001)#this is converting back to volts from mV
+        elif resistor == 7: # this is AUXSAMPLE COARSE
+	    self.resistors_raw[resistor] = int(value/0.4) #convert to i2c value
+            self.ad5694.set_from_value(1,self.resistors_raw[resistor] ) #set the device value from raw register
             self.resistors[resistor] = value
 
         if not self.sensors_enabled: self.updates_needed = 1
@@ -286,15 +286,14 @@ class Backplane(I2CContainer):
             self.tpl0102[3].set_wiper(0, value)
             self.resistors[resistor] = -3.775 + (1.225/22600 + .35*.000001) * (390 * value + 32400)
             self.resistors_raw[resistor] = value
-        elif resistor == 6: # this is AUXSAMPLE COARSE
-            self.ad5694.set_from_value(4, value)
-	    print(value)
+        elif resistor == 6: # this is AUXSAMPLE FINE
+            self.ad5694.set_from_value(4, value) #set the device value 
             self.resistors[resistor] = (value * 20) #setting the voltage
-            self.resistors_raw[resistor] = value
-        elif resistor == 7: # this is AUXSAMPLE FINE
+            self.resistors_raw[resistor] = value #set the raw register value
+        elif resistor == 7: # this is AUXSAMPLE COARSE
             self.ad5694.set_from_value(1, value)
             self.resistors[resistor] = (value * 0.4)
-            self.resistors_raw[resistor] = value
+            self.resistors_raw[resistor] = value #set the raw register value
         if not self.sensors_enabled: self.updates_needed = 1
 
     # this gets the resistor value from the loacal variable list and does not need
