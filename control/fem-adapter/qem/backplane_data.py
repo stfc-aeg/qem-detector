@@ -94,6 +94,7 @@ class BackplaneData(object):
             "temperature" : (self.backplane.get_temp,{"units": "C", "dp":1}),
             "temperature_far" : (self.backplane.get_temp_far,{"units": "C", "dp":1}),
             "fpga_reset" : (False, self.backplane.set_reset_fpga,{"name": "Reset FPGA"}),
+            "sensorLight_enabled": (self.backplane.getSensorLight_enabled, self.backplane.setSensorLight_enabled, {"name": "Sensor Light Enabled"}),
         })
 
     def get(self, path, metadata):
