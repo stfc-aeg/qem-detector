@@ -79,8 +79,6 @@ class Backplane(I2CContainer):
                 self.mcp23008[0].setup(i, MCP23008.IN)
             self.mcp23008[1].output(0, MCP23008.HIGH)
             self.mcp23008[1].setup(0, MCP23008.OUT)
-            self.mcp23008[1].output(6, MCP23008.LOW)
-            self.mcp23008[1].setup(6, MCP23008.OUT)
 
 
             #Resistor readings
@@ -94,8 +92,6 @@ class Backplane(I2CContainer):
                 self.ad5694.read_dac_value(4),
 		self.ad5694.read_dac_value(1),
             ]
-
-            self.sensorLight_enabled = False
 
 	    # not sure where this is used as yet, labelled resisrots, yet calculating voltage
 	    # will come back and comment when I know more AD.  The new cal
@@ -359,13 +355,6 @@ class Backplane(I2CContainer):
         self.psu_enabled = value
         self.mcp23008[1].output(0, MCP23008.HIGH if value else MCP23008.LOW)
         if not self.sensors_enabled: self.updates_needed = 3
-
-    def getSensorLight_enabled(self):
-        return self.sensorLight_enabled
-
-    def setSensorLight_enabled(self, value):
-        self.sensorLight_enabled = value
-        self.mcp23008[1].output(6, MCP23008.HIGH if value else MCP23008.LOW)
 
     def get_capture_enable(self):
         return self.capture_enabled
