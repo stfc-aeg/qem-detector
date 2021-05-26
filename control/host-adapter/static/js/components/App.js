@@ -193,8 +193,8 @@ App.prototype.generate =
                         <div class="dropdown-file">
                             <button id="toggle-btn" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">Configuration Vector File
                             <span class="caret"></span></button>
-                            <ul class="dropdown-menu" id="file_list">` 
-                            + this.generateImageVectorFiles(data["image_vector_files"]["value"]) + this.generateADCVectorFiles(data["adc_vector_files"]["value"]) + 
+                            <ul class="dropdown-menu" id="file_list">` +
+                            //+ this.generateImageVectorFiles(data["image_vector_files"]["value"]) + this.generateADCVectorFiles(data["adc_vector_files"]["value"]) + 
                             `</ul>
                         </div>
                         <span id="current-txt-file"></span>
@@ -500,7 +500,6 @@ App.prototype.generate =
     </div>
 </div>
 `;
-
     this.mount.appendChild(container);
     document.getElementById("BIAS-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "BIAS"));
     document.getElementById("camera-collapse").addEventListener("click", this.toggleCollapsed.bind(this, "camera"));
@@ -509,6 +508,8 @@ App.prototype.generate =
     document.getElementById('bp-refresh-button').addEventListener("click", this.update_bp.bind(this));
     document.getElementById('bp-update-button').addEventListener("click", this.updateLoop_bp.bind(this));
     document.getElementById('bp-reload-button').addEventListener("click", this.reload_bp.bind(this));
+    this.populateFileList(data["image_vector_files"]["value"], data["adc_vector_files"]["value"]);
+
 
     for (i=0; i<data["resistors"].length; i++) {
         document.getElementById("resistor-" + i.toString() + "-button").addEventListener("click", this.setResistor.bind(this, i.toString()));
@@ -536,6 +537,7 @@ App.prototype.generate =
     mode_toggleNumber = !mode_toggleNumber;
         if (mode_toggleNumber) {
             this.in_calibration_mode = false;
+            App.prototype.in_calibration_mode = false;
             for(var i=0; i<image_vector_files.length;i++){
                 image_vector_files[i].style.display = 'block';
             }
@@ -543,11 +545,13 @@ App.prototype.generate =
                 adc_vector_files[i].style.display = 'none';
             }
             console.log("in image capture mode")
+            console.log(App.prototype.in_calibration_mode)
             mode_toggleContainer.style.clipPath = 'inset(0 0 0 50%)';
             mode_toggleContainer.style.backgroundColor = '#337ab7';
     
         } else {
-            this.in_calibration_mode = true;   
+            this.in_calibration_mode = true;
+            App.prototype.in_calibration_mode = true;   
             
             for(var i=0; i<image_vector_files.length;i++){
                 image_vector_files[i].style.display = 'none';
@@ -1274,6 +1278,10 @@ App.prototype.pollForFileWritten =
                 if(data["vector_file_written"] == true){
                     clearInterval(App.prototype.file_written_interval)
                     document.getElementById('save-as-vector-file-button').innerHTML= "File Saved"
+                    
+                    this.updateFileList()
+                    
+                  
                     setTimeout(function(){
                         document.getElementById('save-as-vector-file-button').innerHTML= "Save as Vector File"
                         document.getElementById("save-as-vector-file-button").classList.add("btn-default");
@@ -1303,7 +1311,32 @@ App.prototype.createVectorFile =
         
 
         var filename = document.getElementById("file-value").value;
+        document.getElementById("current-txt-file").innerHTML = filename
+
         console.log(filename)
+  
+        if (App.prototype.in_calibration_mode == true && !filename.includes("ADC")){
+          
+            extension = filename.substr(-4)
+            if (extension == ".txt"){
+               file_name = filename.substr(0, filename.length-4)
+               filename = file_name + "_ADC" + extension
+            }
+            console.log(filename)
+        }
+        else if (App.prototype.in_calibration_mode == false && !filename.includes("IMG")){
+            
+            extension = filename.substr(-4)
+            if (extension == ".txt"){
+               file_name = filename.substr(0, filename.length-4)
+               filename = file_name + "_IMG" + extension
+            }
+            console.log(filename)
+        }
+
+        console.log(filename)
+
+
         apiPUT(this.current_adapter, "update_bias", "false")
         .done(
             (function(){
@@ -1399,35 +1432,43 @@ App.prototype.uploadVector =
     }
 
 /*
-* populates the list of image vector files in the dropdown menu
-* @param image_files: data['image_vector_files'] list of vector files in dev08
-* @returns the list html tag of the vector files
-*/
-App.prototype.generateImageVectorFiles =
-    function(image_files){
-        var image_list = '';
-        var i;
-        for (i=0; i<image_files.length; i++) {
-            image_list += '<li id="image_files" class="image_vectors"><a href="#">' + image_files[i] + '</a></li>';
-        }
-        return image_list
-    };
+* Runs an update of the API to get the new image and adc vector files.
+* Calls populateFileList and regenerates the list of adc and image vector files in the dropdown 
+*/    
+App.prototype.updateFileList = 
+    function(){
+        
+        apiGET(this.current_adapter, "", false)
+        .done(
+            (function(data){
+                this.populateFileList(data["image_vector_files"], data["adc_vector_files"])
+            }).bind(this)
+
+        )
+}
 
 /*
-* populates the list of adc vector files in the dropdown menu
-* @param image_files: data['adc_vector_files'] list of vector files in dev08
-* @returns the list html tag of the vector files
+* populates the list of image and adc vector files in the dropdown menu
+* @param image_files: data['image_vector_files'] list of vector files in dev08
+* @param adc: data['adc_vector_files'] list of vector files in dev08
 */
-App.prototype.generateADCVectorFiles =
-    function(image_files){
-        var image_list ='';
+App.prototype.populateFileList = 
+    function(image_files, adc_files) {
+        
+        var the_list = document.getElementById('file_list')
+        var file_list = '';
         var i;
         for (i=0; i<image_files.length; i++) {
-            image_list += '<li class="adc_vectors"><a href="#">' + image_files[i] + '</a></li>';
+            file_list += '<li id="image_files" class="image_vectors"><a href="#">' + image_files[i] + '</a></li>';
         }
-        return image_list
-    }; 
 
+        var j;
+        for (j=0; j<adc_files.length; j++) {
+            file_list += '<li class="adc_vectors"><a href="#">' + adc_files[j] + '</a></li>';
+        }
+        the_list.innerHTML = file_list;
+
+}
 
 /*
 * Reloads the backplane updating the resistors and variable supplies 
