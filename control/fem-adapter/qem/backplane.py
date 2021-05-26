@@ -79,8 +79,8 @@ class Backplane(I2CContainer):
                 self.mcp23008[0].setup(i, MCP23008.IN)
             self.mcp23008[1].output(0, MCP23008.HIGH)
             self.mcp23008[1].setup(0, MCP23008.OUT)
-            self.mcp23008[1].output(5, MCP23008.LOW)
-            self.mcp23008[1].setup(5, MCP23008.OUT)
+            self.mcp23008[1].output(6, MCP23008.LOW)
+            self.mcp23008[1].setup(6, MCP23008.OUT)
 
 
             #Resistor readings
