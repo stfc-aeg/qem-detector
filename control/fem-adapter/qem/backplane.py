@@ -146,6 +146,7 @@ class Backplane(I2CContainer):
         raise Exception("Timeout on I2C communication")
 
     def GetTemperature(self, v, Ro=30000.00, To=25.0, beta=4964):
+        """This function specifically gets the temperature sensor readings"""
         i = (5.0-v)/15000.0
         r = v/i
         temp = math.log(r/Ro)/beta
@@ -154,6 +155,7 @@ class Backplane(I2CContainer):
         return temp
 
     def poll_all_sensors(self):
+        """This function is used to poll all the sensors on the backplane"""
 
         if not (self.sensors_enabled or (self.updates_needed > 0)) : return
 
