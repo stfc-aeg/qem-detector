@@ -79,7 +79,7 @@ class Backplane(I2CContainer):
                 self.mcp23008[0].setup(i, MCP23008.IN)
             self.mcp23008[1].output(0, MCP23008.HIGH)
             self.mcp23008[1].setup(0, MCP23008.OUT)
-            self.mcp23008[1].output(6, MCP23008.LOW)
+            self.mcp23008[1].output(6, False)
             self.mcp23008[1].setup(6, MCP23008.OUT)
 
 
@@ -364,7 +364,7 @@ class Backplane(I2CContainer):
 
     def setSensorLight_enabled(self, value):
         self.sensorLight_enabled = value
-        self.mcp23008[1].output(6, MCP23008.HIGH if value else MCP23008.LOW)
+        self.mcp23008[1].output(6, value)
 
     def get_capture_enable(self):
         return self.capture_enabled
