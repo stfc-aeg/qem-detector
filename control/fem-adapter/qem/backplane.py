@@ -81,6 +81,11 @@ class Backplane(I2CContainer):
             self.mcp23008[1].setup(0, MCP23008.OUT)
             self.mcp23008[1].output(6, False)
             self.mcp23008[1].setup(6, MCP23008.OUT)
+            
+            # R2, R3 and I in VCTRL circuit 
+            self.R2=66000
+            self.I=-0.00005
+            self.R3=15
 
 
             #Resistor readings
@@ -125,10 +130,10 @@ class Backplane(I2CContainer):
                 self.logger_state = u"N/A"
 
         #Placeholders for sensor readings
-        self.voltages = [0.0] * 15
-        self.voltages_raw = [0.0] * 15
-        self.currents = [0.0] * 15
-        self.currents_raw = [0.0] * 15
+        self.voltages = [0.0] * 14
+        self.voltages_raw = [0.0] * 14
+        self.currents = [0.0] * 14
+        self.currents_raw = [0.0] * 14
         self.power_good = [False] * 8
         self.psu_enabled = True
         self.sensorLight_enabled = False
@@ -137,7 +142,7 @@ class Backplane(I2CContainer):
         self.resistor_non_volatile = False
         self.temperature = 0.0
         self.temperature_far = 0.0
-        self.voltChannelLookup = ((0,2,3,4,5,6,7),(0,2,4,5,6,7))
+        self.voltChannelLookup = ((0,2,3,4,5,6,7),(0,2,4,5,7))
         self.updates_needed = 1
         self.set_sensors_enable(False)
         self.gpio_reset = GPIOReset()
@@ -169,7 +174,7 @@ class Backplane(I2CContainer):
                 self.currents_raw[i] = (self.ad7998[0].read_input_raw(j) & 0xfff)
                 self.currents[i] = self.currents_raw[i] / self.CURRENT_RESISTANCE[i] * 5000 / 4095.0
 
-            for i in range(6):
+            for i in range(5):
                 j = self.voltChannelLookup[1][i]
                 self.currents_raw[i + 7] = (self.ad7998[2].read_input_raw(j) & 0xfff)
                 self.currents[i + 7] = self.currents_raw[i + 7] / self.CURRENT_RESISTANCE[i + 7] * 5000 / 4095.0
@@ -180,18 +185,20 @@ class Backplane(I2CContainer):
                 j = self.voltChannelLookup[0][i]
                 self.voltages_raw[i] = self.ad7998[1].read_input_raw(j) & 0xfff
                 self.voltages[i] = self.voltages_raw[i] * 3 / 4095.0
-            for i in range(6):
+            for i in range(5):
                 j = self.voltChannelLookup[1][i]
                 self.voltages_raw[i + 7] = self.ad7998[3].read_input_raw(j) & 0xfff
                 self.voltages[i + 7] = self.voltages_raw[i + 7] * 5 / 4095.0
 
+            self.voltages[10] = self.voltages[10] * -1 
+
                 
-            self.voltages_raw[14] = self.ad7998[1].read_input_raw(1) & 0xfff
-            self.voltages[14] = self.voltages_raw[14] * 3 /4095.0
+            self.voltages_raw[13] = self.ad7998[1].read_input_raw(1) & 0xfff
+            self.voltages[13] = self.voltages_raw[13] * 3 /4095.0
 
             self.voltages[10] *= -1
-            #self.voltages[13]= 0.3428 + (self.resistors[6]*0.000001) + (self.resistors[7]*0.001)
-            self.voltages[13] = 0.1987 + (self.resistors[6]*0.000001) +(self.resistors[7]*0.001) #0.1987 is the minimum value of coarse but needs testing 
+            #self.voltages[12]= 0.3428 + (self.resistors[6]*0.000001) + (self.resistors[7]*0.001)
+            self.voltages[12] = 0.1987 + (self.resistors[6]*0.000001) +(self.resistors[7]*0.001) #0.1987 is the minimum value of coarse but needs testing 
 
 
             #first calculate the voltage from the register
@@ -245,8 +252,11 @@ class Backplane(I2CContainer):
             self.tpl0102[2].set_wiper(1, self.resistors_raw[resistor])
             self.resistors[resistor] = value
         elif resistor == 5: # this is VCTRL
-            self.resistors_raw[resistor] = int(0.5+((value+3.775)/(1.225/22600+.35*.000001)-32400)/390)
-            self.tpl0102[3].set_wiper(1, self.resistors_raw[resistor])
+            #self.resistors_raw[resistor] = int(0.5+((value+3.775)/(1.225/22600+.35*.000001)-32400)/390)
+            self.resistors_raw[resistor] = int(((self.R2*(value-(self.R3*self.I)))/((self.R2*self.I)+(self.R3*self.I)-value))/390)
+            self.tpl0102[3].set_wiper(0, self.resistors_raw[resistor])
+            print(value)
+            print(self.resistors_raw[resistor])
             self.resistors[resistor] = value
 	elif resistor == 6: # This is AUXSAMPLE FINE
 	    self.resistors_raw[resistor] = int(value/20) #store the i2c value
@@ -288,7 +298,8 @@ class Backplane(I2CContainer):
             self.resistors_raw[resistor] = value
         elif resistor == 5: # this is VCTRL
             self.tpl0102[3].set_wiper(0, value)
-            self.resistors[resistor] = -3.775 + (1.225/22600 + .35*.000001) * (390 * value + 32400)
+            #self.resistors[resistor] = -3.775 + (1.225/22600 + .35*.000001) * (390 * value + 32400)
+            self.resistors[resistor] = (((self.R2*(value*390))/(self.R2+(value*390)))+self.R3)*-self.I
             self.resistors_raw[resistor] = value
         elif resistor == 6: # this is AUXSAMPLE FINE
             self.ad5694.set_from_value(4, value) #set the device value 
@@ -324,7 +335,7 @@ class Backplane(I2CContainer):
 
     # returns the maximum voltage that can be set for a given resistor
     def get_resistor_max(self, resistor):
-        return [2.497, 2.497, 101.1, 3.318, 3.322, 3.41, 81900, 1638][resistor]#changed from 80919.3uV and 1544.73mV 
+        return [2.497, 2.497, 101.1, 3.318, 3.322, 0, 81900, 1638][resistor]#changed from 80919.3uV and 1544.73mV 
 
     # returns the maximum register value that can be set for a given resistor
     def get_register_max(self, resistor):
@@ -443,9 +454,7 @@ class Backplane(I2CContainer):
         return self.voltages_raw[i]
 
     def get_adc_name(self, i):
-        return ["VDDO", "VDD_D18", "VDD_D25", "VDD_P18",  "VDD_A18_PLL",  "VDD_D18ADC",
-               "VDD_D18_PLL", "VDD_RST", "VDD_A33", "VDD_D33", "VCTRL_NEG", "VRESET",
-               "VCTRL_POS", "AUXSAMPLE_SUM", "AUXSAMPLE_MEASURED"][i]
+        return ["VDDO", "VDD_D18", "VDD_D25", "VDD_P18",  "VDD_A18_PLL",  "VDD_D18ADC", "VDD_D18_PLL", "VDD_RST", "VDD_A33", "VDD_D33", "VCTRL", "VRESET", "AUXSAMPLE_SUM", "AUXSAMPLE_MEASURED"][i]
 
     def set_reset_fpga(self, reset):
 	print("set reset called") 

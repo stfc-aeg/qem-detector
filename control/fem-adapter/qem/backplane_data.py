@@ -13,7 +13,7 @@ class CurrentVoltage(object):
     def __init__(self, backplane, i):
         self.index = i
         self.backplane = backplane
-
+        
         self.param_tree = MetadataTree({
             "name" : self.backplane.get_adc_name(i),
             "current" : (self.get_current, {"units" : "mA"}),
@@ -68,7 +68,7 @@ class BackplaneData(object):
             self.power_good.append(PowerGood(self.backplane, i))
 
         self.current_voltage = []
-        for i in range(15):
+        for i in range(14):
             self.current_voltage.append(CurrentVoltage(self.backplane, i))
 
         self.resistors = []
