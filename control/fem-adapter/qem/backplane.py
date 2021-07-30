@@ -110,7 +110,8 @@ class Backplane(I2CContainer):
                 400.0 * (390 * self.resistors_raw[2]) / (390 * self.resistors_raw[2] + 294000),
                 0.0001 * (17800 + (18200 * (390 * self.resistors_raw[3])) / (18200 + (390 * self.resistors_raw[3]))),
                 0.0001 * (49900 * (390 * self.resistors_raw[4])) / (49900 + (390 * self.resistors_raw[4])),
-                -3.775 + (1.225/22600 + .35*.000001) * (390 * self.resistors_raw[5] + 32400),
+                #-3.775 + (1.225/22600 + .35*.000001) * (390 * self.resistors_raw[5] + 32400),
+                (((self.R2*(self.resistors_raw[5]*390))/(self.R2+(self.resistors_raw[5]*390)))+self.R3)*self.I,
 		20 * self.resistors_raw[6], #this is fine as a microvolts
                 0.4 * self.resistors_raw[7], #this is coarse as a millivolts
             ]
@@ -190,7 +191,7 @@ class Backplane(I2CContainer):
                 self.voltages_raw[i + 7] = self.ad7998[3].read_input_raw(j) & 0xfff
                 self.voltages[i + 7] = self.voltages_raw[i + 7] * 5 / 4095.0
 
-            self.voltages[10] = self.voltages[10] * -1 
+            #self.voltages[10] = self.voltages[10] * -1 
 
                 
             self.voltages_raw[13] = self.ad7998[1].read_input_raw(1) & 0xfff
@@ -299,7 +300,7 @@ class Backplane(I2CContainer):
         elif resistor == 5: # this is VCTRL
             self.tpl0102[3].set_wiper(0, value)
             #self.resistors[resistor] = -3.775 + (1.225/22600 + .35*.000001) * (390 * value + 32400)
-            self.resistors[resistor] = (((self.R2*(value*390))/(self.R2+(value*390)))+self.R3)*-self.I
+            self.resistors[resistor] = (((self.R2*(value*390))/(self.R2+(value*390)))+self.R3)*self.I
             self.resistors_raw[resistor] = value
         elif resistor == 6: # this is AUXSAMPLE FINE
             self.ad5694.set_from_value(4, value) #set the device value 
